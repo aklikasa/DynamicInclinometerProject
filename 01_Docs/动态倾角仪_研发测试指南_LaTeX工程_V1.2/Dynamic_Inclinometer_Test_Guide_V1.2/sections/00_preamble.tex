@@ -1,0 +1,59 @@
+\usepackage[margin=22mm,headheight=16pt,footskip=12mm]{geometry}
+\usepackage{fontspec}
+\usepackage{amsmath,amssymb,mathtools,bm}
+\usepackage{booktabs,tabularx,longtable,array,multirow}
+\usepackage{xcolor,colortbl}
+\usepackage{fancyhdr,lastpage}
+\usepackage{enumitem}
+% 兼容缺少 xurl.sty 的较小型 TeX Live/MiKTeX 安装。
+% 有 xurl 时使用更灵活的长网址换行，缺失时退回 url（被 hyperref 支持）。
+\usepackage{hyperref}
+\IfFileExists{xurl.sty}{%
+  \usepackage{xurl}%
+}{%
+  \usepackage{url}%
+}
+\Urlmuskip=0mu plus 1mu\relax
+\usepackage{bookmark}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage{titlesec}
+\usepackage{needspace}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{siunitx}
+\sisetup{detect-all}
+\definecolor{navy}{HTML}{13324C}
+\definecolor{teal}{HTML}{127C86}
+\definecolor{pale}{HTML}{EAF4F5}
+\definecolor{lightgray}{HTML}{F4F6F8}
+\definecolor{redbrown}{HTML}{8E473A}
+\definecolor{graytext}{HTML}{536271}
+\hypersetup{colorlinks=true,linkcolor=navy,urlcolor=teal,pdfauthor={研发测试技术文档},pdftitle={动态倾角仪研发测试指南：分阶段测试项目与实施方案}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{graytext} 动态倾角仪研发测试指南 / S0--S4}
+\fancyhead[R]{\footnotesize\color{graytext} V1.2 · 结构修订稿}
+\fancyfoot[L]{\footnotesize\color{graytext} 待确认产品精度指标与计量证书}
+\fancyfoot[R]{\footnotesize\color{graytext} \thepage/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.35pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{3pt}
+\setlength{\LTpre}{5pt}
+\setlength{\LTpost}{5pt}
+\setlist[enumerate]{itemsep=2pt,topsep=3pt,leftmargin=2.15em}
+\setlist[itemize]{itemsep=1pt,topsep=3pt,leftmargin=2.0em}
+\renewcommand{\arraystretch}{1.32}
+\titleformat{\chapter}{\normalfont\Huge\bfseries\color{navy}}{\thechapter}{.7em}{}
+\titleformat{\section}{\normalfont\Large\bfseries\color{navy}}{\thesection}{.7em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries\color{teal}}{\thesubsection}{.6em}{}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newtcolorbox{keynote}[1][]{colback=pale,colframe=teal,boxrule=.6pt,arc=2mm,breakable,#1}
+\newtcolorbox{warningbox}[1][]{colback=redbrown!4,colframe=redbrown,boxrule=.6pt,arc=2mm,breakable,#1}
+\newcommand{\pending}{\textcolor{redbrown}{\bfseries 待确认 / 待审批}}
+\newcommand{\pilot}{\textcolor{teal}{\bfseries 研发试运行}}
+\newcommand{\tagPZero}{\textcolor{redbrown}{\bfseries P0}}
+\newcommand{\tagPOne}{\textcolor{teal}{\bfseries P1}}
+\newcommand{\testheading}[3]{\Needspace{9\baselineskip}\subsection{#1\quad #2}\noindent\textcolor{graytext}{\bfseries 分类：#3}\par}

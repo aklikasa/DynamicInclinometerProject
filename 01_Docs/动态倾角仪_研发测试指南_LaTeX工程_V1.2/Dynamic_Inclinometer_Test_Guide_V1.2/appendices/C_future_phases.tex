@@ -1,0 +1,21 @@
+\chapter{LaTeX 工程长期维护与版本规则}
+\section{阶段对应源码文件}
+\begin{longtable}{p{32mm}p{106mm}}
+\toprule 阶段或内容 & LaTeX 文件（新增内容应直接写入对应阶段，避免增添游离附录）\\\midrule\endhead
+S0 & \texttt{sections/phase\_S0\_calibration.tex}\\
+S1 总表 & \texttt{sections/05\_overview.tex}\\
+S1 逐项方案 & \texttt{sections/06\_detailed\_protocols.tex}\\
+S1 程序审查/报告 & \texttt{sections/07\_review.tex}\newline\texttt{sections/08\_acceptance\_and\_forms.tex}\\
+S2 & \texttt{sections/phase\_S2\_temperature.tex}\\
+S3 & \texttt{sections/phase\_S3\_dynamic.tex}\\
+S4 & \texttt{sections/phase\_S4\_reliability.tex}\\\bottomrule
+\end{longtable}
+\section{扩展后仍须保持的约束}
+\begin{enumerate}
+\item 只改相应阶段章节，\texttt{main.tex} 继续作为总入口，保留原阶段和测试编号；新测试采用新编号或子编号。
+\item 每阶段按相同顺序维护：\textbf{阶段目的及限制、总表、逐项详细方案、结果与评审}。后续细化时将本版本“待补充”明确替换为经过审核的方案。
+\item 版本变更记录必须说明增加/删除的工况、判据和参考设备变化；任何产品限值均须有审批依据和对应工况范围。
+\item 与本文件共享模板和误差计算方法时，仍需标明数据来自哪个阶段及温度/动态/应力条件，避免不同比较基线混淆。
+\end{enumerate}
+\section{下一版建议推进顺序}
+当前应先执行并评审 S1 19 项常规 CT 项和 CT-12A Allan 专项；获得常温基线后，优先把 S2 全温方案补齐，再完善 S3 动态与干扰的计量和同步部分，最终在具备样机样本后展开 S4。

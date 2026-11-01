@@ -1,0 +1,55 @@
+\section{S1 验收指标、统计模板与报告结构}
+\subsection{指标预算与审批表}
+\begin{longtable}{p{44mm}p{25mm}p{25mm}p{48mm}}
+\toprule
+指标 & 单位 & 正式限值 & 注意事项\\\midrule\endhead
+ACC 方向误差最大值 & $^\circ$ & \pending & 以真实参考重力矢量计算，采用独立姿态\\
+ACC 矢量残差 RMSE & g & \pending & 不能直接等同静态角度精度\\
+ACC 模长最大误差 & g & \pending & 无法替代方向误差\\
+静态 Roll/Pitch 最大绝对误差 & $^\circ$ & \pending & 明确角度范围、角度定义和夹具外参\\
+静态角度重复性 & $^\circ$ 或 $1\sigma$ & \pending & 定义重复到位/复装、统计窗口\\
+角度正反回程差 & $^\circ$ & \pending & 扣除/说明参考回位变化\\
+GYRO Allan ARW & $^\circ/\sqrt{\mathrm h}$ & \pending & CT-12A，明确 ADEV 拟合区间、时长与单位\\
+GYRO 零偏不稳定性 & $^\circ/\mathrm h$ & \pending & CT-12A，按规定模型估计，不能单看最小值\\
+GYRO 静态剩余零偏 & $^\circ$/s & \pending & 明确预热时间和采样窗\\
+GYRO 多速率残差 & $^\circ$/s & \pending & 需角速率参考可溯源\\
+GYRO 比例因子残差 & ppm / \% & \pending & 需可靠标定角速率\\
+GYRO 交叉轴残差 & $^\circ$/s & \pending & 以参考矢量正交分量定义\\
+开机角度复现性 & $^\circ$ & \pending & 规定上电间隔与预热窗口\\
+时间延迟、恢复时间 & ms/s & \pending & 同步与动态参考保证后才可正式签署\\\bottomrule
+\end{longtable}
+
+\subsection{误差预算的最低要求}
+若最终产品目标为 $E_{\rm tilt,target}$，建议至少按参考设备、夹具定位、ADC/传感器残差、噪声、温度、姿态换算分别估算贡献。例如独立误差源可近似用
+\begin{equation}
+ u_{\rm total}=\sqrt{u_{\rm ref}^2+u_{\rm fixture}^2+u_{\rm cal}^2+u_{\rm noise}^2+u_{\rm temp}^2},
+\end{equation}
+但只有在误差源可视作相互独立且定义同一量时才适用；系统偏差必须单独处理。建议依据产品精度目标以及所需覆盖因子确定测试参考的允许不确定度，而不是直接把 $\pm3''$ 写成所有工况的总参考不确定度。
+
+\subsection{推荐每条工况记录表头}
+\begin{longtable}{p{36mm}p{108mm}}
+\toprule
+列名 & 说明\\\midrule\endhead
+\texttt{run\_id}, \texttt{test\_id} & 运行编号、CT 编号；工况步骤编号与 S0 文件保持可追溯但不重用 S0 采样\\
+\texttt{pcb\_id}, \texttt{fixture\_id} & PCB 和工装唯一编号\\
+\texttt{fit\_dataset\_id}, \texttt{cal\_hash} & 标定数据集和冻结参数哈希\\
+\texttt{inner\_cmd}, \texttt{outer\_cmd} & 两轴命令角度，单位 $^\circ$\\
+\texttt{inner\_actual}, \texttt{outer\_actual} & 真实反馈角度的均值和波动范围\\
+\texttt{omega\_ref\_quality} & 参考角速度来源及溯源状态\\
+\texttt{f\_ref\_x/y/z} & P 系比力参考，单位 g\\
+\texttt{a\_corr\_x/y/z}, \texttt{w\_corr\_x/y/z} & 补偿后 6 轴均值与标准差\\
+\texttt{tilt\_ref\_}\allowbreak\texttt{roll/pitch}, \texttt{tilt\_out\_}\allowbreak\texttt{roll/pitch} & 静态角度参考和输出，单位 $^\circ$；说明来源是 MCU 还是离线计算\\
+\texttt{n\_raw}, \texttt{n\_valid}, \texttt{n\_rejected} & 样本和剔除比例\\
+\texttt{ambient\_c}, \texttt{chip\_c} & 实验室室温和芯片内温独立记录\\
+\texttt{limit}, \texttt{decision}, \texttt{reason} & 已审批限值、状态、理由；不能空缺后自动视为 PASS\\\bottomrule
+\end{longtable}
+\subsection{建议的最终报告章序}
+报告模板可按“项目摘要—S0 输入确认—测试环境/设备/计量—CT-00 基准审查—CT-01--CT-13 核心实测及 CT-12A Allan 专项—CT-14--CT-17 补充诊断—异常与重试—测量不确定度—结论及阻断项—原始数据链接”生成。
+\subsection{实际验收前需要补齐的 5 项信息}
+\begin{enumerate}
+\item 产品目标：静态倾角精度、输出角度范围、分辨率、重复性与动态范围。
+\item 实际 IMU 配置：PCB 编号、ASM330LHHX 是否真实使用、ACC/GYRO 量程、ODR、数字滤波设置。
+\item 转台：设备现行计量证书、实际可达角度/速率/装夹约束、实时反馈语义和同步条件。
+\item DUT 输出：只有 6 轴补偿数据还是已经具备 MCU 融合角度，及其时间戳来源。
+\item 可获得的辅助基准：电子水平仪、参考倾角仪、独立速率计量或硬件同步装置。
+\end{enumerate}

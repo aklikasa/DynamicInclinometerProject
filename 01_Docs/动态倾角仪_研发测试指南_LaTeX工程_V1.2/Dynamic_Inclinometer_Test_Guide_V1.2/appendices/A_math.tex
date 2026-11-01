@@ -1,0 +1,52 @@
+\chapter{计算公式、约定与可观测性}
+\section{常温内参补偿表达}
+当前工程完整三轴模型可写为
+\begin{align}
+\bm y_a&=\mathbf F_a\bm f_P+\bm b_a+\bm\epsilon_a,&\hat{\bm f}_P&=\mathbf F_a^{-1}(\bm y_a-\bm b_a),\\
+\bm y_g&=\mathbf F_g\bm\omega_P+\bm b_g+\bm\epsilon_g,&\hat{\bm\omega}_P&=\mathbf F_g^{-1}(\bm y_g-\bm b_g).
+\end{align}
+\textbf{含义：} 全矩阵 $\mathbf F$ 同时吸收传感器比例因子、非正交/交叉轴误差和至公共机械 P 系的相对旋转；仅凭最终 $\mathbf F$ 的某个对角元素不能无条件定义为纯敏感轴比例因子。\textbf{不得在输出已是公共 P 系时再无条件叠乘另一安装旋转矩阵。}
+
+\section{平台旋转和静止比力}
+\begin{align}
+\mathbf R_x(\alpha)&=\begin{bmatrix}1&0&0\\0&\cos\alpha&-\sin\alpha\\0&\sin\alpha&\cos\alpha\end{bmatrix},&
+\mathbf R_z(\beta)&=\begin{bmatrix}\cos\beta&-\sin\beta&0\\\sin\beta&\cos\beta&0\\0&0&1\end{bmatrix},\\
+\bm f_P&=\mathbf R_z^{\mathsf T}(\beta)\mathbf R_x^{\mathsf T}(\alpha)\begin{bmatrix}0\\0\\\sigma\end{bmatrix}.
+\end{align}
+单位以 g 表示。实际应先现场核实坐标系的正负方向和比力符号。内轴 $\beta$ 变化时若外轴 $\alpha=0$，$\bm f_P$ 与 $\beta$ 无关，因此不能用此状态给出独立的二维倾角刺激。
+\section{静态倾角定义}
+\begin{equation}
+\phi=\operatorname{atan2}(f_y,f_z),\qquad
+\theta=\operatorname{atan2}\!\left(-f_x,\sqrt{f_y^2+f_z^2}\right).
+\label{eq:tilt}
+\end{equation}
+这是\textbf{一个明确但可调整的 Roll/Pitch 约定}，前提为静止时零位比力朝 $+Z$。如果 PCB 的坐标、重力符号或产品角度定义不同，必须显式更新本公式及参考计算，禁止只改显示符号。
+\section{平台角速度参考}
+\begin{equation}
+\bm\omega_P=\mathbf R_{BP}^{\mathsf T}\left(\dot\alpha\begin{bmatrix}1\\0\\0\end{bmatrix}
++\dot\beta\mathbf R_x(\alpha)\begin{bmatrix}0\\0\\1\end{bmatrix}\right).
+\end{equation}
+角速度以 $^\circ$/s 记录时保持一致单位；若使用 $\sin/\cos$ 数值计算，应转换角度制为弧度制。\emph{数值上能生成参考向量}不意味着速率反馈已经计量合格。
+\section{输入设计矩阵与可观测性}
+$N$ 个参考比力的完整仿射模型可构造 $\mathbf H=[\bm f_{P,1},1;\ldots;\bm f_{P,N},1]$，至少需要 $\mathrm{rank}(\mathbf H)=4$；还应检查条件数与方向覆盖。不同\emph{机械位置}不一定提供不同\emph{参考重力方向}，例如外轴水平的多组内轴角。
+\section{动态工况范围边界}
+正弦摆角 $\theta(t)=A\sin(2\pi f t)$ 时，最大角速度
+\begin{equation}
+\omega_{\max}=2\pi f A.
+\end{equation}
+当 $A$ 为角度单位 $^\circ$，$f$ 为 Hz，则 $\omega$ 为 $^\circ$/s；示例 $A=5^\circ,\ f=0.1\,\mathrm{Hz}$ 对应 $\omega_{\max}\approx3.14^\circ/s$。角加速度峰值还与 $(2\pi f)^2A$ 有关，也需审核。
+\section{稳态统计与时间轴}
+原始和补偿采样不宜仅保留每 16 个样本的均值。用于静态均值的 N 帧，可先给出全量结果，再给出按固定剔除规则的有效结果。事件与转台反馈必须使用一致可追溯的时间轴；接收端推算时间戳的误差不能忽略。
+
+\section{Allan 方差和 Allan 偏差（用于 CT-12A）}
+以等间隔采集的某一陀螺仪角速度序列 $\omega_k$（单位例如 $^\circ/\mathrm s$）为例，采样间隔 $\Delta t$，取平均块大小 $m$，$\tau=m\Delta t$。对相邻非重叠块求均值
+\begin{equation}
+\bar\omega_j(m)=\frac1m\sum_{k=jm}^{(j+1)m-1}\omega_k,\qquad M=\lfloor N/m\rfloor.
+\end{equation}
+非重叠 Allan 方差（Allan variance, AVAR）及 Allan 偏差（Allan deviation, ADEV）为
+\begin{equation}
+\sigma_A^2(\tau)=\frac{1}{2(M-1)}\sum_{j=0}^{M-2}\left[\bar\omega_{j+1}(m)-\bar\omega_j(m)\right]^2,\qquad
+\sigma_A(\tau)=\sqrt{\sigma_A^2(\tau)}.
+\end{equation}
+CT-12A 建议实际采用\emph{重叠 Allan 偏差}以增加长 $\tau$ 时可用样本对，并在数据处理脚本、图例和报告中声明所用估计方式。ADEV 双对数斜率约为 $-1/2$、$0$、$+1/2$ 时通常可分别用于识别白速率噪声、零偏不稳定性相关区间、速率随机游走相关区间；具体系数换算必须与采用的噪声模型、带宽、采样单位匹配。
+\textbf{重要限制：} 只有长时间连续且近似平稳的数据才能支持较大 $\tau$ 的评估；温度慢漂、工装微动、长段缺帧和自动零偏更新会改变曲线。不要直接把曲线最小点当成所有陀螺仪的零偏不稳定性保证值，也不要在未说明采样处理时比较不同固件的 ADEV。

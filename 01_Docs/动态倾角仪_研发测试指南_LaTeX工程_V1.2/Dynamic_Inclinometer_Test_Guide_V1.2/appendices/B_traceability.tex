@@ -1,0 +1,13 @@
+\chapter{来源、审查依据与参考资料}
+\section{用户提供的原始材料}
+\begin{enumerate}
+\item 《2TD-600 双轴转台使用维护说明书》：封面名称 2TD-600、文件代号 JC10468YS，2023 年 3 月。主要使用 PDF 第 4--6 页（结构、指标、工作环境）、第 9--14 页（安装、接口、操作和记录）、第 15 页（安全操作）、第 19--23 页（串口及远控协议）。
+\item \path{TiltSensorCalibration_PLC_AutoTempComp_WindowsCompatible(2).zip}：主要审查 \path{production_calibration.py}、\path{production_quality_profile.json}、\path{calibration_model_compare.py}、\path{form/form_imu_calibration.py}、\path{turntable/turntable_data_get.py}，以及项目根目录的 \path{legacy_document_*.md} 和 \path{doc/legacy_document_*.md} 历史说明。
+\end{enumerate}
+\section{外部技术资料（仅作方法学背景）}
+\begin{itemize}
+\item VectorNav, \emph{Calibration and Characterization of IMUs}: \url{https://www.vectornav.com/resources/inertial-navigation-primer/specifications--and--error-budgets/specs-imucal}。多姿态加速度计、转台陀螺仪与噪声表征方法学背景。
+\item Analog Devices, \emph{AN-1049: Calibrating iMEMS Gyroscopes}: \url{https://www.analog.com/en/resources/app-notes/an-1049.html}。陀螺仪零偏与速率激励标定方法背景。
+\end{itemize}
+\section{信息的可信边界}
+项目 README/历史说明为\emph{软件开发记录}，不能替代厂家证书、实际联调记录和被测 PCB 实验数据。公开技术资料为方法参考，\textbf{没有提供本产品特定的允差数值}。本规范中的建议采样时长、姿态数、重试轮数和测试角度为工程方案草案，需由团队评审且基于实际量程/负载/精度目标修改。

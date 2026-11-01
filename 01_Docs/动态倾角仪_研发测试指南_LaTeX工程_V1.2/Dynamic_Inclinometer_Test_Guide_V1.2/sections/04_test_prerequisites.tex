@@ -1,0 +1,40 @@
+\chapter{实验通用前置条件、数据和判定原则}
+\section{状态冻结与独立验证}
+\begin{enumerate}
+\item 将 S0 标定结果\textbf{冻结}：PCB ID、内参矩阵、偏置、量程、ODR、固件版本、算法版本、轴系定义、原始数据集哈希值均记录。S1 不能边测边回写修正标定结果。
+\item \textbf{独立数据至少三层：} S0 拟合集 $D_\mathrm{fit}$；S0 用于选模型的验证集 $D_\mathrm{select}$；本规范新增\textbf{真正封存的验收集} $D_\mathrm{accept}$。原工程已有 12 个验证姿态，如它们参与 A/B/C 模型挑选，就不得再拿同一批数据宣布独立最终验收。
+\item 常温按手册环境温度 $20$--$30^\circ\mathrm C$ 执行；\textbf{记录室温和芯片内温}，两者不可互相代替。对每条工况，按温度、稳定时间、反馈新鲜度设定数据质量门槛。
+\item 明确 $\mathbf f_P$ 采用\emph{比力}而非重力加速度向量，记录 $\sigma$；检查加速度单位 g 和陀螺仪单位 $^\circ$/s，验证寄存器量程数值或转换系数。
+\item 若 DUT 只有原始六轴输出，则静态倾角必须\textbf{离线计算}并注明；有 MCU 角度输出时，应同时存储原始六轴、补偿六轴、MCU 姿态角。
+\end{enumerate}
+\section{建议工况采样规则}
+\noindent\begin{tabularx}{\textwidth}{p{51mm}Y}
+\toprule
+对象 & 建议试运行方法（不是计量标准规定）\\\midrule
+静态参考点 & 到位后确认两轴状态\textbf{静止}，姿态误差与温度稳定，再静置 3--5\,s；每点记录 10--30\,s，推荐 3 次独立采集；需要更高精度时延长。\\
+零速陀螺仪 & 预热后连续记录不少于 120\,s；多姿态与开关机分别收集；稳定性观察建议 30--60\,min。\\
+动态速率稳态段 & 先低速验证正反转与停机；只截取稳态区间，避免加减速和换向，建议每点稳态有效 10--20\,s（需要可用安全行程和速度模式支持）。\\
+采样时间 & 记录真实 MCU 时间戳 / 计数器、主机单调时钟、转台反馈时间戳及丢包序号。每个样本尽量使用实际硬件时间，不把 16 点帧平均时间当作真同步。\\
+质量评价 & 保留\textbf{全量未滤波记录}；任何 3$\sigma$/MAD 剔除及重测规则、比例、原因必须另记，不能只报告筛选后的“最佳一次”。\\\bottomrule
+\end{tabularx}
+\section{数据包最小字段}
+\begin{longtable}{p{40mm}p{102mm}}
+\toprule
+记录文件 & 必需字段\\\midrule\endhead
+\texttt{manifest.json} & run\_id、PCB ID、硬件/固件/软件版本、开始/结束时间、人员、参考转台证书编号及有效期、夹具 ID、S0 参数文件哈希、环境温度、芯片温度、结果等级\\
+\texttt{imu\_raw.csv} & 时间戳、样本序号、六轴原始码值、六轴物理单位值、芯片温度、量程、ODR、帧/丢包状态\\
+\texttt{imu\_corrected.csv} & 对应样本时间戳、修正后三轴加速度/角速度、参数版本；若只有上位机补偿，必须标记“离线”\\
+\shortstack[l]{\texttt{turntable\_}\\\texttt{feedback.csv}} & 转台两轴实际位置、反馈速率、时间戳、到位/运动模式、限位/报警和控制状态\\
+\texttt{step\_markers.csv} & 项目 ID、工况 ID、命令角/速率、实际角/速率统计量、样本起止索引、稳定区间、有效率、舍弃理由\\
+\texttt{result\_metrics.csv} & 项目 ID、误差指标名、数值、单位、标准限值、数据集名称、结论（PASS/FAIL/BLOCKED/DIAGNOSTIC）\\\bottomrule
+\end{longtable}
+\section{统一数据判定}
+\begin{itemize}
+\item \textbf{PASS：} 前置设备溯源有效、工况覆盖完整、指标限值事先审批、测量不确定度可接受且未触发阻断条件。
+\item \textbf{FAIL：} 合法参考与数据质量满足要求，但实测指标超过已批准限值。
+\item \textbf{BLOCKED：} 缺少角速度校准、参考姿态未知、量程未确认、时间不同步或机械条件不满足；\emph{不得}填写 PASS。
+\item \textbf{DIAGNOSTIC：} 可作研发分析、趋势图、候选参数比较，但不等于正式性能验收。
+\end{itemize}
+\begin{warningbox}
+\textbf{不可把数据质量阈值当产品精度限值。} 例如“每工况 ACC 波动 $<0.025\,g$”只说明采集没有异常抖动，绝不证明“倾角精度 $<0.1^\circ$”。本规范表格的产品误差限值默认“待审批”，并在现有代码审查章节另列试运行门限。
+\end{warningbox}

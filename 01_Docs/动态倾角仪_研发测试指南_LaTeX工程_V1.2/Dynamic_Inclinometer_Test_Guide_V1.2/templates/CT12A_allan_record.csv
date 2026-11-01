@@ -1,0 +1,1 @@
+﻿run_id,pcb_id,firmware_hash,cal_hash,axis,raw_or_corrected,sampling_hz,sample_count,continuous_hours,missing_frames,temperature_min_c,temperature_max_c,tau_s,allan_deviation_unit,adev_value,window_type,fit_slope,fit_tau_min_s,fit_tau_max_s,model_coefficient,coefficient_unit,decision,notes
