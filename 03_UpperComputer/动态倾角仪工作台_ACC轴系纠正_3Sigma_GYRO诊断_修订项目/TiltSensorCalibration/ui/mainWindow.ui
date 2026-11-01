@@ -1,0 +1,2925 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ui version="4.0">
+ <class>mainWindow</class>
+ <widget class="QMainWindow" name="mainWindow">
+  <property name="styleSheet"><string notr="true">
+/* Compact Liquid Glass | Dynamic Inclinometer */
+QMainWindow { background: #e8ebed; color: #30353a; font-family: "Microsoft YaHei UI", "PingFang SC", "Segoe UI"; font-size: 12px; }
+QWidget#centralwidget { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #f5f6f7,stop:0.48 #ecf0f1,stop:1 #e5e9eb); }
+QGroupBox {
+  color: #4b545c; font-size: 12px; font-weight: 600;
+  border: 1px solid #d9dfe2; border-top: 1px solid #ffffff;
+  border-radius: 15px; margin-top: 13px; padding-top: 11px;
+  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+     stop:0 rgba(255,255,255,248),stop:0.15 rgba(255,255,255,239),stop:1 rgba(249,251,251,232));
+}
+QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left;
+  left: 16px; top: 1px; padding: 0 7px 0 5px; color: #535a60;
+  background: transparent; }
+QTabWidget::pane { border: 1px solid #dce1e5; border-top: 1px solid #ffffff;
+  border-radius: 11px; background: rgba(255,255,255,224); top: -1px; }
+QTabBar::tab {
+  color: #707983; min-width: 60px; padding: 8px 12px; margin-right: 4px;
+  background: rgba(238,241,243,153); border: 1px solid transparent;
+  border-top-left-radius: 9px; border-top-right-radius: 9px;
+}
+QTabBar::tab:selected {
+  color: #293038; font-weight: 600; border: 1px solid #dce1e5;
+  border-bottom-color: #fefefe;
+  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #ffffff,stop:1 #f8fafa);
+}
+QTabBar::tab:hover:!selected { background: rgba(255,255,255,206); color: #424b53; }
+QPushButton {
+  color: #444b53; min-height: 19px; padding: 3px 8px;
+  border: 1px solid #cdd4d9; border-top: 1px solid #ffffff;
+  border-radius: 9px;
+  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #ffffff,stop:0.42 #fbfcfc,stop:1 #eaedef);
+}
+QPushButton:hover {
+  color: #252c32; border-color: #aeb7be;
+  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #ffffff,stop:1 #f2f5f6);
+}
+QPushButton:pressed { padding-top: 5px; padding-bottom: 3px;
+  border-color: #b5bec5; background: #e1e6e9; }
+QPushButton:disabled { color: #acb1b5; border: 1px solid #e3e6e8; background: #f0f2f3; }
+QPushButton#pushButton_DataRecordStart,
+QPushButton#button_IncCommPortOpen {
+  color: #ffffff; font-weight: 600; border: 1px solid #313840; border-top-color: #737d86;
+  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #717a83,stop:0.08 #555f69,stop:1 #303840);
+}
+QPushButton#pushButton_DataRecordStart:hover,
+QPushButton#button_IncCommPortOpen:hover {
+  border-color: #484f56; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #818a93,stop:1 #414b54);
+}
+QPushButton#pushButton_DataRecordStart:pressed, QPushButton#button_IncCommPortOpen:pressed {
+  background: #30383f;
+}
+QPushButton#pushButton_DataRecordStart[recording="true"] {
+  color: #7b4546; border: 1px solid #d9bdbd; border-top-color: #fffafa;
+  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #fffafa,stop:1 #f3e2e2);
+}
+QPushButton#pushButton_closeWindows { color: #5c6369; min-height: 0px; border-radius: 8px; }
+QLineEdit, QTextEdit, QPlainTextEdit, QTextBrowser, QComboBox, QSpinBox, QDoubleSpinBox {
+  color: #394048; selection-background-color: #adb9c1;
+  border: 1px solid #d6dce0; border-top: 1px solid #cbd2d6;
+  border-radius: 8px; padding: 4px 7px;
+  background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #f7f9f9,stop:0.2 #ffffff,stop:1 #ffffff);
+}
+QTextBrowser { background: #fafbfb; }
+QLineEdit:focus, QTextEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {
+  border: 1px solid #99a5af; background: #ffffff;
+}
+QComboBox::drop-down { border: none; width: 22px; }
+QComboBox::down-arrow { width: 7px; height: 7px; }
+QAbstractItemView { alternate-background-color: #f7f9fa; background: #ffffff; }
+QTableWidget { color: #343b42; background: #ffffff; alternate-background-color: #f5f7f8;
+  gridline-color: #ecf0f2; border: 1px solid #e1e6e9; border-radius: 8px;
+  selection-background-color: #e2e8ec; selection-color: #232b31; }
+QHeaderView::section { color: #657078; background: #f4f6f7; border: none;
+  border-bottom: 1px solid #dee3e6; border-right: 1px solid #e6ebed; padding: 6px; font-weight: 600; }
+QProgressBar { background: #eef1f2; color: #525c64; border: 1px solid #d9e0e4; border-radius: 7px; text-align: center; }
+QProgressBar::chunk { border-radius: 6px; background: #939fa8; }
+QCheckBox { spacing: 6px; color: #505860; }
+QScrollBar:vertical { background: #f2f4f5; width: 10px; border: none; margin: 1px; }
+QScrollBar::handle:vertical { background: #cdd5db; min-height: 24px; border-radius: 4px; }
+QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height: 0px; }
+QScrollBar:horizontal { background: #f2f4f5; height: 10px; border: none; margin: 1px; }
+QScrollBar::handle:horizontal { background: #cdd5db; min-width: 24px; border-radius: 4px; }
+QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal { width: 0px; }
+QToolTip { background: #fbfcfc; color: #353c43; border: 1px solid #ced6db; padding: 5px; }
+</string></property><property name="geometry">
+   <rect><x>0</x><y>0</y><width>1144</width><height>723</height></rect></property>
+  <property name="mouseTracking">
+   <bool>false</bool>
+  </property>
+  <property name="windowTitle">
+   <string>动态倾角仪 · IMU 工作台</string></property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonIconOnly</enum>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QGroupBox" name="groupBox_IncController">
+    <property name="geometry">
+     <rect><x>10</x><y>10</y><width>470</width><height>678</height></rect></property>
+    <property name="title">
+     <string>IMU 设备与数据</string></property>
+    <widget class="QGroupBox" name="serialPortBox">
+     <property name="geometry">
+      <rect><x>13</x><y>25</y><width>444</width><height>91</height></rect></property>
+     <property name="title">
+      <string>01  设备连接</string></property>
+     <widget class="QPushButton" name="button_IncCommPortOpen">
+      <property name="geometry">
+       <rect><x>309</x><y>36</y><width>115</width><height>33</height></rect></property>
+      <property name="text">
+       <string>连接串口</string></property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+      <property name="default">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_IncCommPortSelect">
+      <property name="geometry">
+       <rect><x>16</x><y>36</y><width>276</width><height>33</height></rect></property>
+      <property name="cursor">
+       <cursorShape>ArrowCursor</cursorShape>
+      </property>
+      <property name="currentIndex">
+       <number>-1</number>
+      </property>
+      <property name="insertPolicy">
+       <enum>QComboBox::InsertAtBottom</enum>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="geometry">
+      <rect><x>13</x><y>267</y><width>444</width><height>394</height></rect></property>
+     <property name="title">
+      <string>03  数据工作区</string></property>
+     <widget class="QTabWidget" name="tabWidget_AccDataManual">
+      <property name="geometry">
+       <rect><x>11</x><y>25</y><width>422</width><height>353</height></rect></property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab_AccData">
+       <attribute name="title">
+        <string>实时数据</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableWidget_AccDataDisplay">
+        <property name="geometry">
+         <rect><x>3</x><y>4</y><width>412</width><height>312</height></rect></property>
+        <property name="lineWidth">
+         <number>1</number>
+        </property>
+        <property name="rowCount">
+         <number>0</number>
+        </property>
+        <property name="columnCount">
+         <number>7</number>
+        </property>
+        <column>
+         <property name="text">
+          <string>加速度X轴(g)</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>加速度Y轴(g)</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>加速度Z轴(g)</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>温度(摄氏度)</string>
+         </property>
+        </column>
+        <column/>
+        <column/>
+        <column/>
+       </widget>
+       </widget>
+      <widget class="QWidget" name="tab_DataRecord">
+       <attribute name="title">
+        <string>数据记录</string>
+       </attribute>
+       <widget class="QTextEdit" name="textEdit_AccDataSaveDirectory">
+        <property name="geometry">
+         <rect><x>16</x><y>57</y><width>280</width><height>36</height></rect></property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_AccDataSaveDirectorySelect">
+        <property name="geometry">
+         <rect><x>304</x><y>57</y><width>99</width><height>36</height></rect></property>
+        <property name="text">
+         <string>选择文件夹</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_DataRecordStart">
+        <property name="geometry">
+         <rect><x>16</x><y>119</y><width>387</width><height>44</height></rect></property>
+        <property name="text">
+         <string>开始记录</string></property>
+       </widget>
+       <widget class="QLabel" name="label_RecordFolderTitle"><property name="alignment"><set>Qt::AlignVCenter|Qt::AlignLeft</set></property><property name="text"><string>记录保存位置</string></property><property name="geometry"><rect><x>16</x><y>18</y><width>370</width><height>26</height></rect></property></widget><widget class="QLabel" name="label_RecordGuide"><property name="alignment"><set>Qt::AlignVCenter|Qt::AlignLeft</set></property><property name="text"><string>开始时创建一份新的 CSV 数据文件；停止时完成写盘。
+记录期间不可修改保存目录。</string></property><property name="geometry"><rect><x>16</x><y>181</y><width>385</width><height>53</height></rect></property></widget></widget>
+      </widget>
+     <!-- 已按要求删除：安装误差校准补偿 / X-Mark校准补偿 / 加速度计校准补偿 / 使用校准文件 4个复选框 -->
+    </widget>
+    <widget class="QGroupBox" name="groupBox_IncState">
+     <property name="geometry">
+      <rect><x>13</x><y>124</y><width>444</width><height>135</height></rect></property>
+     <property name="title">
+      <string>02  通讯与采样状态</string></property>
+     <widget class="QTextBrowser" name="textBrowser_IncStateInfo">
+      <property name="geometry">
+       <rect><x>119</x><y>31</y><width>305</width><height>90</height></rect></property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_IncStateLight">
+      <property name="geometry">
+       <rect><x>15</x><y>36</y><width>91</width><height>70</height></rect></property>
+      <property name="text">
+       <string>状态</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="pushButton_closeWindows">
+    <property name="geometry">
+     <rect><x>1029</x><y>12</y><width>104</width><height>29</height></rect></property>
+    <property name="text">
+     <string>退出程序</string></property>
+   </widget>
+   <widget class="QTabWidget" name="tabWidget_CalMain">
+    <property name="geometry">
+     <rect><x>488</x><y>47</y><width>645</width><height>641</height></rect></property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tab_8">
+     <attribute name="title">
+      <string>转台</string>
+     </attribute>
+     <widget class="QGroupBox" name="groupBox_TurntablePortSelect">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>211</width>
+        <height>91</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>转台型号选择</string>
+      </property>
+      <widget class="QComboBox" name="comboBox_TurntableModelSelect">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>91</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="cursor">
+        <cursorShape>ArrowCursor</cursorShape>
+       </property>
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <property name="currentIndex">
+        <number>-1</number>
+       </property>
+       <property name="insertPolicy">
+        <enum>QComboBox::InsertAtBottom</enum>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="button_TurntableCommPortOpen">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>30</y>
+         <width>71</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>打开转台</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="comboBox_TurntableCommPortSelect">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>64</y>
+         <width>140</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>选择 2TD600 转台实际连接的 COM 口</string>
+       </property>
+       <property name="placeholderText">
+        <string>选择 2TD600 COM 口</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_TurntableCommPortRefresh">
+       <property name="geometry">
+        <rect>
+         <x>155</x>
+         <y>64</y>
+         <width>46</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>刷新</string>
+       </property>
+       <property name="toolTip">
+        <string>重新枚举系统串口</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_TurntableReturnZeroController">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>10</y>
+        <width>401</width>
+        <height>91</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>转台回零控制区</string>
+      </property>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>20</y>
+         <width>401</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_18">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_InnerReturnZero">
+          <property name="text">
+           <string>内轴回零</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_OutterReturnZero">
+          <property name="text">
+           <string>外轴回零</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_AllReturnZero">
+          <property name="text">
+           <string>全部回零</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>621</width>
+        <height>511</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab_27">
+       <attribute name="title">
+        <string>轴状态</string>
+       </attribute>
+       <widget class="QGroupBox" name="groupBox_InnerSstate">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>361</width>
+          <height>221</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>内轴状态</string>
+        </property>
+        <widget class="QLabel" name="label_InnerCurrentPosition">
+         <property name="geometry">
+          <rect>
+           <x>60</x>
+           <y>20</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>当前位置（°）</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_InnerCurrentSpeed">
+         <property name="geometry">
+          <rect>
+           <x>230</x>
+           <y>20</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>当前速率(°/s)</string>
+         </property>
+        </widget>
+        <widget class="QTextEdit" name="textEdit_InnerCurrentPosition">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>151</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QTextEdit" name="textEdit_InnerCurrentSpeed">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>40</y>
+           <width>151</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>14</x>
+           <y>83</y>
+           <width>341</width>
+           <height>131</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerRunMode">
+              <property name="text">
+               <string>运动模式</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerEnable">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>使能状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerReturnToZero">
+              <property name="text">
+               <string>找零状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerMoveInPlace">
+              <property name="text">
+               <string>到位状态</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerModel">
+              <property name="text">
+               <string>内轴状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerLockState">
+              <property name="text">
+               <string>上锁状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerUpLimit">
+              <property name="text">
+               <string>上限位状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerDownLimit">
+              <property name="text">
+               <string>下限位状态</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_11">
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerDriverFault">
+              <property name="text">
+               <string>驱动状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerOverVoltage">
+              <property name="text">
+               <string>电压状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerOverSpeed">
+              <property name="text">
+               <string>超速状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_InnerOverDiff">
+              <property name="text">
+               <string>超差状态</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_OutState">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>240</y>
+          <width>361</width>
+          <height>221</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>外轴状态</string>
+        </property>
+        <widget class="QTextEdit" name="textEdit_outterCurrentSpeed">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>40</y>
+           <width>151</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_OutterCurrentPosition">
+         <property name="geometry">
+          <rect>
+           <x>60</x>
+           <y>20</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>当前位置（°）</string>
+         </property>
+        </widget>
+        <widget class="QTextEdit" name="textEdit_OutterCurrentPosition">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>151</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_outterCurrentSpeed">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>20</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>当前速率(°/s)</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget_2">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>81</y>
+           <width>341</width>
+           <height>131</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_12">
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterRunMode">
+              <property name="text">
+               <string>运动模式</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterEnable">
+              <property name="text">
+               <string>使能状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterReturnToZero">
+              <property name="text">
+               <string>找零状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterMoveInPlace">
+              <property name="text">
+               <string>到位状态</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_13">
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterModel">
+              <property name="text">
+               <string>外轴状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterLockState">
+              <property name="text">
+               <string>上锁状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterUpLimit">
+              <property name="text">
+               <string>上限位状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterDownLimit">
+              <property name="text">
+               <string>下限位状态</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_14">
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterDriverFault">
+              <property name="text">
+               <string>驱动状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterOverVoltage">
+              <property name="text">
+               <string>电压状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterOverSpeed">
+              <property name="text">
+               <string>超速状态</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_OuterOverDiff">
+              <property name="text">
+               <string>超差状态</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_30">
+       <attribute name="title">
+        <string>运动控制</string>
+       </attribute>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>201</width>
+          <height>151</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>内轴位置控制区</string>
+        </property>
+        <widget class="QComboBox" name="comboBox_InnerPositionMode">
+         <property name="geometry">
+          <rect><x>11</x><y>18</y><width>180</width><height>27</height></rect>
+         </property>
+         <item><property name="text"><string>相对位置（增量）</string></property></item>
+         <item><property name="text"><string>绝对位置（目标角）</string></property></item>
+        </widget>
+        <widget class="QPushButton" name="pushButton_InnerRun">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>116</y>
+           <width>71</width>
+           <height>28</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>运行</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_InnerStop">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>116</y>
+           <width>71</width>
+           <height>28</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停车</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>48</y>
+           <width>181</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QLabel" name="label_InnerRotationAngleSet">
+            <property name="text">
+             <string>目标/增量角度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_InnerRotationAngleSet">
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du">
+            <property name="text">
+             <string>度</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>79</y>
+           <width>181</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_InnerRotationSpeedSet">
+            <property name="text">
+             <string>转动速度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_InnerRotationSpeedSet">
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_5">
+            <property name="text">
+             <string>度/秒</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>170</y>
+          <width>201</width>
+          <height>151</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>外轴位置控制区</string>
+        </property>
+        <widget class="QComboBox" name="comboBox_OuterPositionMode">
+         <property name="geometry">
+          <rect><x>11</x><y>18</y><width>180</width><height>27</height></rect>
+         </property>
+         <item><property name="text"><string>相对位置（增量）</string></property></item>
+         <item><property name="text"><string>绝对位置（目标角）</string></property></item>
+        </widget>
+        <widget class="QPushButton" name="pushButton_OutterRun">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>116</y>
+           <width>71</width>
+           <height>28</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>运行</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_OutterStop">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>116</y>
+           <width>71</width>
+           <height>28</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停车</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>48</y>
+           <width>181</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLabel" name="label_outterRotationAngleSet">
+            <property name="text">
+             <string>目标/增量角度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_outerRotationAngleSet">
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_2">
+            <property name="text">
+             <string>度</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>79</y>
+           <width>181</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLabel" name="label_outterRotationSpeedSet">
+            <property name="text">
+             <string>转动速度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_outerRotationSpeedSet">
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_6">
+            <property name="text">
+             <string>度/秒</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_AllRationController">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>330</y>
+          <width>201</width>
+          <height>131</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>多轴转动位置控制区</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_AllRun">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>60</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>运行</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_AllStop">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>60</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停车</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_15">
+        <property name="geometry">
+         <rect>
+          <x>210</x>
+          <y>10</y>
+          <width>201</width>
+          <height>111</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>内轴速率控制区</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_InnerRunForSpeedMode">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>79</y>
+           <width>71</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>运行</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_InnerStopForSpeedMode">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>79</y>
+           <width>71</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停车</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>18</y>
+           <width>183</width>
+           <height>28</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_54">
+          <item>
+           <widget class="QLabel" name="label_InnerRotationSpeedSet_10">
+            <property name="text">
+             <string>转动速度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_InnerRotationSpeedForSpeedMode">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>33</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>79</width>
+              <height>33</height>
+             </size>
+            </property>
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_7">
+            <property name="text">
+             <string>度/秒</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       
+        <widget class="QWidget" name="layoutWidget_InnerAcceleration">
+         <property name="geometry">
+          <rect><x>11</x><y>49</y><width>183</width><height>25</height></rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_InnerAcceleration">
+          <property name="spacing"><number>4</number></property>
+          <property name="leftMargin"><number>0</number></property>
+          <property name="topMargin"><number>0</number></property>
+          <property name="rightMargin"><number>0</number></property>
+          <property name="bottomMargin"><number>0</number></property>
+          <item>
+           <widget class="QLabel" name="label_InnerRotationAcceleration">
+            <property name="text"><string>加速度：</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_InnerRotationAccelForSpeedMode">
+            <property name="text"><string>10</string></property>
+            <property name="maximumWidth"><number>70</number></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_InnerRotationAccelerationUnit">
+            <property name="text"><string>°/s²</string></property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+</widget>
+       <widget class="QGroupBox" name="groupBox_16">
+        <property name="geometry">
+         <rect>
+          <x>210</x>
+          <y>130</y>
+          <width>201</width>
+          <height>111</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>外轴速率控制区</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_OuterRunForSpeedMode">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>79</y>
+           <width>71</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>运行</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_OuterStopForSpeedMode">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>79</y>
+           <width>71</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停车</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>20</y>
+           <width>181</width>
+           <height>35</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_57">
+          <item>
+           <widget class="QLabel" name="label_outterRotationSpeedSet_10">
+            <property name="text">
+             <string>转动速度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_OuterRotationSpeedForSpeedMode">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>33</height>
+             </size>
+            </property>
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_8">
+            <property name="text">
+             <string>度/秒</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       
+        <widget class="QWidget" name="layoutWidget_OuterAcceleration">
+         <property name="geometry">
+          <rect><x>11</x><y>49</y><width>183</width><height>25</height></rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_OuterAcceleration">
+          <property name="spacing"><number>4</number></property>
+          <property name="leftMargin"><number>0</number></property>
+          <property name="topMargin"><number>0</number></property>
+          <property name="rightMargin"><number>0</number></property>
+          <property name="bottomMargin"><number>0</number></property>
+          <item>
+           <widget class="QLabel" name="label_OuterRotationAcceleration">
+            <property name="text"><string>加速度：</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_OuterRotationAccelForSpeedMode">
+            <property name="text"><string>10</string></property>
+            <property name="maximumWidth"><number>70</number></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_OuterRotationAccelerationUnit">
+            <property name="text"><string>°/s²</string></property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+</widget>
+       <widget class="QGroupBox" name="groupBox_17">
+        <property name="geometry">
+         <rect>
+          <x>410</x>
+          <y>170</y>
+          <width>201</width>
+          <height>151</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>外轴摇摆控制区</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_OuterRunForSwayMode">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>110</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>运行</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_OuterStopForSwayMode">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>110</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停车</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>71</y>
+           <width>171</width>
+           <height>35</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_48">
+          <item>
+           <widget class="QLabel" name="label_outterRotationSpeedSet_11">
+            <property name="text">
+             <string>摇摆频率：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_OuterSwayFreqForSwayMode">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>33</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>79</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_24">
+            <property name="text">
+             <string>Hz</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>20</y>
+           <width>171</width>
+           <height>35</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_59">
+          <item>
+           <widget class="QLabel" name="label_outterRotationAngleSet_11">
+            <property name="text">
+             <string>摇摆幅度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_OuterSwayAmplForSwayMode">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>33</height>
+             </size>
+            </property>
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_21">
+            <property name="text">
+             <string>度</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_18">
+        <property name="geometry">
+         <rect>
+          <x>410</x>
+          <y>10</y>
+          <width>201</width>
+          <height>151</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>内轴摇摆控制区</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_InnerRunForSwayMode">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>110</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>运行</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_InnerStopForSwayMode">
+         <property name="geometry">
+          <rect>
+           <x>110</x>
+           <y>110</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停车</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>61</y>
+           <width>169</width>
+           <height>35</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_53">
+          <item>
+           <widget class="QLabel" name="label_InnerRotationSpeedSet_11">
+            <property name="text">
+             <string>摇摆频率：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_InnerSwayFreqForSwayMode">
+            <property name="minimumSize">
+             <size>
+              <width>79</width>
+              <height>33</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>79</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_23">
+            <property name="text">
+             <string>Hz</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>21</y>
+           <width>165</width>
+           <height>35</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_58">
+          <item>
+           <widget class="QLabel" name="label_InnerRotationAngleSet_11">
+            <property name="text">
+             <string>摇摆幅度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_InnerSwayAmplForSwayMode">
+            <property name="minimumSize">
+             <size>
+              <width>79</width>
+              <height>33</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>79</width>
+              <height>33</height>
+             </size>
+            </property>
+            </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Du_9">
+            <property name="text">
+             <string>度</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_9">
+     <attribute name="title">
+      <string>温箱</string>
+     </attribute>
+     <widget class="QGroupBox" name="groupBox_6">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>311</width>
+        <height>101</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>温箱IP</string>
+      </property>
+      <widget class="QLabel" name="arr_3">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>31</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>IP</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_ip">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>40</y>
+         <width>171</width>
+         <height>31</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_ConnectTC">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>40</y>
+         <width>81</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>连接温箱</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_7">
+      <property name="geometry">
+       <rect>
+        <x>330</x>
+        <y>10</y>
+        <width>301</width>
+        <height>171</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>设置</string>
+      </property>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>161</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="arr_4">
+          <property name="text">
+           <string>超高温设置</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_14">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>29</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_UltraHighTemperature"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="arr_11">
+          <property name="text">
+           <string>°C</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>50</y>
+         <width>161</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_22">
+        <item>
+         <widget class="QLabel" name="arr_5">
+          <property name="text">
+           <string>超低温设置</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_15">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>29</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_UltraLowTemperature"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="arr_12">
+          <property name="text">
+           <string>°C</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>191</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_25">
+        <item>
+         <widget class="QLabel" name="arr_10">
+          <property name="text">
+           <string>定值速率</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_18">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_fixedValueRate"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="arr_13">
+          <property name="text">
+           <string>°C/分钟</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_fixedValueRateOnOff">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>80</y>
+         <width>79</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+      <widget class="QLabel" name="arr_6">
+       <property name="geometry">
+        <rect>
+         <x>11</x>
+         <y>81</y>
+         <width>72</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>定值速率开关</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_Set">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>53</y>
+         <width>75</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>设置</string>
+       </property>
+      </widget>
+      <widget class="QWidget" name="layoutWidget_10">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>130</y>
+         <width>161</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_26">
+        <item>
+         <widget class="QLabel" name="arr_16">
+          <property name="text">
+           <string>设定温度</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_17">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_SettingTemperature"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="arr_17">
+          <property name="text">
+           <string>°C</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QPushButton" name="pushButton_lightingOnOff">
+       <property name="geometry">
+        <rect>
+         <x>214</x>
+         <y>123</y>
+         <width>71</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>照明开/关</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_8">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>220</y>
+        <width>601</width>
+        <height>171</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>实测温度（°C）</string>
+      </property>
+      <widget class="QTextBrowser" name="textBrowser_MeasuredTemperature">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>301</width>
+         <height>131</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>70</pointsize>
+        </font>
+       </property>
+       <property name="placeholderText">
+        <string>85°C</string>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_9">
+       <property name="geometry">
+        <rect>
+         <x>320</x>
+         <y>20</y>
+         <width>271</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string/>
+       </property>
+       <widget class="QLabel" name="arr_14">
+        <property name="geometry">
+         <rect>
+          <x>220</x>
+          <y>60</y>
+          <width>43</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>°C/分钟</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="arr_15">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>110</y>
+          <width>13</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>°C</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="arr_8">
+        <property name="geometry">
+         <rect>
+          <x>11</x>
+          <y>21</y>
+          <width>72</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>定值速率开关</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_fixedValueRateState">
+        <property name="geometry">
+         <rect>
+          <x>110</x>
+          <y>20</y>
+          <width>54</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>关</string>
+        </property>
+       </widget>
+       <widget class="QTextBrowser" name="textBrowser_SettingTemperature">
+        <property name="geometry">
+         <rect>
+          <x>90</x>
+          <y>100</y>
+          <width>131</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QTextBrowser" name="textBrowser_TemperatureRate">
+        <property name="geometry">
+         <rect>
+          <x>90</x>
+          <y>50</y>
+          <width>131</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="arr_7">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>72</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>温度速率</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="arr_9">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>100</y>
+          <width>72</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>设定温度</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_10">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>420</y>
+        <width>621</width>
+        <height>161</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>温箱状态</string>
+      </property>
+      <widget class="QPushButton" name="pushButton_RunState">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>30</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>运行/停止</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_FixedValueState">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>30</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>定值
+运行/停止</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_RunMode">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>30</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>定值/程序
+模式</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_lightingState">
+       <property name="geometry">
+        <rect>
+         <x>490</x>
+         <y>30</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>照明开关</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_AlarmState">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>100</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>报警值</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_DeviceFaultState">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>100</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>设备故障</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_CommState">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>100</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>通讯状态</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_ConnectedState">
+       <property name="geometry">
+        <rect>
+         <x>490</x>
+         <y>100</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>连接状态</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_14">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>311</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>运行/&amp;停止</string>
+      </property>
+      <widget class="QPushButton" name="pushButton_RunStop">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>20</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>运行</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_18">
+     <attribute name="title">
+      <string>倾角仪校准</string>
+     </attribute>
+     <widget class="QTabWidget" name="tabWidget_IncCal">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>621</width>
+        <height>591</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>校准设置</string>
+       </attribute>
+       <widget class="QTabWidget" name="tabWidget_CalRun">
+        <property name="geometry">
+         <rect>
+          <x>-10</x>
+          <y>420</y>
+          <width>621</width>
+          <height>131</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab_19">
+         <attribute name="title">
+          <string>加速度计校准</string>
+         </attribute>
+         <widget class="QCheckBox" name="checkBox_EllipsoidFitting">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>111</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>椭球拟合</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_AccCalRun">
+          <property name="geometry">
+           <rect>
+            <x>520</x>
+            <y>20</y>
+            <width>75</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>自动运行</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="checkBox_TotalAccelerationCheck">
+          <property name="geometry">
+           <rect>
+            <x>100</x>
+            <y>10</y>
+            <width>91</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>总加速度检验</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_TurntableAutoController">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>10</y>
+          <width>611</width>
+          <height>91</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>数据存储目录</string>
+        </property>
+        <widget class="QWidget" name="layoutWidget_27">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>60</y>
+           <width>212</width>
+           <height>26</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <widget class="QLabel" name="label_RotationSpeedSet">
+            <property name="text">
+             <string>转动速率(°/s)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_RotationSpeedSet">
+            <property name="cursorPosition">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QPushButton" name="pushButton_AccDataSaveDirectorySelect_Auto">
+         <property name="geometry">
+          <rect>
+           <x>510</x>
+           <y>30</y>
+           <width>81</width>
+           <height>41</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>选择文件夹</string>
+         </property>
+        </widget>
+        <widget class="QTextEdit" name="textEdit_AccDataSaveDirectory_Auto">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>20</y>
+           <width>301</width>
+           <height>31</height>
+          </rect>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QTabWidget" name="tabWidget_CalItemParaSet">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>280</y>
+          <width>611</width>
+          <height>131</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab_5">
+         <attribute name="title">
+          <string>加速度计校准</string>
+         </attribute>
+         <widget class="QCheckBox" name="checkBox_LMCalcu">
+          <property name="geometry">
+           <rect>
+            <x>260</x>
+            <y>20</y>
+            <width>91</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>LM计算</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="ave_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>48</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>平均次数</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="checkBox_AIAEnableOfAccCal">
+          <property name="geometry">
+           <rect>
+            <x>140</x>
+            <y>70</y>
+            <width>79</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>AIA</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="lineEdit_AverageNumOfAccCal">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>70</y>
+            <width>51</width>
+            <height>20</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="lineEdit_PositionNumOfAccCal">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>20</y>
+            <width>132</width>
+            <height>20</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_RotationAngleSet_2">
+          <property name="geometry">
+           <rect>
+            <x>11</x>
+            <y>21</y>
+            <width>40</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>位置数 </string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="checkBox_AccTdcCalcuEnable">
+          <property name="geometry">
+           <rect>
+            <x>340</x>
+            <y>20</y>
+            <width>91</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>温漂补偿计算</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="checkBox_TpsCompCalcuEnable">
+          <property name="geometry">
+           <rect>
+            <x>450</x>
+            <y>20</y>
+            <width>131</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>温度传感器补偿计算</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="checkBox_AccCalFTPPush">
+          <property name="geometry">
+           <rect>
+            <x>260</x>
+            <y>50</y>
+            <width>91</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>数据上传</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QWidget" name="tab_6">
+         <attribute name="title">
+          <string>总加速度检验</string>
+         </attribute>
+         <widget class="QLabel" name="ave_3">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>48</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>平均次数</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="lineEdit_AverageNumOfTotalAccelerationCheck">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>10</y>
+            <width>51</width>
+            <height>20</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="checkBox_AIAEnableOfTotalAccelerationCheck">
+          <property name="geometry">
+           <rect>
+            <x>140</x>
+            <y>10</y>
+            <width>79</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>AIA</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QTabWidget" name="tabWidget_TemperatureControl">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>110</y>
+          <width>611</width>
+          <height>171</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab_20">
+         <attribute name="title">
+          <string>温控设置</string>
+         </attribute>
+         <widget class="QComboBox" name="comboBox_TemperatureControlMode">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>10</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="cursor">
+           <cursorShape>ArrowCursor</cursorShape>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <property name="insertPolicy">
+           <enum>QComboBox::InsertAtBottom</enum>
+          </property>
+          <item>
+           <property name="text">
+            <string>定值模式</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>程序模式</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLabel" name="arr_18">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>温控模式</string>
+          </property>
+         </widget>
+         <widget class="QWidget" name="layoutWidget_9">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>10</y>
+            <width>231</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_45">
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_39">
+             <property name="text">
+              <string>运行温度</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_OperatingTemperature"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_41">
+             <property name="text">
+              <string>℃</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QLabel" name="label_RotationAngleSet_30">
+          <property name="geometry">
+           <rect>
+            <x>510</x>
+            <y>50</y>
+            <width>16</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>℃</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="lineEdit_TemperatureInterval">
+          <property name="geometry">
+           <rect>
+            <x>450</x>
+            <y>50</y>
+            <width>50</width>
+            <height>20</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QWidget" name="layoutWidget_33">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>50</y>
+            <width>193</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_42">
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_26">
+             <property name="text">
+              <string>温度范围</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_TemperatureRange1"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_24">
+             <property name="text">
+              <string>—</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_TemperatureRange2"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_25">
+             <property name="text">
+              <string>℃</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="layoutWidget_4">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>121</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_52">
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_32">
+             <property name="text">
+              <string>起始温度</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_StartTemperature"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_31">
+             <property name="text">
+              <string>℃</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QLabel" name="label_RotationAngleSet_29">
+          <property name="geometry">
+           <rect>
+            <x>390</x>
+            <y>50</y>
+            <width>48</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>温度间隔</string>
+          </property>
+         </widget>
+         <widget class="QWidget" name="layoutWidget_34">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>110</y>
+            <width>133</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_43">
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_27">
+             <property name="text">
+              <string>保温时间</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_TemperatureHoldTime"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_28">
+             <property name="text">
+              <string>分钟</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="layoutWidget_5">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>80</y>
+            <width>121</width>
+            <height>24</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_51">
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_50">
+             <property name="text">
+              <string>温度偏差</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_TemperatureDeviation"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_54">
+             <property name="text">
+              <string>℃</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QLabel" name="label_RotationAngleSet_56">
+          <property name="geometry">
+           <rect>
+            <x>490</x>
+            <y>80</y>
+            <width>31</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>分钟</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_RotationAngleSet_51">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>80</y>
+            <width>71</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>温度命中次数</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="lineEdit_TemperatureHitCount">
+          <property name="geometry">
+           <rect>
+            <x>250</x>
+            <y>80</y>
+            <width>61</width>
+            <height>20</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_RotationAngleSet_52">
+          <property name="geometry">
+           <rect>
+            <x>350</x>
+            <y>80</y>
+            <width>71</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>温度等待时间</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_RotationAngleSet_55">
+          <property name="geometry">
+           <rect>
+            <x>320</x>
+            <y>80</y>
+            <width>21</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>次</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="lineEdit_TemperatureWaitTime">
+          <property name="geometry">
+           <rect>
+            <x>430</x>
+            <y>80</y>
+            <width>51</width>
+            <height>20</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="checkBox_TemperatureControlEnable">
+          <property name="geometry">
+           <rect>
+            <x>350</x>
+            <y>115</y>
+            <width>71</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>温控</string>
+          </property>
+         </widget>
+         <widget class="QWidget" name="layoutWidget_24">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>110</y>
+            <width>121</width>
+            <height>29</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_44">
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_37">
+             <property name="text">
+              <string>运行次数</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_RunNum"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_RotationAngleSet_38">
+             <property name="text">
+              <string>次</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>运行状态</string>
+       </attribute>
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>10</y>
+          <width>611</width>
+          <height>361</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>运行状态</string>
+        </property>
+        <widget class="QProgressBar" name="progressBar_AutoRun">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>270</y>
+           <width>521</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+        <widget class="QTextBrowser" name="textBrowser_AutoRunStateInfo">
+         <property name="geometry">
+          <rect>
+           <x>130</x>
+           <y>20</y>
+           <width>361</width>
+           <height>221</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_AutoRunStateLight">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>81</width>
+           <height>81</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>状态</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_AutoRunProgressInfo">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>250</y>
+           <width>431</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>的海湾的</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+   </widget>
+  <widget class="QLabel" name="label_WorkspaceHeader"><property name="alignment"><set>Qt::AlignVCenter|Qt::AlignLeft</set></property><property name="text"><string>DYNAMIC INCLINOMETER     /     动态倾角仪工作台</string></property><property name="geometry"><rect><x>494</x><y>12</y><width>500</width><height>27</height></rect></property></widget></widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1144</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
