@@ -1,0 +1,18 @@
+# 1. 忽略 Python 缓存文件
+__pycache__/
+*.py[cod]
+
+# 2. 忽略 Windows 系统自动生成的垃圾文件
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# 3. 忽略常见的编辑器临时文件夹
+.vscode/
+.idea/
+*.suo
+*.user
+
+# 4. 如果你编译产生了临时文件或大文件，也可以把后缀写进来
+# *.log
+# *.tmp
