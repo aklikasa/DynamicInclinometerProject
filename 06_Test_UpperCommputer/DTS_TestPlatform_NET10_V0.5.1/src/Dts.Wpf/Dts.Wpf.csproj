@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Dts.TestPlatform</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Dts.Core/Dts.Core.csproj" />
+    <ProjectReference Include="../Dts.Devices/Dts.Devices.csproj" />
+    <ProjectReference Include="../Dts.TestEngine/Dts.TestEngine.csproj" />
+    <ProjectReference Include="../Dts.Tests/Dts.Tests.csproj" />
+    <None Include="../../plugins/README.txt" Link="plugins/README.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../plugins/*.dll" Link="plugins/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../assets/tests.json" Link="assets/tests.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

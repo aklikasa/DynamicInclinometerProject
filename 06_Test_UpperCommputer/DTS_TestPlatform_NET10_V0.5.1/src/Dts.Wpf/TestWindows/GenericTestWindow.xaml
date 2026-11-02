@@ -1,0 +1,19 @@
+<Window x:Class="Dts.Wpf.TestWindows.GenericTestWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="测试设置" Width="750" Height="545" MinWidth="680" MinHeight="470" WindowStartupLocation="CenterOwner" Closing="OnClosing">
+ <Grid Margin="20"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Style="{StaticResource Card}"><StackPanel><TextBlock x:Name="Header" Text="检测模块" Style="{StaticResource Title}" FontSize="20"/><TextBlock x:Name="StageLabel" Foreground="#6681A0" Margin="0,6,0,0"/></StackPanel></Border>
+  <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,12,0,10">
+   <Border Style="{StaticResource Card}" Margin="0,0,0,10"><StackPanel>
+    <TextBlock Text="方案说明" Style="{StaticResource Title}"/><TextBlock x:Name="Purpose" Margin="0,8,0,0" TextWrapping="Wrap"/><TextBlock x:Name="Procedure" Margin="0,7,0,0" TextWrapping="Wrap" Foreground="#5C748E"/><TextBlock x:Name="Implementation" Margin="0,10,0,0" Foreground="#996638" TextWrapping="Wrap"/>
+   </StackPanel></Border>
+   <Border Style="{StaticResource Card}"><StackPanel>
+    <TextBlock Text="本测试运行设置" Style="{StaticResource Title}"/><WrapPanel Margin="0,10,0,4"><TextBlock Text="采样时长 (秒)" VerticalAlignment="Center"/><TextBox x:Name="Duration" Text="180" Width="95" Margin="8,0,0,0"/></WrapPanel>
+    <TextBlock x:Name="OutputRoot" Text="结果保存根目录" Foreground="#5577A1" TextWrapping="Wrap" Margin="0,6,0,0"/>
+    <TextBlock Text="本子窗口是后续测试的统一入口。未来开发专用测试时，可替换为独立 XAML/算法/结果/报告模块。" Foreground="#74879C" FontSize="12" TextWrapping="Wrap" Margin="0,9,0,0"/>
+   </StackPanel></Border>
+  </StackPanel></ScrollViewer>
+  <DockPanel Grid.Row="2" Margin="0,10,0,0" LastChildFill="True"><Button Content="关闭" DockPanel.Dock="Right" Style="{StaticResource Action}" Click="CloseClick"/><Button x:Name="StopBtn" Content="取消" DockPanel.Dock="Right" Style="{StaticResource Warning}" Click="CancelClick" IsEnabled="False"/><Button x:Name="StartBtn" Content="▶ 执行真实采集子项" DockPanel.Dock="Right" Style="{StaticResource Primary}" Click="RunClick"/><TextBlock x:Name="Status" Text="等待执行" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="#28619F"/></DockPanel>
+ </Grid>
+</Window>
