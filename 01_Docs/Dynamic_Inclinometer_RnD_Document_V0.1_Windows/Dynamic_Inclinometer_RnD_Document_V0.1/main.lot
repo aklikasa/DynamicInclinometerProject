@@ -1,0 +1,27 @@
+\contentsline {table}{\numberline {1}{\ignorespaces 研发阶段边界及当前文档状态}}{1}{table.caption.7}%
+\addvspace {10.0pt}
+\contentsline {table}{\numberline {1.1}{\ignorespaces 本文常用数学与工程符号}}{4}{table.caption.8}%
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\contentsline {table}{\numberline {4.1}{\ignorespaces ACC 拟合姿态（12 组）}}{10}{table.caption.12}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces ACC 独立验证姿态（12 组，不参与拟合）}}{10}{table.caption.13}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces GYRO 速率点选择（当前试运行工艺）}}{11}{table.caption.14}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces 采样质量门限（软件当前值；并非计量标准通用规定）}}{12}{table.caption.15}%
+\addvspace {10.0pt}
+\contentsline {table}{\numberline {5.1}{\ignorespaces ACC 三方案汇总（来自用户提供的 {\small \nolinkurl {model_comparison_acc.csv}}）}}{14}{table.caption.16}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces GYRO 三方案汇总（来自用户提供的 {\small \nolinkurl {model_comparison_gyro.xlsx}}）}}{14}{table.caption.17}%
+\addvspace {10.0pt}
+\contentsline {table}{\numberline {6.1}{\ignorespaces 软件默认的五温度点自动实验计划}}{16}{table.caption.18}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces PLC 自动流程当前代码判据}}{17}{table.caption.20}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces IMU 内部温度稳定性要求}}{18}{table.caption.21}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces 一个温度点的任务量}}{18}{table.caption.22}%
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\contentsline {table}{\numberline {8.1}{\ignorespaces 异常触发与受控处理原则}}{21}{table.caption.23}%
+\contentsline {table}{\numberline {8.2}{\ignorespaces 温补实验输出文件及其用途}}{23}{table.caption.24}%
+\addvspace {10.0pt}
+\addvspace {10.0pt}
+\contentsline {table}{\numberline {10.1}{\ignorespaces 研发实验审核记录表}}{27}{table.caption.25}%
+\addvspace {10.0pt}
+\addvspace {10.0pt}

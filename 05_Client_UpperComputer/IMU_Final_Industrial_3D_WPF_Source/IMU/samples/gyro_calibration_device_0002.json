@@ -1,0 +1,2179 @@
+{
+  "schema_version": 3,
+  "calibration_type": "gyroscope_production_ambient",
+  "created_at": "2026-10-22T16:21:26.288+08:00",
+  "run_id": "GYRO_20261022_155506",
+  "device_serial": "0002",
+  "axis_model": "outer_x_inner_z",
+  "gravity_sign": 1,
+  "coordinate_frame": "转台圆盘公共机械坐标系 P",
+  "model": "raw = forward_matrix @ angular_velocity_P + bias",
+  "raw_gyro_bias_dps": [
+    3.9161841254454597,
+    -7.483350057887706,
+    -3.9824775363913543
+  ],
+  "raw_to_platform_matrix": [
+    [
+      0.08386861046044251,
+      -0.09152213083395885,
+      -0.0011968536677437749
+    ],
+    [
+      0.09073665419056254,
+      0.08505251783980983,
+      -0.002544897448947455
+    ],
+    [
+      0.0034101516926438955,
+      0.0016051165344451717,
+      0.12460551340318528
+    ]
+  ],
+  "forward_platform_to_raw_matrix": [
+    [
+      5.507795430486724,
+      5.9234704156345614,
+      0.1738819520908189
+    ],
+    [
+      -5.878130930549495,
+      5.431156221083358,
+      0.0544636658749192
+    ],
+    [
+      -0.0750154026612525,
+      -0.23207296792919174,
+      8.019866764664279
+    ]
+  ],
+  "axis_intrinsic_invariants": {
+    "axis_sensitivity": [
+      8.09033665568073,
+      8.003302282520364,
+      8.02357452112502
+    ],
+    "pairwise_axis_angles_deg": {
+      "xy": 90.17235747488577,
+      "xz": 90.3471805167654,
+      "yz": 90.34144997210167
+    },
+    "pairwise_nonorthogonality_deg": {
+      "xy": 0.17235747488577147,
+      "xz": 0.3471805167654054,
+      "yz": 0.34144997210167105
+    },
+    "meaning": "灵敏度按原始测量通道定义；安装旋转不变量；非任意校正矩阵对角元素"
+  },
+  "fit_quality": {
+    "samples": 19,
+    "design_rank": 4,
+    "matrix_condition_number": 1.0145766513017598,
+    "rmse_vector_dps": 0.019431552781015958,
+    "max_vector_error_dps": 0.07582993211356924
+  },
+  "independent_validation": {
+    "count": 13,
+    "rmse_vector": 0.010593263881288452,
+    "max_vector_error": 0.017596277552793076,
+    "rmse_axis": [
+      0.00633757425563043,
+      0.006547035444820334,
+      0.005402658521251097
+    ],
+    "max_error_axis": [
+      0.0170194968286701,
+      0.013434280738870541,
+      0.016475349512841575
+    ],
+    "vectors": [
+      {
+        "reference": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "corrected": [
+          0.005137638440111409,
+          0.001297292697228327,
+          0.003530167983467933
+        ],
+        "error": [
+          0.005137638440111409,
+          0.001297292697228327,
+          0.003530167983467933
+        ]
+      },
+      {
+        "reference": [
+          -6.146539451332839e-06,
+          7.417079519456138e-07,
+          1.4969709929045258
+        ],
+        "corrected": [
+          -0.00802713414620676,
+          0.0035579905400178933,
+          1.4984800843076411
+        ],
+        "error": [
+          -0.008020987606755427,
+          0.0035572488320659477,
+          0.0015090914031152813
+        ]
+      },
+      {
+        "reference": [
+          -7.691969451967262e-06,
+          -9.275040660505773e-07,
+          -1.4971360530097053
+        ],
+        "corrected": [
+          -0.0014997717911390605,
+          0.004893238205598286,
+          -1.4889602676268914
+        ],
+        "error": [
+          -0.0014920798216870933,
+          0.004894165709664337,
+          0.008175785382813938
+        ]
+      },
+      {
+        "reference": [
+          -1.3123064208642177e-06,
+          4.604841563615736e-07,
+          3.495988464355469
+        ],
+        "corrected": [
+          -0.0007803353864640827,
+          0.0058499094063733815,
+          3.493594823083839
+        ],
+        "error": [
+          -0.0007790230800432185,
+          0.00584944892221702,
+          -0.002393641271629665
+        ]
+      },
+      {
+        "reference": [
+          8.564102822125415e-06,
+          3.065437400285335e-06,
+          -3.4972704478672583
+        ],
+        "corrected": [
+          -0.0028443649660415704,
+          0.0020025010811460884,
+          -3.4807950983544167
+        ],
+        "error": [
+          -0.0028529290688636957,
+          0.001999435643745803,
+          0.016475349512841575
+        ]
+      },
+      {
+        "reference": [
+          1.4971468826200311,
+          2.7134224253748126e-06,
+          -1.0908998515271493e-05
+        ],
+        "corrected": [
+          1.491124190206797,
+          0.007893197637794551,
+          0.0024221695380649386
+        ],
+        "error": [
+          -0.006022692413234054,
+          0.007890484215369175,
+          0.00243307853658021
+        ]
+      },
+      {
+        "reference": [
+          -1.4965488450930589,
+          2.0151057125286214e-06,
+          9.153685479157603e-06
+        ],
+        "corrected": [
+          -1.4932681673922574,
+          0.005737348843955164,
+          -0.0007528497981422581
+        ],
+        "error": [
+          0.0032806777008014265,
+          0.005735333738242636,
+          -0.0007620034836214157
+        ]
+      },
+      {
+        "reference": [
+          3.496762847875642,
+          1.315594186241945e-05,
+          -4.9937855113636355e-06
+        ],
+        "corrected": [
+          3.4945309715758075,
+          0.011428414470777297,
+          -0.0006320334983029964
+        ],
+        "error": [
+          -0.0022318762998345676,
+          0.011415258528914878,
+          -0.0006270397127916327
+        ]
+      },
+      {
+        "reference": [
+          -3.498207263330181,
+          1.1107086453522324e-05,
+          -2.308722560381676e-06
+        ],
+        "corrected": [
+          -3.481187766501511,
+          -0.0033893830629141268,
+          0.0028963768688536856
+        ],
+        "error": [
+          0.0170194968286701,
+          -0.0034004901493676493,
+          0.0028986855914140673
+        ]
+      },
+      {
+        "reference": [
+          -8.496183706257039e-06,
+          1.496076122242392,
+          -2.0623751426940638e-05
+        ],
+        "corrected": [
+          0.0008387127740084694,
+          1.501543305465694,
+          -0.001214867739947138
+        ],
+        "error": [
+          0.0008472089577147264,
+          0.005467183223301975,
+          -0.0011942439885201973
+        ]
+      },
+      {
+        "reference": [
+          -6.7602394976549645e-06,
+          -1.4966522616437798,
+          1.6391537595524015e-05
+        ],
+        "corrected": [
+          0.007869887543360186,
+          -1.490914904260321,
+          0.0009094822722871678
+        ],
+        "error": [
+          0.00787664778285784,
+          0.00573735738345893,
+          0.0008930907346916438
+        ]
+      },
+      {
+        "reference": [
+          -4.048950660642606e-05,
+          3.495249452912377,
+          8.211007567264574e-07
+        ],
+        "corrected": [
+          0.003947672183770959,
+          3.4946078974316404,
+          0.0013797538463051447
+        ],
+        "error": [
+          0.003988161690377385,
+          -0.0006415554807368551,
+          0.0013789327455484182
+        ]
+      },
+      {
+        "reference": [
+          -3.746298850282089e-05,
+          -3.4965758597168417,
+          8.138020833333334e-07
+        ],
+        "corrected": [
+          -0.00034417336816773065,
+          -3.483141578977971,
+          0.0011332518629147046
+        ],
+        "error": [
+          -0.0003067103796649098,
+          0.013434280738870541,
+          0.0011324380608313713
+        ]
+      }
+    ],
+    "max_direction_error_deg": 0.3354936351907936,
+    "max_zero_rate_residual_dps": 0.006367133034191636,
+    "max_cross_axis_dps": 0.011432475750570593
+  },
+  "quality_gate": {
+    "gates": {
+      "matrix_condition": {
+        "value": 1.0145766513017598,
+        "limit": 30.0,
+        "pass": true
+      },
+      "design_condition": {
+        "value": 1.7714081137564726,
+        "limit": 20.0,
+        "pass": true
+      },
+      "rmse_vector_dps": {
+        "value": 0.010593263881288452,
+        "limit": 0.25,
+        "pass": true
+      },
+      "max_vector_dps": {
+        "value": 0.017596277552793076,
+        "limit": 0.65,
+        "pass": true
+      },
+      "max_direction_deg": {
+        "value": 0.3354936351907936,
+        "limit": 4.0,
+        "pass": true
+      },
+      "max_cross_axis_dps": {
+        "value": 0.011432475750570593,
+        "limit": 0.45,
+        "pass": true
+      },
+      "max_zero_rate_dps": {
+        "value": 0.006367133034191636,
+        "limit": 0.15,
+        "pass": true
+      },
+      "temperature_run_span_c": {
+        "value": 0.2335819357303741,
+        "limit": 3.0,
+        "pass": true
+      }
+    },
+    "metric_pass": true,
+    "profile_id": "PILOT_ASM330LHHX_FLEXIBLE_FS_V3",
+    "approved_for_production": false,
+    "verdict": "PILOT_PASS_NOT_RELEASED",
+    "notice": "量程或ODR未得到MCU有效报告；使用本次任务的固定换算设置进行试运行标定。需确认实际寄存器配置后复核，禁止作为正式出厂PASS。",
+    "configuration_verified_for_release": false
+  },
+  "quality_profile_snapshot": {
+    "profile_id": "PILOT_ASM330LHHX_FLEXIBLE_FS_V3",
+    "approved_for_production": false,
+    "scope": "PCB 六轴 IMU 常温，公共机械平台 P，禁止作为全温产品认证",
+    "references": [
+      "IEEE 1293-2018（加速度计方法参考）",
+      "IEEE 1431-2004（非活动保留；陀螺仪方法参考）",
+      "IEEE 1554-2005（非活动保留；设备及数据参考）",
+      "ST ASM330LHHX DS13197 Rev9 Table2 2023（量程与灵敏度）"
+    ],
+    "quality": {
+      "minimum_frames": 50,
+      "max_rejection_fraction": 0.1,
+      "mad_sigma": 3.0,
+      "gyro_mad_sigma": 6.0,
+      "static_acc_std_max_g": 0.025,
+      "static_gyro_std_max_dps": 0.45,
+      "rate_gyro_std_max_dps": 0.55,
+      "rate_reference_std_max_dps": 0.18,
+      "rate_reference_error_max_dps": 0.3,
+      "static_feedback_speed_max_dps": 0.05,
+      "temperature_min_c": 15.0,
+      "temperature_max_c": 35.0,
+      "temperature_span_max_c": 1.0,
+      "feedback_age_max_ms": 250,
+      "static_sample_max_retries": 5,
+      "rate_sample_max_retries": 3
+    },
+    "acceptance": {
+      "acc_vector_rmse_max_g": 0.015,
+      "acc_vector_max_error_g": 0.035,
+      "acc_angle_max_deg": 1.2,
+      "acc_norm_max_error_g": 0.03,
+      "gyro_vector_rmse_max_dps": 0.25,
+      "gyro_vector_max_error_dps": 0.65,
+      "gyro_zero_residual_max_dps": 0.15,
+      "gyro_direction_max_deg": 4.0,
+      "gyro_cross_axis_max_dps": 0.45,
+      "correction_condition_max": 30.0,
+      "fit_design_condition_max": 20.0,
+      "temperature_run_span_max_c": 3.0
+    },
+    "rates": {
+      "fit_dps": [
+        1.0,
+        2.0,
+        5.0
+      ],
+      "verify_dps": [
+        1.5,
+        3.5
+      ],
+      "maximum_command_rate_dps": 10.0,
+      "proposed_after_turntable_approval": {
+        "fit_dps": [
+          5.0,
+          20.0,
+          60.0
+        ],
+        "verify_dps": [
+          10.0,
+          40.0,
+          80.0
+        ],
+        "enabled": false,
+        "reason": "未核实2TD600连续速率、计量精度、加减速行程以及电缆缠绕风险；禁止自动执行"
+      }
+    },
+    "timing": {
+      "gyro_zero_seconds": 120.0,
+      "static_seconds": 5.0,
+      "rate_seconds": 5.0,
+      "settle_seconds": 3.0
+    },
+    "sensor_config": {
+      "chip": "ASM330LHHX",
+      "candidate_acc_fs_g": 8,
+      "candidate_gyro_fs_dps": 250,
+      "full_scale_policy": "use_effective_range_not_mandatory_match",
+      "release_policy": "MCU量程/ODR未知时仅允许试运行，不允许正式出厂放行",
+      "note": "候选量程不是自动标定启动门槛。程序使用已由旧版采集模块换算的g/°/s数值；未知量程时必须核对底层回退比例。标定期间有效换算量程不得变更。"
+    }
+  },
+  "fit_measurements": [
+    {
+      "step_id": "GYRO_ZERO_FIT",
+      "split": "fit",
+      "inner_target_deg": 0.0,
+      "outer_target_deg": 0.0,
+      "attempts": 1,
+      "retry_count": 0,
+      "frame_count": 5290,
+      "accepted_frames": 5290,
+      "acc_raw_samples": 84640,
+      "acc_accepted_samples": 80951,
+      "gyro_raw_samples": 84640,
+      "gyro_accepted_samples": 84516,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.027893945168487713,
+        0.005462167658655151,
+        1.009258776739354
+      ],
+      "gyro_raw_mean_dps": [
+        3.948859065241618,
+        -7.501710641752693,
+        -3.95895533117638
+      ],
+      "acc_std_g": [
+        0.00039022270139881676,
+        0.00036285787062298106,
+        0.0004212930404115301
+      ],
+      "gyro_std_dps": [
+        0.30109219501786966,
+        0.3564686751814988,
+        0.20508744363039838
+      ],
+      "inner_actual_mean_deg": 359.9999888544497,
+      "outer_actual_mean_deg": 359.99999399104115,
+      "inner_rate_mean_dps": -1.6729863244328922e-07,
+      "outer_rate_mean_dps": 4.4447679866536825e-07,
+      "temperature_mean_c": 23.81405733104915,
+      "temperature_span_c": 0.2421875,
+      "temperature_min_c": 23.703125,
+      "temperature_max_c": 23.9453125,
+      "reference": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "measured": [
+        3.948859065241618,
+        -7.501710641752693,
+        -3.95895533117638
+      ]
+    },
+    {
+      "step_id": "GYRO_FIT_Z_01",
+      "split": "fit",
+      "axis": "inner",
+      "target_rate_dps": 1.0,
+      "reference": [
+        -3.409815335159855e-06,
+        2.9027261028158335e-07,
+        0.9998552899027979
+      ],
+      "measured": [
+        4.072465697674418,
+        -7.404092635658916,
+        4.039390697674418
+      ],
+      "frame_count": 215,
+      "accepted_frames": 215,
+      "acc_raw_samples": 3440,
+      "acc_accepted_samples": 3289,
+      "gyro_raw_samples": 3440,
+      "gyro_accepted_samples": 3437,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.028126200290271734,
+        0.004395751416858332,
+        1.0092178291741205
+      ],
+      "gyro_raw_mean_dps": [
+        4.072465697674418,
+        -7.404092635658916,
+        4.039390697674418
+      ],
+      "acc_std_g": [
+        0.00038852696198198657,
+        0.00033089244964240214,
+        0.0004337227572656681
+      ],
+      "gyro_std_dps": [
+        0.31121070348640056,
+        0.34986360535975636,
+        0.23069434787646811
+      ],
+      "inner_actual_mean_deg": 184.8657749619595,
+      "outer_actual_mean_deg": 251.16277713808478,
+      "inner_rate_mean_dps": 0.9998552899027979,
+      "outer_rate_mean_dps": 3.422148273844906e-06,
+      "temperature_mean_c": 23.902307412790698,
+      "temperature_span_c": 0.10546875,
+      "temperature_min_c": 23.84765625,
+      "temperature_max_c": 23.953125
+    },
+    {
+      "step_id": "GYRO_FIT_Z_02",
+      "split": "fit",
+      "axis": "inner",
+      "target_rate_dps": -1.0,
+      "reference": [
+        -7.297737181843206e-06,
+        -6.156617984587331e-07,
+        -0.9998771301003002
+      ],
+      "measured": [
+        3.744003820960698,
+        -7.520998908296943,
+        -11.916806768558953
+      ],
+      "frame_count": 229,
+      "accepted_frames": 229,
+      "acc_raw_samples": 3664,
+      "acc_accepted_samples": 3506,
+      "gyro_raw_samples": 3664,
+      "gyro_accepted_samples": 3660,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.028267678023377627,
+        0.004453861927355758,
+        1.0091149062692943
+      ],
+      "gyro_raw_mean_dps": [
+        3.744003820960698,
+        -7.520998908296943,
+        -11.916806768558953
+      ],
+      "acc_std_g": [
+        0.00041703439906820084,
+        0.0003729201655291226,
+        0.00040564194683560324
+      ],
+      "gyro_std_dps": [
+        0.286520584767956,
+        0.3340643785340761,
+        0.23453358997943308
+      ],
+      "inner_actual_mean_deg": 175.17775283213786,
+      "outer_actual_mean_deg": 103.75547191718965,
+      "inner_rate_mean_dps": -0.9998771301003002,
+      "outer_rate_mean_dps": 7.323660793984675e-06,
+      "temperature_mean_c": 23.920220387554586,
+      "temperature_span_c": 0.1015625,
+      "temperature_min_c": 23.86328125,
+      "temperature_max_c": 23.96484375
+    },
+    {
+      "step_id": "GYRO_FIT_Z_03",
+      "split": "fit",
+      "axis": "inner",
+      "target_rate_dps": 2.0,
+      "reference": [
+        -1.0040980927272791e-07,
+        1.892891932087082e-08,
+        2.0000183657823105
+      ],
+      "measured": [
+        4.234307126696831,
+        -7.320335784313727,
+        12.027175904977376
+      ],
+      "frame_count": 221,
+      "accepted_frames": 221,
+      "acc_raw_samples": 3536,
+      "acc_accepted_samples": 3356,
+      "gyro_raw_samples": 3536,
+      "gyro_accepted_samples": 3530,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.028135899125892955,
+        0.004445509293421513,
+        1.0091521080169648
+      ],
+      "gyro_raw_mean_dps": [
+        4.234307126696831,
+        -7.320335784313727,
+        12.027175904977376
+      ],
+      "acc_std_g": [
+        0.0005063948953300782,
+        0.00041685171632269293,
+        0.0004063619497123842
+      ],
+      "gyro_std_dps": [
+        0.306594920034567,
+        0.3454325416845726,
+        0.2764217255456425
+      ],
+      "inner_actual_mean_deg": 190.67591554115262,
+      "outer_actual_mean_deg": 301.35743908343,
+      "inner_rate_mean_dps": 2.0000183657823105,
+      "outer_rate_mean_dps": 1.0217844091257786e-07,
+      "temperature_mean_c": 23.914610435520363,
+      "temperature_span_c": 0.109375,
+      "temperature_min_c": 23.84765625,
+      "temperature_max_c": 23.95703125
+    },
+    {
+      "step_id": "GYRO_FIT_Z_04",
+      "split": "fit",
+      "axis": "inner",
+      "target_rate_dps": -2.0,
+      "reference": [
+        6.1242133737454685e-06,
+        9.550660164392433e-07,
+        -1.9808871067992042
+      ],
+      "measured": [
+        3.564541284403671,
+        -7.572434633027518,
+        -19.929904434250762
+      ],
+      "frame_count": 218,
+      "accepted_frames": 218,
+      "acc_raw_samples": 3488,
+      "acc_accepted_samples": 3338,
+      "gyro_raw_samples": 3488,
+      "gyro_accepted_samples": 3480,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.02832731444261014,
+        0.004476770989389054,
+        1.0091258959599838
+      ],
+      "gyro_raw_mean_dps": [
+        3.564541284403671,
+        -7.572434633027518,
+        -19.929904434250762
+      ],
+      "acc_std_g": [
+        0.0003860458045412929,
+        0.0003541783251407149,
+        0.0004367902306707811
+      ],
+      "gyro_std_dps": [
+        0.3229427532866129,
+        0.3602411832771446,
+        0.21455192366114628
+      ],
+      "inner_actual_mean_deg": 171.13616691379372,
+      "outer_actual_mean_deg": 14.862421013867413,
+      "inner_rate_mean_dps": -1.9808871067992044,
+      "outer_rate_mean_dps": -6.198236889858973e-06,
+      "temperature_mean_c": 23.92221545298165,
+      "temperature_span_c": 0.109375,
+      "temperature_min_c": 23.85546875,
+      "temperature_max_c": 23.96484375
+    },
+    {
+      "step_id": "GYRO_FIT_Z_05",
+      "split": "fit",
+      "axis": "inner",
+      "target_rate_dps": 5.0,
+      "reference": [
+        -3.573721456762158e-05,
+        2.0130911476345936e-05,
+        4.980152464132705
+      ],
+      "measured": [
+        4.792700268817203,
+        -7.209,
+        35.99744086021504
+      ],
+      "frame_count": 217,
+      "accepted_frames": 217,
+      "acc_raw_samples": 3472,
+      "acc_accepted_samples": 3319,
+      "gyro_raw_samples": 3472,
+      "gyro_accepted_samples": 3467,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.027868680897309307,
+        0.004419666711610205,
+        1.0092093224884378
+      ],
+      "gyro_raw_mean_dps": [
+        4.792700268817203,
+        -7.209,
+        35.99744086021504
+      ],
+      "acc_std_g": [
+        0.0004696266072069823,
+        0.00039489896437976205,
+        0.00038827394374534914
+      ],
+      "gyro_std_dps": [
+        0.2852614397016578,
+        0.3361429404120943,
+        0.23044169004446752
+      ],
+      "inner_actual_mean_deg": 209.39272972845262,
+      "outer_actual_mean_deg": 102.85717831771025,
+      "inner_rate_mean_dps": 4.980152464132704,
+      "outer_rate_mean_dps": 4.101709523994672e-05,
+      "temperature_mean_c": 23.936707949308754,
+      "temperature_span_c": 0.1015625,
+      "temperature_min_c": 23.87890625,
+      "temperature_max_c": 23.98046875
+    },
+    {
+      "step_id": "GYRO_FIT_Z_06",
+      "split": "fit",
+      "axis": "inner",
+      "target_rate_dps": -5.0,
+      "reference": [
+        -2.5645250850748643e-05,
+        -1.451225527559282e-05,
+        -4.977856266605961
+      ],
+      "measured": [
+        3.0481358858858836,
+        -7.735750563063062,
+        -43.868665352852865
+      ],
+      "frame_count": 222,
+      "accepted_frames": 222,
+      "acc_raw_samples": 3552,
+      "acc_accepted_samples": 3397,
+      "gyro_raw_samples": 3552,
+      "gyro_accepted_samples": 3543,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.02828458689795565,
+        0.004434834367884366,
+        1.0091825243437116
+      ],
+      "gyro_raw_mean_dps": [
+        3.0481358858858836,
+        -7.735750563063062,
+        -43.868665352852865
+      ],
+      "acc_std_g": [
+        0.00044568078081122097,
+        0.00045222671990588644,
+        0.0004278473953969875
+      ],
+      "gyro_std_dps": [
+        0.3056737674885132,
+        0.335521206021782,
+        0.29306337501103885
+      ],
+      "inner_actual_mean_deg": 150.4951422064154,
+      "outer_actual_mean_deg": 0.00018795164453934434,
+      "inner_rate_mean_dps": -4.977856266605961,
+      "outer_rate_mean_dps": 2.9466666665603617e-05,
+      "temperature_mean_c": 23.9169481981982,
+      "temperature_span_c": 0.109375,
+      "temperature_min_c": 23.85546875,
+      "temperature_max_c": 23.96484375
+    },
+    {
+      "step_id": "GYRO_FIT_X_07",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": 1.0,
+      "reference": [
+        0.996320365012707,
+        0.08366456042501963,
+        1.3563368055555556e-07
+      ],
+      "measured": [
+        9.469080000000005,
+        -13.31671314814814,
+        -4.081432777777779
+      ],
+      "frame_count": 225,
+      "accepted_frames": 225,
+      "acc_raw_samples": 3600,
+      "acc_accepted_samples": 3453,
+      "gyro_raw_samples": 3600,
+      "gyro_accepted_samples": 3593,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.08729900490313394,
+        -0.07385065822547825,
+        -0.9809590096975989
+      ],
+      "gyro_raw_mean_dps": [
+        9.469080000000005,
+        -13.31671314814814,
+        -4.081432777777779
+      ],
+      "acc_std_g": [
+        0.0185853977391228,
+        0.017121071482746386,
+        0.0028131418208232045
+      ],
+      "gyro_std_dps": [
+        0.2994539897025341,
+        0.34317821164222156,
+        0.19661836069802902
+      ],
+      "inner_actual_mean_deg": 355.1999313693576,
+      "outer_actual_mean_deg": 184.8034375,
+      "inner_rate_mean_dps": 1.3563368055555556e-07,
+      "outer_rate_mean_dps": 0.9998269992404514,
+      "temperature_mean_c": 23.892847222222223,
+      "temperature_span_c": 0.125,
+      "temperature_min_c": 23.8203125,
+      "temperature_max_c": 23.9453125
+    },
+    {
+      "step_id": "GYRO_FIT_X_08",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": -1.0,
+      "reference": [
+        -0.9997818973082642,
+        8.548456811637344e-07,
+        -8.226818756473785e-06
+      ],
+      "measured": [
+        -1.5758040902140675,
+        -1.598278478593272,
+        -3.8979403669724793
+      ],
+      "frame_count": 218,
+      "accepted_frames": 218,
+      "acc_raw_samples": 3488,
+      "acc_accepted_samples": 3331,
+      "gyro_raw_samples": 3488,
+      "gyro_accepted_samples": 3486,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.03634879835059817,
+        0.039746093808179575,
+        -0.9849181903909161
+      ],
+      "gyro_raw_mean_dps": [
+        -1.5758040902140675,
+        -1.598278478593272,
+        -3.8979403669724793
+      ],
+      "acc_std_g": [
+        0.01877628754750328,
+        0.01719267015932767,
+        0.0016634529020290092
+      ],
+      "gyro_std_dps": [
+        0.3216172218223589,
+        0.3573478567048946,
+        0.18080601464743645
+      ],
+      "inner_actual_mean_deg": 4.898973445860891e-05,
+      "outer_actual_mean_deg": 175.15595875311334,
+      "inner_rate_mean_dps": -8.226818756473785e-06,
+      "outer_rate_mean_dps": -0.9997818973086295,
+      "temperature_mean_c": 23.89625143348624,
+      "temperature_span_c": 0.13671875,
+      "temperature_min_c": 23.8203125,
+      "temperature_max_c": 23.95703125
+    },
+    {
+      "step_id": "GYRO_FIT_X_09",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": 2.0,
+      "reference": [
+        2.0002622771632352,
+        4.4298382381099605e-06,
+        -9.235582853618421e-06
+      ],
+      "measured": [
+        14.963218932748536,
+        -19.137431834795322,
+        -4.136771381578946
+      ],
+      "frame_count": 228,
+      "accepted_frames": 228,
+      "acc_raw_samples": 3648,
+      "acc_accepted_samples": 3498,
+      "gyro_raw_samples": 3648,
+      "gyro_accepted_samples": 3643,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.16115716817504505,
+        -0.14176746038092022,
+        -0.9638656694366126
+      ],
+      "gyro_raw_mean_dps": [
+        14.963218932748536,
+        -19.137431834795322,
+        -4.136771381578946
+      ],
+      "acc_std_g": [
+        0.036644677801456194,
+        0.03379845580997743,
+        0.010689112723834581
+      ],
+      "gyro_std_dps": [
+        0.32994436274660965,
+        0.3846646644721262,
+        0.2195527401885419
+      ],
+      "inner_actual_mean_deg": 359.99987311112255,
+      "outer_actual_mean_deg": 190.6481714081346,
+      "inner_rate_mean_dps": -9.235582853618421e-06,
+      "outer_rate_mean_dps": 2.00026227716814,
+      "temperature_mean_c": 23.872481496710527,
+      "temperature_span_c": 0.1328125,
+      "temperature_min_c": 23.8125,
+      "temperature_max_c": 23.9453125
+    },
+    {
+      "step_id": "GYRO_FIT_X_10",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": -2.0,
+      "reference": [
+        -2.0002076966387152,
+        3.7309256296839993e-06,
+        -2.287826182665802e-06
+      ],
+      "measured": [
+        -7.0218502604166675,
+        4.191115885416669,
+        -3.826442708333338
+      ],
+      "frame_count": 224,
+      "accepted_frames": 224,
+      "acc_raw_samples": 3584,
+      "acc_accepted_samples": 3452,
+      "gyro_raw_samples": 3584,
+      "gyro_accepted_samples": 3580,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.10961840112118168,
+        0.10691176017546437,
+        -0.9731161160963671
+      ],
+      "gyro_raw_mean_dps": [
+        -7.0218502604166675,
+        4.191115885416669,
+        -3.826442708333338
+      ],
+      "acc_std_g": [
+        0.03705037499394361,
+        0.033942336088610775,
+        0.008171351277554577
+      ],
+      "gyro_std_dps": [
+        0.30444630390196503,
+        0.36150747065360256,
+        0.21300850609961558
+      ],
+      "inner_actual_mean_deg": 0.00010687204764638279,
+      "outer_actual_mean_deg": 169.42014898572648,
+      "inner_rate_mean_dps": -2.287826182665802e-06,
+      "outer_rate_mean_dps": -2.0002076966421947,
+      "temperature_mean_c": 23.845650809151785,
+      "temperature_span_c": 0.14453125,
+      "temperature_min_c": 23.78125,
+      "temperature_max_c": 23.92578125
+    },
+    {
+      "step_id": "GYRO_FIT_X_11",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": 5.0,
+      "reference": [
+        4.979742499400419,
+        2.383597668155091e-05,
+        -3.526475694444444e-06
+      ],
+      "measured": [
+        31.418853247863243,
+        -36.727888675213684,
+        -4.360747820512819
+      ],
+      "frame_count": 225,
+      "accepted_frames": 225,
+      "acc_raw_samples": 3600,
+      "acc_accepted_samples": 3457,
+      "gyro_raw_samples": 3600,
+      "gyro_accepted_samples": 3595,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.37893402197496956,
+        -0.3431576671137566,
+        -0.8413931641247447
+      ],
+      "gyro_raw_mean_dps": [
+        31.418853247863243,
+        -36.727888675213684,
+        -4.360747820512819
+      ],
+      "acc_std_g": [
+        0.07935864302304543,
+        0.07361761782993902,
+        0.064607280112288
+      ],
+      "gyro_std_dps": [
+        0.29490958706782316,
+        0.3897495315873062,
+        0.214743945856421
+      ],
+      "inner_actual_mean_deg": 359.9997257486979,
+      "outer_actual_mean_deg": 209.25036424424914,
+      "inner_rate_mean_dps": -3.5264756944444443e-06,
+      "outer_rate_mean_dps": 4.9797424994574655,
+      "temperature_mean_c": 23.83861111111111,
+      "temperature_span_c": 0.13671875,
+      "temperature_min_c": 23.77734375,
+      "temperature_max_c": 23.9140625
+    },
+    {
+      "step_id": "GYRO_FIT_X_12",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": -5.0,
+      "reference": [
+        -4.975168702782218,
+        2.156100174716291e-05,
+        4.85334686547248e-07
+      ],
+      "measured": [
+        -23.519376508295636,
+        21.775454751131207,
+        -3.6209304298642526
+      ],
+      "frame_count": 221,
+      "accepted_frames": 221,
+      "acc_raw_samples": 3536,
+      "acc_accepted_samples": 3363,
+      "gyro_raw_samples": 3536,
+      "gyro_accepted_samples": 3529,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.3328297235592462,
+        0.3106985702333301,
+        -0.8657664451262163
+      ],
+      "gyro_raw_mean_dps": [
+        -23.519376508295636,
+        21.775454751131207,
+        -3.6209304298642526
+      ],
+      "acc_std_g": [
+        0.08265237687185716,
+        0.07523717567312073,
+        0.05854360448983662
+      ],
+      "gyro_std_dps": [
+        0.2995926018358493,
+        0.4043140926771929,
+        0.2211237129906264
+      ],
+      "inner_actual_mean_deg": 0.0002483040226330534,
+      "outer_actual_mean_deg": 150.86909574620864,
+      "inner_rate_mean_dps": 4.85334686547248e-07,
+      "outer_rate_mean_dps": -4.975168702828938,
+      "temperature_mean_c": 23.788726668552037,
+      "temperature_span_c": 0.109375,
+      "temperature_min_c": 23.7421875,
+      "temperature_max_c": 23.8515625
+    },
+    {
+      "step_id": "GYRO_FIT_Y_13",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": 1.0,
+      "reference": [
+        -3.821307780835725e-06,
+        0.9998199187884463,
+        -5.636129293355856e-06
+      ],
+      "measured": [
+        9.85426051051051,
+        -2.0641341966966964,
+        -4.209559309309308
+      ],
+      "frame_count": 222,
+      "accepted_frames": 222,
+      "acc_raw_samples": 3552,
+      "acc_accepted_samples": 3400,
+      "gyro_raw_samples": 3552,
+      "gyro_accepted_samples": 3548,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.03360068042066794,
+        -0.08075340256348378,
+        -0.9831892333259088
+      ],
+      "gyro_raw_mean_dps": [
+        9.85426051051051,
+        -2.0641341966966964,
+        -4.209559309309308
+      ],
+      "acc_std_g": [
+        0.017251817078707883,
+        0.018339922870714467,
+        0.002086026168591782
+      ],
+      "gyro_std_dps": [
+        0.31543948997624915,
+        0.34663918807966654,
+        0.20378760300540147
+      ],
+      "inner_actual_mean_deg": 269.999781015757,
+      "outer_actual_mean_deg": 184.95093096483936,
+      "inner_rate_mean_dps": -5.636129293355856e-06,
+      "outer_rate_mean_dps": 0.9998199187957488,
+      "temperature_mean_c": 23.77178350225225,
+      "temperature_span_c": 0.12109375,
+      "temperature_min_c": 23.71484375,
+      "temperature_max_c": 23.8359375
+    },
+    {
+      "step_id": "GYRO_FIT_Y_14",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": -1.0,
+      "reference": [
+        -3.0858667082052944e-06,
+        -0.9996653917053064,
+        1.0443793402777777e-05
+      ],
+      "measured": [
+        -1.932482222222223,
+        -12.84944370370371,
+        -3.776094259259261
+      ],
+      "frame_count": 225,
+      "accepted_frames": 225,
+      "acc_raw_samples": 3600,
+      "acc_accepted_samples": 3473,
+      "gyro_raw_samples": 3600,
+      "gyro_accepted_samples": 3596,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.08256351407692308,
+        0.04326531957305659,
+        -0.9824921582747251
+      ],
+      "gyro_raw_mean_dps": [
+        -1.932482222222223,
+        -12.84944370370371,
+        -3.776094259259261
+      ],
+      "acc_std_g": [
+        0.017142726428934274,
+        0.01834080178717584,
+        0.0022885224396324505
+      ],
+      "gyro_std_dps": [
+        0.3069467388933851,
+        0.3672246141633126,
+        0.20048844436407157
+      ],
+      "inner_actual_mean_deg": 270.00017686631946,
+      "outer_actual_mean_deg": 175.19822740342883,
+      "inner_rate_mean_dps": 1.0443793402777777e-05,
+      "outer_rate_mean_dps": -0.9996653917100694,
+      "temperature_mean_c": 23.767309027777777,
+      "temperature_span_c": 0.12109375,
+      "temperature_min_c": 23.703125,
+      "temperature_max_c": 23.82421875
+    },
+    {
+      "step_id": "GYRO_FIT_Y_15",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": 2.0,
+      "reference": [
+        -1.4048855634786927e-05,
+        2.0001855297130016,
+        -1.0267596378504674e-05
+      ],
+      "measured": [
+        15.762051596573212,
+        3.404032126168223,
+        -4.479649338006231
+      ],
+      "frame_count": 214,
+      "accepted_frames": 214,
+      "acc_raw_samples": 3424,
+      "acc_accepted_samples": 3276,
+      "gyro_raw_samples": 3424,
+      "gyro_accepted_samples": 3417,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.10160948363031055,
+        -0.15258620140679027,
+        -0.9694169144588081
+      ],
+      "gyro_raw_mean_dps": [
+        15.762051596573212,
+        3.404032126168223,
+        -4.479649338006231
+      ],
+      "acc_std_g": [
+        0.034288869835866535,
+        0.03614986361473808,
+        0.009135776622063718
+      ],
+      "gyro_std_dps": [
+        0.32738560185471394,
+        0.3448380779506641,
+        0.20771024329874976
+      ],
+      "inner_actual_mean_deg": 269.9995975672642,
+      "outer_actual_mean_deg": 190.68094335538206,
+      "inner_rate_mean_dps": -1.0267596378504672e-05,
+      "outer_rate_mean_dps": 2.0001855297623394,
+      "temperature_mean_c": 23.76233936915888,
+      "temperature_span_c": 0.109375,
+      "temperature_min_c": 23.71875,
+      "temperature_max_c": 23.828125
+    },
+    {
+      "step_id": "GYRO_FIT_Y_16",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": -2.0,
+      "reference": [
+        -1.2657935811474155e-05,
+        -2.000286417229875,
+        -3.6397111525229356e-06
+      ],
+      "measured": [
+        -7.850213493883788,
+        -18.287198967889907,
+        -3.520424694189602
+      ],
+      "frame_count": 218,
+      "accepted_frames": 218,
+      "acc_raw_samples": 3488,
+      "acc_accepted_samples": 3345,
+      "gyro_raw_samples": 3488,
+      "gyro_accepted_samples": 3483,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.15296351524788282,
+        0.11879523466495279,
+        -0.9668296779797617
+      ],
+      "gyro_raw_mean_dps": [
+        -7.850213493883788,
+        -18.287198967889907,
+        -3.520424694189602
+      ],
+      "acc_std_g": [
+        0.03320822231270256,
+        0.035747404057241715,
+        0.00961094650320122
+      ],
+      "gyro_std_dps": [
+        0.3302902841329457,
+        0.36051542839099626,
+        0.1993557672074393
+      ],
+      "inner_actual_mean_deg": 270.00036257122633,
+      "outer_actual_mean_deg": 169.20478253845775,
+      "inner_rate_mean_dps": -3.639711152522936e-06,
+      "outer_rate_mean_dps": -2.0002864172699253,
+      "temperature_mean_c": 23.752042717889907,
+      "temperature_span_c": 0.12109375,
+      "temperature_min_c": 23.703125,
+      "temperature_max_c": 23.82421875
+    },
+    {
+      "step_id": "GYRO_FIT_Y_17",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": 5.0,
+      "reference": [
+        -7.514713869062991e-05,
+        4.974056735000922,
+        5.832248263888889e-06
+      ],
+      "measured": [
+        33.45990796296296,
+        19.604183148148138,
+        -5.148586851851848
+      ],
+      "frame_count": 225,
+      "accepted_frames": 225,
+      "acc_raw_samples": 3600,
+      "acc_accepted_samples": 3462,
+      "gyro_raw_samples": 3600,
+      "gyro_accepted_samples": 3595,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.3051057756509971,
+        -0.3651421687804234,
+        -0.8594134375767202
+      ],
+      "gyro_raw_mean_dps": [
+        33.45990796296296,
+        19.604183148148138,
+        -5.148586851851848
+      ],
+      "acc_std_g": [
+        0.07652974271967182,
+        0.07909182988628162,
+        0.05992863898194298
+      ],
+      "gyro_std_dps": [
+        0.323610664057658,
+        0.3847268032197736,
+        0.22309640852182286
+      ],
+      "inner_actual_mean_deg": 269.9991343858507,
+      "outer_actual_mean_deg": 208.822197265625,
+      "inner_rate_mean_dps": 5.832248263888889e-06,
+      "outer_rate_mean_dps": 4.974056735568577,
+      "temperature_mean_c": 23.74529513888889,
+      "temperature_span_c": 0.10546875,
+      "temperature_min_c": 23.703125,
+      "temperature_max_c": 23.80859375
+    },
+    {
+      "step_id": "GYRO_FIT_Y_18",
+      "split": "fit",
+      "axis": "outer",
+      "target_rate_dps": -5.0,
+      "reference": [
+        -7.077259905297843e-05,
+        -4.977703678212217,
+        -8.247994087837838e-06
+      ],
+      "measured": [
+        -25.541711148648634,
+        -34.48206700450451,
+        -2.8454382507507514
+      ],
+      "frame_count": 222,
+      "accepted_frames": 222,
+      "acc_raw_samples": 3552,
+      "acc_accepted_samples": 3403,
+      "gyro_raw_samples": 3552,
+      "gyro_accepted_samples": 3548,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.35558237374373003,
+        0.33955359555262693,
+        -0.8484172519513331
+      ],
+      "gyro_raw_mean_dps": [
+        -25.541711148648634,
+        -34.48206700450451,
+        -2.8454382507507514
+      ],
+      "acc_std_g": [
+        0.07332206957487113,
+        0.08064069350538956,
+        0.062259860255626576
+      ],
+      "gyro_std_dps": [
+        0.3233751721133427,
+        0.3701549490242028,
+        0.2016637032235933
+      ],
+      "inner_actual_mean_deg": 270.00081462688274,
+      "outer_actual_mean_deg": 150.5590789382522,
+      "inner_rate_mean_dps": -8.247994087837838e-06,
+      "outer_rate_mean_dps": -4.977703678715336,
+      "temperature_mean_c": 23.7255419481982,
+      "temperature_span_c": 0.09765625,
+      "temperature_min_c": 23.6875,
+      "temperature_max_c": 23.78515625
+    }
+  ],
+  "validation_measurements": [
+    {
+      "step_id": "GYRO_ZERO_VAL",
+      "split": "validate",
+      "inner_target_deg": 0.0,
+      "outer_target_deg": 0.0,
+      "attempts": 1,
+      "retry_count": 0,
+      "frame_count": 445,
+      "accepted_frames": 445,
+      "acc_raw_samples": 7120,
+      "acc_accepted_samples": 6808,
+      "gyro_raw_samples": 7120,
+      "gyro_accepted_samples": 7113,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.02779151081100549,
+        0.00536061587305017,
+        1.0093677330193034
+      ],
+      "gyro_raw_mean_dps": [
+        3.952779494382023,
+        -7.506311704119853,
+        -3.9548525280898894
+      ],
+      "acc_std_g": [
+        0.00039311532298663373,
+        0.00035763288008238065,
+        0.00039952524824789297
+      ],
+      "gyro_std_dps": [
+        0.30864381792564793,
+        0.3414284961592606,
+        0.20901941985921832
+      ],
+      "inner_actual_mean_deg": 359.99998779296874,
+      "outer_actual_mean_deg": 359.99998882097685,
+      "inner_rate_mean_dps": -2.0573648174157303e-06,
+      "outer_rate_mean_dps": -2.7954523440442584e-06,
+      "temperature_mean_c": 23.79355688202247,
+      "temperature_span_c": 0.125,
+      "temperature_min_c": 23.7265625,
+      "temperature_max_c": 23.8515625,
+      "reference": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "measured": [
+        3.952779494382023,
+        -7.506311704119853,
+        -3.9548525280898894
+      ]
+    },
+    {
+      "step_id": "GYRO_VAL_Z_01",
+      "split": "validate",
+      "axis": "inner",
+      "target_rate_dps": 1.5,
+      "reference": [
+        -6.146539451332839e-06,
+        7.417079519456138e-07,
+        1.4969709929045258
+      ],
+      "measured": [
+        4.153606606606609,
+        -7.335228791291292,
+        8.034909534534531
+      ],
+      "frame_count": 222,
+      "accepted_frames": 222,
+      "acc_raw_samples": 3552,
+      "acc_accepted_samples": 3382,
+      "gyro_raw_samples": 3552,
+      "gyro_accepted_samples": 3548,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.02801604740949743,
+        0.004423409738515991,
+        1.0092349140798766
+      ],
+      "gyro_raw_mean_dps": [
+        4.153606606606609,
+        -7.335228791291292,
+        8.034909534534531
+      ],
+      "acc_std_g": [
+        0.00043335179548774296,
+        0.0003608486994870491,
+        0.0004041765610384079
+      ],
+      "gyro_std_dps": [
+        0.2983128892591964,
+        0.3532716244607003,
+        0.22026971977244675
+      ],
+      "inner_actual_mean_deg": 186.88065991100964,
+      "outer_actual_mean_deg": 264.3242991907281,
+      "inner_rate_mean_dps": 1.4969709929045256,
+      "outer_rate_mean_dps": 6.1911289691599895e-06,
+      "temperature_mean_c": 23.897047438063062,
+      "temperature_span_c": 0.13671875,
+      "temperature_min_c": 23.828125,
+      "temperature_max_c": 23.96484375
+    },
+    {
+      "step_id": "GYRO_VAL_Z_02",
+      "split": "validate",
+      "axis": "inner",
+      "target_rate_dps": -1.5,
+      "reference": [
+        -7.691969451967262e-06,
+        -9.275040660505773e-07,
+        -1.4971360530097053
+      ],
+      "measured": [
+        3.6780053230543333,
+        -7.529052496328929,
+        -15.924763582966236
+      ],
+      "frame_count": 227,
+      "accepted_frames": 227,
+      "acc_raw_samples": 3632,
+      "acc_accepted_samples": 3465,
+      "gyro_raw_samples": 3632,
+      "gyro_accepted_samples": 3629,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.02805229832058543,
+        0.004343016815930031,
+        1.0093025395215094
+      ],
+      "gyro_raw_mean_dps": [
+        3.6780053230543333,
+        -7.529052496328929,
+        -15.924763582966236
+      ],
+      "acc_std_g": [
+        0.00039528481419716133,
+        0.0003168676810686139,
+        0.0004601704119249022
+      ],
+      "gyro_std_dps": [
+        0.2919152021287019,
+        0.33112706898078487,
+        0.20290367506354812
+      ],
+      "inner_actual_mean_deg": 173.12442211537635,
+      "outer_actual_mean_deg": 72.95156876432176,
+      "inner_rate_mean_dps": -1.4971360530097053,
+      "outer_rate_mean_dps": 7.747687257669657e-06,
+      "temperature_mean_c": 23.917538546255507,
+      "temperature_span_c": 0.1171875,
+      "temperature_min_c": 23.85546875,
+      "temperature_max_c": 23.97265625
+    },
+    {
+      "step_id": "GYRO_VAL_Z_03",
+      "split": "validate",
+      "axis": "inner",
+      "target_rate_dps": 3.5,
+      "reference": [
+        -1.3123064208642177e-06,
+        4.604841563615736e-07,
+        3.495988464355469
+      ],
+      "measured": [
+        4.554011050724638,
+        -7.256717391304345,
+        24.03438840579708
+      ],
+      "frame_count": 230,
+      "accepted_frames": 230,
+      "acc_raw_samples": 3680,
+      "acc_accepted_samples": 3514,
+      "gyro_raw_samples": 3680,
+      "gyro_accepted_samples": 3679,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.027890774873984715,
+        0.004282549712931993,
+        1.0092927018979927
+      ],
+      "gyro_raw_mean_dps": [
+        4.554011050724638,
+        -7.256717391304345,
+        24.03438840579708
+      ],
+      "acc_std_g": [
+        0.00042247129491386503,
+        0.00040439870644852916,
+        0.0004278087731451029
+      ],
+      "gyro_std_dps": [
+        0.31896267773172476,
+        0.39309724485106623,
+        0.2804211101812068
+      ],
+      "inner_actual_mean_deg": 199.33581005594004,
+      "outer_actual_mean_deg": 165.9130376601295,
+      "inner_rate_mean_dps": 3.495988464355469,
+      "outer_rate_mean_dps": 1.3907529617110577e-06,
+      "temperature_mean_c": 23.934358016304348,
+      "temperature_span_c": 0.0859375,
+      "temperature_min_c": 23.88671875,
+      "temperature_max_c": 23.97265625
+    },
+    {
+      "step_id": "GYRO_VAL_Z_04",
+      "split": "validate",
+      "axis": "inner",
+      "target_rate_dps": -3.5,
+      "reference": [
+        8.564102822125415e-06,
+        3.065437400285335e-06,
+        -3.4972704478672583
+      ],
+      "measured": [
+        3.3071322544642845,
+        -7.645331473214284,
+        -31.898241815476208
+      ],
+      "frame_count": 224,
+      "accepted_frames": 224,
+      "acc_raw_samples": 3584,
+      "acc_accepted_samples": 3428,
+      "gyro_raw_samples": 3584,
+      "gyro_accepted_samples": 3574,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.02823880974130036,
+        0.004464969599113683,
+        1.0092363671239286
+      ],
+      "gyro_raw_mean_dps": [
+        3.3071322544642845,
+        -7.645331473214284,
+        -31.898241815476208
+      ],
+      "acc_std_g": [
+        0.0005292025842291765,
+        0.0004506581073652487,
+        0.0003849448061947131
+      ],
+      "gyro_std_dps": [
+        0.32052161048625805,
+        0.35145360795474434,
+        0.325082408843758
+      ],
+      "inner_actual_mean_deg": 160.30566542489188,
+      "outer_actual_mean_deg": 0.0001015356385047588,
+      "inner_rate_mean_dps": -3.4972704478672574,
+      "outer_rate_mean_dps": -9.096195006869883e-06,
+      "temperature_mean_c": 23.959123883928573,
+      "temperature_span_c": 0.10546875,
+      "temperature_min_c": 23.9140625,
+      "temperature_max_c": 24.01953125
+    },
+    {
+      "step_id": "GYRO_VAL_X_05",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": 1.5,
+      "reference": [
+        1.4971468826200311,
+        2.7134224253748126e-06,
+        -1.0908998515271493e-05
+      ],
+      "measured": [
+        12.176167420814481,
+        -16.205372171945687,
+        -4.076741138763197
+      ],
+      "frame_count": 221,
+      "accepted_frames": 221,
+      "acc_raw_samples": 3536,
+      "acc_accepted_samples": 3396,
+      "gyro_raw_samples": 3536,
+      "gyro_accepted_samples": 3534,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.11328605436680586,
+        -0.09771386887835018,
+        -0.9761096386482102
+      ],
+      "gyro_raw_mean_dps": [
+        12.176167420814481,
+        -16.205372171945687,
+        -4.076741138763197
+      ],
+      "acc_std_g": [
+        0.027379384472501038,
+        0.025161300615208944,
+        0.005464116495222917
+      ],
+      "gyro_std_dps": [
+        0.307823815973606,
+        0.3552241121544836,
+        0.2005886312732511
+      ],
+      "inner_actual_mean_deg": 359.9998961573812,
+      "outer_actual_mean_deg": 186.8512457247773,
+      "inner_rate_mean_dps": -1.0908998515271493e-05,
+      "outer_rate_mean_dps": 1.49714688262249,
+      "temperature_mean_c": 23.947062358597286,
+      "temperature_span_c": 0.1171875,
+      "temperature_min_c": 23.8671875,
+      "temperature_max_c": 23.984375
+    },
+    {
+      "step_id": "GYRO_VAL_X_06",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": -1.5,
+      "reference": [
+        -1.4965488450930589,
+        2.0151057125286214e-06,
+        9.153685479157603e-06
+      ],
+      "measured": [
+        -4.2745773542600904,
+        1.3253951793721968,
+        -3.8778286621823606
+      ],
+      "frame_count": 223,
+      "accepted_frames": 223,
+      "acc_raw_samples": 3568,
+      "acc_accepted_samples": 3424,
+      "gyro_raw_samples": 3568,
+      "gyro_accepted_samples": 3559,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.06253568510754941,
+        0.06381724231282547,
+        -0.9818148529178784
+      ],
+      "gyro_raw_mean_dps": [
+        -4.2745773542600904,
+        1.3253951793721968,
+        -3.8778286621823606
+      ],
+      "acc_std_g": [
+        0.027752244096189628,
+        0.025473767602693806,
+        0.003734295527740247
+      ],
+      "gyro_std_dps": [
+        0.31005810863701827,
+        0.3342767428788813,
+        0.20446894541788102
+      ],
+      "inner_actual_mean_deg": 7.71488702016561e-05,
+      "outer_actual_mean_deg": 173.11061239884037,
+      "inner_rate_mean_dps": 9.153685479157603e-06,
+      "outer_rate_mean_dps": -1.4965488450944155,
+      "temperature_mean_c": 23.945890554932735,
+      "temperature_span_c": 0.1015625,
+      "temperature_min_c": 23.88671875,
+      "temperature_max_c": 23.98828125
+    },
+    {
+      "step_id": "GYRO_VAL_X_07",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": 3.5,
+      "reference": [
+        3.496762847875642,
+        1.315594186241945e-05,
+        -4.9937855113636355e-06
+      ],
+      "measured": [
+        23.230931818181816,
+        -27.962625568181828,
+        -4.252342234848484
+      ],
+      "frame_count": 220,
+      "accepted_frames": 220,
+      "acc_raw_samples": 3520,
+      "acc_accepted_samples": 3348,
+      "gyro_raw_samples": 3520,
+      "gyro_accepted_samples": 3517,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.2674477047995753,
+        -0.23990786866446062,
+        -0.9188598340093241
+      ],
+      "gyro_raw_mean_dps": [
+        23.230931818181816,
+        -27.962625568181828,
+        -4.252342234848484
+      ],
+      "acc_std_g": [
+        0.0597085120949819,
+        0.055121349687741364,
+        0.03092074233445528
+      ],
+      "gyro_std_dps": [
+        0.32030836193322465,
+        0.3862276430120384,
+        0.22617467426255006
+      ],
+      "inner_actual_mean_deg": 359.9997844349254,
+      "outer_actual_mean_deg": 199.37718034224076,
+      "inner_rate_mean_dps": -4.993785511363636e-06,
+      "outer_rate_mean_dps": 3.4967628479003907,
+      "temperature_mean_c": 23.92491122159091,
+      "temperature_span_c": 0.1171875,
+      "temperature_min_c": 23.86328125,
+      "temperature_max_c": 23.98046875
+    },
+    {
+      "step_id": "GYRO_VAL_X_08",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": -3.5,
+      "reference": [
+        -3.498207263330181,
+        1.1107086453522324e-05,
+        -2.308722560381676e-06
+      ],
+      "measured": [
+        -15.277059230194325,
+        12.961276905829592,
+        -3.6973196935724957
+      ],
+      "frame_count": 223,
+      "accepted_frames": 223,
+      "acc_raw_samples": 3568,
+      "acc_accepted_samples": 3424,
+      "gyro_raw_samples": 3568,
+      "gyro_accepted_samples": 3565,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.22504970972995622,
+        0.21249701786556127,
+        -0.931886082268516
+      ],
+      "gyro_raw_mean_dps": [
+        -15.277059230194325,
+        12.961276905829592,
+        -3.6973196935724957
+      ],
+      "acc_std_g": [
+        0.06260585480414908,
+        0.057131564218722355,
+        0.02827493542000047
+      ],
+      "gyro_std_dps": [
+        0.32871398782724687,
+        0.39883663009248566,
+        0.21134673415883357
+      ],
+      "inner_actual_mean_deg": 0.00018191865963533503,
+      "outer_actual_mean_deg": 160.11145820104488,
+      "inner_rate_mean_dps": -2.3087225603816757e-06,
+      "outer_rate_mean_dps": -3.498207263347814,
+      "temperature_mean_c": 23.906512752242154,
+      "temperature_span_c": 0.14453125,
+      "temperature_min_c": 23.828125,
+      "temperature_max_c": 23.97265625
+    },
+    {
+      "step_id": "GYRO_VAL_Y_09",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": 1.5,
+      "reference": [
+        -8.496183706257039e-06,
+        1.496076122242392,
+        -2.0623751426940638e-05
+      ],
+      "measured": [
+        12.814939687975645,
+        0.6667699771689499,
+        -4.340751141552511
+      ],
+      "frame_count": 219,
+      "accepted_frames": 219,
+      "acc_raw_samples": 3504,
+      "acc_accepted_samples": 3338,
+      "gyro_raw_samples": 3504,
+      "gyro_accepted_samples": 3502,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.05639395505105626,
+        -0.10493714683146006,
+        -0.9796337076323033
+      ],
+      "gyro_raw_mean_dps": [
+        12.814939687975645,
+        0.6667699771689499,
+        -4.340751141552511
+      ],
+      "acc_std_g": [
+        0.026099447930281995,
+        0.027611747402397795,
+        0.004367966433739287
+      ],
+      "gyro_std_dps": [
+        0.3086508285823033,
+        0.35106432239554486,
+        0.1936052647529153
+      ],
+      "inner_actual_mean_deg": 269.99967461851634,
+      "outer_actual_mean_deg": 186.8670735816433,
+      "inner_rate_mean_dps": -2.0623751426940638e-05,
+      "outer_rate_mean_dps": 1.4960761222665169,
+      "temperature_mean_c": 23.87482163242009,
+      "temperature_span_c": 0.1328125,
+      "temperature_min_c": 23.8046875,
+      "temperature_max_c": 23.9375
+    },
+    {
+      "step_id": "GYRO_VAL_Y_10",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": -1.5,
+      "reference": [
+        -6.7602394976549645e-06,
+        -1.4966522616437798,
+        1.6391537595524015e-05
+      ],
+      "measured": [
+        -4.871702328966524,
+        -15.626952510917024,
+        -3.6297729257641915
+      ],
+      "frame_count": 229,
+      "accepted_frames": 229,
+      "acc_raw_samples": 3664,
+      "acc_accepted_samples": 3509,
+      "gyro_raw_samples": 3664,
+      "gyro_accepted_samples": 3656,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.10700797847145582,
+        0.06937974845941908,
+        -0.978227010211622
+      ],
+      "gyro_raw_mean_dps": [
+        -4.871702328966524,
+        -15.626952510917024,
+        -3.6297729257641915
+      ],
+      "acc_std_g": [
+        0.025720627645238133,
+        0.0276127693062579,
+        0.004809033608942496
+      ],
+      "gyro_std_dps": [
+        0.32144751247592984,
+        0.37041880794093834,
+        0.21800882185944517
+      ],
+      "inner_actual_mean_deg": 270.00025879972367,
+      "outer_actual_mean_deg": 173.132734540248,
+      "inner_rate_mean_dps": 1.639153759552402e-05,
+      "outer_rate_mean_dps": -1.4966522616590474,
+      "temperature_mean_c": 23.859869677947597,
+      "temperature_span_c": 0.12890625,
+      "temperature_min_c": 23.79296875,
+      "temperature_max_c": 23.921875
+    },
+    {
+      "step_id": "GYRO_VAL_Y_11",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": 3.5,
+      "reference": [
+        -4.048950660642606e-05,
+        3.495249452912377,
+        8.211007567264574e-07
+      ],
+      "measured": [
+        24.63837350523171,
+        11.473281576980565,
+        -4.7827122571001475
+      ],
+      "frame_count": 223,
+      "accepted_frames": 223,
+      "acc_raw_samples": 3568,
+      "acc_accepted_samples": 3418,
+      "gyro_raw_samples": 3568,
+      "gyro_accepted_samples": 3565,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        0.2012868108879909,
+        -0.25696480701370755,
+        -0.929263437272705
+      ],
+      "gyro_raw_mean_dps": [
+        24.63837350523171,
+        11.473281576980565,
+        -4.7827122571001475
+      ],
+      "acc_std_g": [
+        0.05859793766795956,
+        0.06121618788319878,
+        0.029192020289877108
+      ],
+      "gyro_std_dps": [
+        0.33767231937734415,
+        0.38944919709978376,
+        0.2043763999886229
+      ],
+      "inner_actual_mean_deg": 269.9993362768883,
+      "outer_actual_mean_deg": 199.28626199901905,
+      "inner_rate_mean_dps": 8.211007567264574e-07,
+      "outer_rate_mean_dps": 3.495249453146896,
+      "temperature_mean_c": 23.870340526905828,
+      "temperature_span_c": 0.125,
+      "temperature_min_c": 23.8125,
+      "temperature_max_c": 23.9375
+    },
+    {
+      "step_id": "GYRO_VAL_Y_12",
+      "split": "validate",
+      "axis": "outer",
+      "target_rate_dps": -3.5,
+      "reference": [
+        -3.746298850282089e-05,
+        -3.4965758597168417,
+        8.138020833333334e-07
+      ],
+      "measured": [
+        -16.71780055555556,
+        -26.398751296296314,
+        -3.1650201851851834
+      ],
+      "frame_count": 225,
+      "accepted_frames": 225,
+      "acc_raw_samples": 3600,
+      "acc_accepted_samples": 3449,
+      "gyro_raw_samples": 3600,
+      "gyro_accepted_samples": 3596,
+      "filter_method": "per_frame_MAD_1.4826_then_segment_MAD_1.4826",
+      "filter_sigma": 6.0,
+      "reject_fraction": 0.0,
+      "acc_raw_mean_g": [
+        -0.24940087954619442,
+        0.2233109862553927,
+        -0.9249770178032147
+      ],
+      "gyro_raw_mean_dps": [
+        -16.71780055555556,
+        -26.398751296296314,
+        -3.1650201851851834
+      ],
+      "acc_std_g": [
+        0.05698264659803593,
+        0.06186249555760232,
+        0.030145244418097274
+      ],
+      "gyro_std_dps": [
+        0.31478429340042513,
+        0.41581267406542954,
+        0.20577936794808624
+      ],
+      "inner_actual_mean_deg": 270.00061387803817,
+      "outer_actual_mean_deg": 160.67963033040365,
+      "inner_rate_mean_dps": 8.138020833333334e-07,
+      "outer_rate_mean_dps": -3.4965758599175345,
+      "temperature_mean_c": 23.84904513888889,
+      "temperature_span_c": 0.140625,
+      "temperature_min_c": 23.78125,
+      "temperature_max_c": 23.921875
+    }
+  ],
+  "tested_rate_points_dps": [
+    1.0,
+    1.5,
+    2.0,
+    3.5,
+    5.0
+  ],
+  "rate_scope_warning": "本次仅证明报告列出的离散角速度工况；不代表 20°/s、100°/s 或全量程精度。",
+  "status": "PILOT_PASS_NOT_RELEASED",
+  "static_retry_history": [],
+  "rate_retry_history": [],
+  "configuration_warning": "量程或ODR未得到MCU有效报告；使用本次任务的固定换算设置进行试运行标定。需确认实际寄存器配置后复核，禁止作为正式出厂PASS。",
+  "sensor_configuration": {
+    "chip": "ASM330LHHX",
+    "acc_fs_g": 2,
+    "gyro_fs_dps": 2000,
+    "odr_hz": 0,
+    "acc_full_scale_mcu_verified": false,
+    "gyro_full_scale_mcu_verified": false,
+    "odr_mcu_verified": false,
+    "verified_for_release": false,
+    "source": "EFFECTIVE_FALLBACK_UNVERIFIED",
+    "note": "MCU量程或ODR缺少可信报告；显示数值可能是底层默认回退，仅供开发标定；运行时必须保持数值一致"
+  },
+  "result_file_latest": "E:\\动态倾角仪生产测试\\测试\\gyro\\gyro_calibration.json",
+  "result_file_run": "E:\\动态倾角仪生产测试\\测试\\gyro\\GYRO_20261022_155506\\gyro_calibration.json"
+}

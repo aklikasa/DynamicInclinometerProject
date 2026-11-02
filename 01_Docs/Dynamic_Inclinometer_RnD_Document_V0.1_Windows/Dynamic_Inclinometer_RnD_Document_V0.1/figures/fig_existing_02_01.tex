@@ -1,0 +1,12 @@
+\begin{figure}[H]\centering
+\begin{tikzpicture}[>=Stealth,node distance=10mm and 9mm, every node/.style={font=\small},box/.style={draw=border,fill=soft,rounded corners=2mm,align=center,minimum height=12mm,text width=33mm},top/.style={draw=teal,fill=teal!8,rounded corners=2mm,align=center,minimum height=13mm,text width=37mm}]
+\node[top] (app) {Python / PySide6\\自动实验调度};
+\node[box,below left=12mm and 19mm of app] (imu) {ASM330LHHX\\串口 / MCU / Modbus};
+\node[box,below=12mm of app] (turn) {2TD600 或 2FDT600WK\\分别使用对应驱动};
+\node[box,below right=12mm and 19mm of app] (chamber) {Snap7 / PLC 温箱\\SP / PV / 状态 / 报警};
+\node[box,below=15mm of turn,text width=65mm] (alg) {质量筛选与统一工况记录\\常温 A/B/C / 温补 $\mathbf F(T),\vect b(T)$ / 报告};
+\draw[->,thick,blue] (app)--(imu);\draw[->,thick,blue] (app)--(turn);\draw[->,thick,blue] (app)--(chamber);
+\draw[->,thick,teal] (imu.south)--(alg.north west);\draw[->,thick,teal] (turn)--(alg);\draw[->,thick,teal] (chamber.south)--(alg.north east);
+\end{tikzpicture}
+\caption{当前上位机的控制与计算链路示意；设备型号必须由对应页面明确选定。}
+\end{figure}

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>DynamicInclinometer.App</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../DynamicInclinometer.Core/DynamicInclinometer.Core.csproj" />
+    <ProjectReference Include="../DynamicInclinometer.Devices/DynamicInclinometer.Devices.csproj" />
+    <ProjectReference Include="../DynamicInclinometer.Infrastructure/DynamicInclinometer.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../vendor/2TD600.dll" Link="2TD600.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="Assets/PrecisionAmbient.jpg" />
+    <!-- Include the editable HLSL source inside the EXE, compile once on first use on Windows.
+         NO build-time calls to nested dotnet projects; HLSL failure cannot block WPF EXE generation. -->
+    <EmbeddedResource Include="Effects/LiquidGlass.hlsl" LogicalName="DynamicInclinometer.App.Effects.LiquidGlass.hlsl" />
+  </ItemGroup>
+  <Target Name="VerifyWindowsAppHost" AfterTargets="Build"
+          Condition="'$(OS)' == 'Windows_NT' and '$(UseAppHost)' == 'true'">
+    <Error Condition="!Exists('$(TargetDir)$(AssemblyName).exe')"
+           Text="未生成启动程序 $(TargetDir)$(AssemblyName).exe，请检查 UseAppHost / OutputType / TargetDir 和 SDK。" />
+  </Target>
+</Project>

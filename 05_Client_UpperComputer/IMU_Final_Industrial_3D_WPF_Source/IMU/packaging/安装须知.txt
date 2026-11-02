@@ -1,0 +1,8 @@
+Dynamic Inclinometer Lab · 工程验证版使用须知
+
+1. 当前为常温研发测试软件，尚未完成 Windows / 转台 / IMU 实机最终验收，也不能作为产品计量合格证明。
+2. IMU 与校准文件必须按 device_serial 一一对应。请用户从独立的标定管理介质中导入属于本台设备的 ACC/GYRO JSON。不要把设备 0002 的校准数据用于其他设备。
+3. 未确认固件量程、ODR、Tick 时，不得将融合角用于精度验收。
+4. 目前 2TD600 为只读监测，无自动运动功能。实际运动必须另有独立硬件急停与安全联锁。
+5. 实验数据默认位于用户文档 DynamicInclinometerExperiments；错误日志位于 %LOCALAPPDATA%\DynamicInclinometerLab。更新与卸载前请备份实验记录与校准文件。
+6. 如串口连接失败，请检查 USB 串口设备的驱动及 Windows 设备管理器的 COM 编号。

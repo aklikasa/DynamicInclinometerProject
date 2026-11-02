@@ -1,0 +1,12 @@
+{
+  "note": "仅为字段说明模板，不可作为实测陀螺仪校准。上位机按设备编号、偏置和矩阵等字段识别，不以 JSON 版本号拒绝。",
+  "device_serial": "REPLACE_WITH_REAL_DEVICE_ID",
+  "calibration_type": "gyroscope_production_ambient",
+  "raw_gyro_bias_dps": [0, 0, 0],
+  "raw_to_platform_matrix": [[1,0,0],[0,1,0],[0,0,1]],
+  "quality_gate": {
+    "verdict": "TEMPLATE_NOT_CALIBRATED",
+    "approved_for_production": false,
+    "verified_for_research": false
+  }
+}

@@ -1,0 +1,87 @@
+% 字体自动回退：跨 Windows (MiKTeX/TeX Live) 与 Linux (TeX Live)。
+% 不再硬性要求安装 Liberation/Noto 字体；无需随项目附带字体文件。
+% !重要：本工程以 XeLaTeX 编译，不能使用 pdfLaTeX。
+\usepackage{fontspec}
+% 西文字体：Windows 标准字体优先，Linux 常见字体回退。
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{%
+  \IfFontExistsTF{Liberation Serif}{\setmainfont{Liberation Serif}}{%
+    \IfFontExistsTF{TeXGyreTermes}{\setmainfont{TeXGyreTermes}}{%
+      \IfFontExistsTF{DejaVu Serif}{\setmainfont{DejaVu Serif}}{%
+        \PackageError{IMUManual}{No Latin serif font found}{Install Times New Roman, Liberation Serif or DejaVu Serif.}}}}}
+\IfFontExistsTF{Arial}{\setsansfont{Arial}}{%
+  \IfFontExistsTF{Liberation Sans}{\setsansfont{Liberation Sans}}{%
+    \IfFontExistsTF{TeXGyreHeros}{\setsansfont{TeXGyreHeros}}{%
+      \IfFontExistsTF{DejaVu Sans}{\setsansfont{DejaVu Sans}}{%
+        \PackageError{IMUManual}{No Latin sans font found}{Install Arial, Liberation Sans or DejaVu Sans.}}}}}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}[Scale=0.86]}{%
+  \IfFontExistsTF{Liberation Mono}{\setmonofont{Liberation Mono}[Scale=0.86]}{%
+    \IfFontExistsTF{DejaVu Sans Mono}{\setmonofont{DejaVu Sans Mono}[Scale=0.86]}{%
+      \PackageError{IMUManual}{No Latin mono font found}{Install Consolas, Liberation Mono or DejaVu Sans Mono.}}}}
+% 中文字体：Windows 系统字体 -> Linux 常见字体 -> ctex 常见 Fandol 字体。
+% AutoFakeBold 防止宋体只有普通字重时大量粗体中文无法正确显示。
+\IfFontExistsTF{SimSun}{\setCJKmainfont{SimSun}[AutoFakeBold=2]}{%
+  \IfFontExistsTF{Noto Serif CJK SC}{\setCJKmainfont{Noto Serif CJK SC}[AutoFakeBold=2]}{%
+    \IfFontExistsTF{FandolSong-Regular}{\setCJKmainfont{FandolSong-Regular}[AutoFakeBold=2]}{%
+      \PackageError{IMUManual}{No Chinese serif font found}{Install SimSun, Noto Serif CJK SC or Fandol fonts (ctex).}}}}
+\IfFontExistsTF{Microsoft YaHei}{\setCJKsansfont{Microsoft YaHei}[AutoFakeBold=2]}{%
+  \IfFontExistsTF{Noto Sans CJK SC}{\setCJKsansfont{Noto Sans CJK SC}[AutoFakeBold=2]}{%
+    \IfFontExistsTF{FandolHei-Regular}{\setCJKsansfont{FandolHei-Regular}[AutoFakeBold=2]}{%
+      \PackageError{IMUManual}{No Chinese sans font found}{Install Microsoft YaHei, Noto Sans CJK SC or Fandol fonts (ctex).}}}}
+\IfFontExistsTF{Microsoft YaHei}{\setCJKmonofont{Microsoft YaHei}[Scale=0.87]}{%
+  \IfFontExistsTF{Noto Sans Mono CJK SC}{\setCJKmonofont{Noto Sans Mono CJK SC}[Scale=0.87]}{%
+    \IfFontExistsTF{FandolFang-Regular}{\setCJKmonofont{FandolFang-Regular}[Scale=0.87]}{%
+      \IfFontExistsTF{FandolHei-Regular}{\setCJKmonofont{FandolHei-Regular}[Scale=0.87]}{}}}}
+\usepackage[margin=24mm,top=26mm,bottom=24mm,headheight=14pt]{geometry}
+\usepackage{amsmath,amssymb,bm,mathtools}
+\usepackage{booktabs,longtable,tabularx,array,multirow,makecell}
+\usepackage{graphicx,xcolor,tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{etoolbox}
+\usepackage{pdflscape}
+\usepackage{siunitx}
+\sisetup{detect-all}
+\definecolor{navy}{HTML}{1B304A}
+\definecolor{blue}{HTML}{2E6388}
+\definecolor{teal}{HTML}{277B82}
+\definecolor{muted}{HTML}{536477}
+\definecolor{border}{HTML}{D5E0EA}
+\definecolor{soft}{HTML}{F2F6FA}
+\definecolor{amber}{HTML}{9A641E}
+\hypersetup{colorlinks=true,linkcolor=navy,urlcolor=blue,bookmarksnumbered=true,pdfauthor={IMU Calibration Engineering Team},pdftitle={动态倾角仪研发技术文档：常温内参标定与自动温补（V0.1）}}
+\ctexset{chapter={name={第,章},number=\chinese{chapter},format=\huge\sffamily\bfseries\color{navy},beforeskip=0pt,afterskip=19pt},section={format=\Large\sffamily\bfseries\color{navy},beforeskip=14pt,afterskip=7pt},subsection={format=\large\sffamily\bfseries\color{blue},beforeskip=11pt,afterskip=5pt}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\color{muted}\thepage}\renewcommand{\headrulewidth}{0pt}}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\sffamily\color{muted}动态倾角仪研发技术文档}
+\fancyhead[R]{\small\sffamily\color{muted}研发文档 V0.1}
+\fancyfoot[L]{\scriptsize\color{muted}未批准量产 / RESEARCH BASELINE}
+\fancyfoot[R]{\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0.45pt}\renewcommand{\footrulewidth}{0pt}
+\setlength{\parindent}{2em}\setlength{\parskip}{4pt}
+\setlist[itemize]{itemsep=3pt,topsep=4pt,leftmargin=2.2em}
+\setlist[enumerate]{itemsep=4pt,topsep=5pt,leftmargin=2.2em}
+\captionsetup{font=small,labelfont={bf,color=navy}}
+\newtcolorbox{notice}[1][]{enhanced,breakable,colback=soft,colframe=border,boxrule=.55pt,arc=2mm,left=3mm,right=3mm,top=2mm,bottom=2mm,#1}
+\newtcolorbox{warningbox}[1][]{enhanced,breakable,colback=white,colframe=amber,boxrule=.8pt,arc=2mm,left=3mm,right=3mm,top=2mm,bottom=2mm,#1}
+\newcommand{\source}[1]{\textsf{\small\color{muted}[依据：#1]}}
+\newcommand{\Code}[1]{{\small\nolinkurl{#1}}}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\dd}{\mathrm{d}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{Z}{>{\centering\arraybackslash}X}
+\renewcommand{\arraystretch}{1.19}
+\lstset{basicstyle=\ttfamily\footnotesize,keywordstyle=\color{blue},stringstyle=\color{teal},commentstyle=\color{muted},breaklines=true,frame=single,rulecolor=\color{border},backgroundcolor=\color{soft},columns=fullflexible,keepspaces=true,showstringspaces=false}
+
+\graphicspath{{assets/photos/}{assets/schematics/}}
+
+% Avoid excessive full-page vertical stretching around fixed-height floats and tables.
+\raggedbottom

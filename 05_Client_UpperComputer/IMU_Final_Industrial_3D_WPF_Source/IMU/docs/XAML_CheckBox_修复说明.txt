@@ -1,0 +1,15 @@
+WPF XAML 编译问题修复（2026-10-27）
+
+修复位置：src/DynamicInclinometer.App/TurntableControlView.xaml 第 69 行附近
+修复内容：CheckBox 控件不提供 TextWrapping 依赖属性。将长提示文字改成
+CheckBox 下的 TextBlock，并且只在 TextBlock 上设置 TextWrapping="Wrap"。
+没有修改转台控制、安全联锁、自动摇摆和 IMU 融合等任何业务逻辑。
+
+已完成静态核验：
+- 所有 XAML 通过 XML 解析；
+- 所有 TextWrapping 所属控件均为 TextBlock/TextBox 等合法文本控件；
+- 重要事件处理程序名称均在对应代码文件中出现；
+- ZIP 文件 CRC 完整性验证。
+
+限制：当前环境没有 Windows WPF 编译与设备，因此仍需要在 Windows Visual Studio 上重新生成验证。
+操作：解压新包至独立文件夹，使用 Visual Studio 打开 DynamicInclinometer.slnx，执行「重新生成解决方案」。

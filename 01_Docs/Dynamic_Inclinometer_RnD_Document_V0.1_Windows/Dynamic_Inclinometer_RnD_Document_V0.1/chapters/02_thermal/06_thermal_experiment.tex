@@ -1,0 +1,23 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{自动温补：实验设计与运行流程}
+\section{两类设备在温补阶段的分工}
+常温 2TD600 与温控 2FDT600WK 是不同驱动路径。温补实验只允许选用\textbf{2FDT600WK}，同时复用经过现场验证的原 PLC 温控驱动；IMU 原始帧通过同一实时数据队列采集。\textbf{温箱设定值 SP 不是样品温度}，模型使用同步获取的 IMU 芯片温度 $T_c$。
+
+\section{默认温度计划：拟合点与温度验证点隔离}
+\input{tables/tbl_thermal_temperature_split.tex}
+程序要求至少五个互异温度点，升序输入，允许的设定范围为 $-40\sim85\, ^\circ\mathrm C$；数据角色采用\textbf{第 1、3、5… 点为拟合，第 2、4… 点为验证}的交替规则。增加温度点应重新审查此规则，以避免将本应验证的温度误归为拟合温度。一次运行只覆盖\textbf{单向升温}；成功后默认回到 $25\, ^\circ\mathrm C$，但回温不执行完整的参数复测，不能宣称已完成冷热滞回验证。
+
+\section{完整任务状态机}
+\input{figures/fig_existing_06_01.tex}
+
+\section{PLC 自动控温的当前判据}
+\input{tables/tbl_plc_guards.tex}
+数据通过原\Code{tc_set_fixed_value_mode()}、\Code{tc_sp_set()}、\Code{tc_fixed_value_startup()} 等接口操作。已通过现场使用事实确认原上位机曾成功读 PV 与设 SP；但是\textbf{新增自动循环程序本身尚未完成该设备的连续实机联动验收}。
+
+\section{芯片热平衡判据（软件初值）}
+\input{tables/tbl_imu_stability.tex}
+建议正式研发记录另加 PCB 表面参考温度、箱内温度空间差和保温时长试验，以确定 30 min 是否足够；不得单凭芯片与箱温相差 $\le10\, ^\circ\mathrm C$ 宣称绝对热平衡。
+
+\section{各温度点的 ACC/GYRO 工况数量}
+\input{tables/tbl_temp_task_count.tex}
+每个工况都需要转台实际角度/速率、芯片温度和原始 IMU 帧。动态速率必须先通过反馈稳定检查；当前 2FDT 工程的速率反馈依据编码器位置差分估计，\textbf{尚须通过参考计量证明速度不确定度满足目标}。

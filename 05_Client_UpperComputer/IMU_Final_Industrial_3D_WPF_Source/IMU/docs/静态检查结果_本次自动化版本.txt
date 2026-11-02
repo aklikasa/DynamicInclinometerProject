@@ -1,0 +1,39 @@
+PASS TurntableControlView.xaml XML
+PASS App.xaml XML
+PASS MainWindow.xaml XML
+PASS MainWindow.xaml event handlers 25
+PASS TurntableControlView.xaml event handlers 10
+PASS ESKF real-time output
+PASS 3D and trend XAML
+PASS ACC/GYRO sample compensation
+PASS Tick fallback source flag
+PASS Continuous error count handled after processed samples
+PASS Homing + safe feedback
+PASS Real physical sine guarded
+PASS Real vs synthetic isolation
+PASS No QC PASS claim in HTML code
+PASS Hardware x64 native DLL included
+PASS DLL export GetAxisFindZero
+PASS DLL export GetAxisLock
+PASS DLL export SetAxisFindZero
+PASS DLL export SetAxisSway
+PASS DLL export SetAxisStop
+PASS DLL export GetRunMode
+PASS C# delimiters Program.cs
+PASS C# delimiters App.xaml.cs
+PASS C# delimiters MainWindow.xaml.cs
+PASS C# delimiters TurntableControlView.xaml.cs
+PASS C# delimiters ExperimentRecorder.cs
+PASS C# delimiters TurntableManualFrame.cs
+PASS C# delimiters SineSweepExperiment.cs
+PASS C# delimiters ErrorStateKalmanFilter.cs
+PASS C# delimiters Attitude.cs
+PASS C# delimiters Sst810HtmlReport.cs
+PASS C# delimiters Calibration.cs
+PASS C# delimiters Models.cs
+PASS C# delimiters Experiments.cs
+PASS C# delimiters ImuProtocol.cs
+PASS C# delimiters TurntableTelemetry.cs
+PASS C# delimiters ImuSources.cs
+TOTAL: 37 / 37
+NOTE: These are offline source-level checks only, not a .NET build, UI screenshot, or motor/IMU hardware test.

@@ -1,0 +1,347 @@
+<Window x:Class="DynamicInclinometer.App.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="clr-namespace:DynamicInclinometer.App"
+ xmlns:glass="clr-namespace:DynamicInclinometer.App.Controls"
+ Title="Dynamic Inclinometer · 动态倾角仪" Width="1640" Height="945"
+ MinWidth="1200" MinHeight="750" WindowState="Maximized" WindowStartupLocation="CenterScreen"
+ Background="#0A1522" UseLayoutRounding="True" SnapsToDevicePixels="True">
+ <Grid ClipToBounds="True">
+  <!-- Real GPU shader samples this *decorative* background, never another control or fake data. -->
+  <Grid x:Name="LiquidScene" IsHitTestVisible="False" ClipToBounds="True">
+   <Grid.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#091323" Offset="0"/><GradientStop Color="#1B3047" Offset="0.43"/><GradientStop Color="#0B1726" Offset="0.8"/><GradientStop Color="#1B2B36" Offset="1"/>
+   </LinearGradientBrush></Grid.Background>
+   <Image Source="Assets/PrecisionAmbient.jpg" Stretch="UniformToFill" Opacity="0.62" IsHitTestVisible="False"/>
+   <Ellipse Width="880" Height="520" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="170,-340,0,0" Opacity="0.22">
+    <Ellipse.Fill><RadialGradientBrush><GradientStop Color="#6E9CB4" Offset="0"/><GradientStop Color="#16324F" Offset="0.55"/><GradientStop Color="#00131B2C" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
+   </Ellipse>
+   <Ellipse Width="520" Height="500" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-210,-190" Opacity="0.2">
+    <Ellipse.Fill><RadialGradientBrush><GradientStop Color="#AD8360" Offset="0"/><GradientStop Color="#403B45" Offset="0.46"/><GradientStop Color="#00141C2C" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
+   </Ellipse>
+   <Ellipse Width="780" Height="460" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-350,0,0,-260" Opacity="0.15">
+    <Ellipse.Fill><RadialGradientBrush><GradientStop Color="#93C7E3" Offset="0"/><GradientStop Color="#1A2B42" Offset="0.58"/><GradientStop Color="#00141C2C" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
+   </Ellipse>
+  </Grid>
+  <Grid Margin="12,10,13,10">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="166"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <!-- Shell navigation is functional, not decorative buttons. -->
+   <glass:LiquidGlassPane Grid.Column="0" Style="{StaticResource LiquidGlassCard}" Padding="10" Margin="0,0,13,0">
+    <Grid>
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <StackPanel Margin="6,10,5,25">
+      <Border Width="48" Height="48" Background="#21578A" CornerRadius="13" HorizontalAlignment="Left" Margin="0,0,0,12" BorderBrush="#8EBBE4" BorderThickness="1">
+       <TextBlock Text="DI" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+      </Border>
+      <TextBlock Text="Dynamic" Foreground="#F4F7FB" FontSize="16" FontWeight="Bold"/>
+      <TextBlock Text="Inclinometer" Foreground="#F4F7FB" FontSize="16" FontWeight="Bold"/>
+      <TextBlock Text="动态倾角仪" Foreground="#94ACC5" FontSize="11" Margin="0,6,0,0"/>
+     </StackPanel>
+     <StackPanel Grid.Row="1" Margin="0,4,0,0">
+      <Button x:Name="NavMonitorButton" Content="⌂   实时监测" Click="NavMonitor_Click" Style="{StaticResource NavSelected}"/>
+      <Button x:Name="NavTurntableButton" Content="◎   转台控制" Click="NavTurntable_Click" Style="{StaticResource NavAction}"/>
+      <Button Content="▤   数据记录" Click="NavRecords_Click" Style="{StaticResource NavAction}"/>
+      <Button Content="⚙   标定与设置" Click="NavSettings_Click" Style="{StaticResource NavAction}"/>
+     </StackPanel>
+     <StackPanel Grid.Row="3" Margin="4,0,3,10">
+      <Border Height="1" Background="#4C65798D" Margin="0,0,0,12"/>
+      <TextBlock Text="v1.0  ·  DESKTOP" Foreground="#90A9C1" FontSize="10"/>
+      <TextBlock Text="真实数据 · 实时测量" Foreground="#A9C4D3" FontSize="10" Margin="0,7,0,0"/>
+      <TextBlock Text="无硬件时不显示模拟角度" Foreground="#7395B2" FontSize="10" TextWrapping="Wrap" Margin="0,4,0,0"/>
+     </StackPanel>
+    </Grid>
+   </glass:LiquidGlassPane>
+   <Grid Grid.Column="1">
+    <Grid.RowDefinitions><RowDefinition Height="68"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <!-- Live top bar -->
+    <Grid Grid.Row="0" Margin="2,0,2,8">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <StackPanel VerticalAlignment="Center">
+      <TextBlock Text="Dynamic Inclinometer  动态倾角仪" Foreground="#F2F7FC" FontSize="23" FontWeight="SemiBold"/>
+      <TextBlock Text="IMU Monitoring &amp; Dual-Axis Turntable Control" Foreground="#91ACC7" FontSize="11" Margin="1,3,0,0"/>
+     </StackPanel>
+     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+      <Ellipse x:Name="TopConnectionLamp" Width="8" Height="8" Fill="#818B9B" Margin="0,0,7,0" VerticalAlignment="Center"/>
+      <TextBlock x:Name="StatusLabel" Text="待机 · 等待连接" Foreground="#E3EDF7" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="11" FontWeight="SemiBold"/>
+      <TextBlock Text="●" Foreground="#83BCDB" VerticalAlignment="Center" FontSize="10" Margin="10,0,7,0"/>
+      <TextBlock Text="产品模式" Foreground="#A2B4C8" VerticalAlignment="Center" FontSize="10"/>
+     </StackPanel>
+    </Grid>
+    <TabControl Grid.Row="1" x:Name="MainTabs" Background="Transparent" BorderThickness="0" Padding="0" SelectedIndex="0">
+     <TabControl.Template><ControlTemplate TargetType="TabControl"><ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent"/></ControlTemplate></TabControl.Template>
+     <TabItem Header="实时监测">
+      <ScrollViewer x:Name="MonitorScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+       <Grid Margin="0,0,4,6">
+        <Grid.RowDefinitions><RowDefinition Height="177"/><RowDefinition Height="314"/><RowDefinition Height="232"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <!-- Row 1: Device / Acquisition / Glass -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+         <Grid.ColumnDefinitions><ColumnDefinition Width="1.12*"/><ColumnDefinition Width="1*"/></Grid.ColumnDefinitions>
+         <glass:LiquidGlassPane Style="{StaticResource LiquidGlassCard}" Padding="14" Margin="0,0,10,0">
+          <Grid>
+           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+           <TextBlock Text="设备连接    Device Connection" Style="{StaticResource PanelHeading}"/>
+           <Grid Grid.Row="1" Margin="0,12,0,4">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+             <TextBlock Text="设备号" Foreground="#A9BDD5" FontSize="11" Margin="0,2,8,13"/>
+             <TextBlock Text="IMU 串口" Foreground="#A9BDD5" FontSize="11" Margin="0,1,8,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,6,0">
+             <TextBox x:Name="SerialId" Width="104" Height="31" HorizontalAlignment="Left" ToolTip="输入与 ACC/GYRO 标定文件匹配的设备号"/>
+             <ComboBox x:Name="ImuPort" Width="104" Height="32" HorizontalAlignment="Left" Margin="0,6,0,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="4,0,0,0">
+             <Button Content="刷新端口" Click="RefreshPorts_Click" Padding="10,5" MinHeight="31"/>
+             <Button x:Name="ConnectImuButton" Content="连接设备" ToolTip="连接后立即实时查看六轴数据与 ESKF 姿态，不会自动创建数据记录文件；再次点击断开" Click="Connect_Click" Style="{StaticResource PrimaryAction}" Padding="10,5" MinHeight="31"/>
+            </StackPanel>
+           </Grid>
+           <TextBlock Grid.Row="2" x:Name="CalibrationText" Text="等待设备号与校准文件" Foreground="#C6B38F" FontSize="10" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="0,4,0,0"/>
+          </Grid>
+         </glass:LiquidGlassPane>
+         <glass:LiquidGlassPane Grid.Column="1" Style="{StaticResource LiquidGlassCard}" Padding="14" Margin="0,0,10,0">
+          <Grid>
+           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+           <TextBlock Text="采集记录    Data Recording" Style="{StaticResource PanelHeading}"/>
+           <Grid Grid.Row="1" Margin="0,10,0,5">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <Button x:Name="StopImuButton" Content="▶  开始采集" ToolTip="开始保存 CSV 文件；停止采集只关闭本次记录，不断开 IMU 在线监测" Click="Stop_Click" Style="{StaticResource PrimaryAction}" Padding="8,5" Height="37" Margin="0,0,9,0"/>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock x:Name="RecordStateText" Text="未连接 / 未记录" Foreground="#A8BECE" FontSize="10"/>
+             <TextBlock x:Name="SessionElapsedText" Text="--:--:--" Foreground="White" FontSize="17" FontWeight="SemiBold"/></StackPanel>
+           </Grid>
+           <Grid Grid.Row="2" Margin="0,5,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="实测处理率" FontSize="10" Foreground="#95B3CB"/><TextBlock x:Name="SampleRateText" Text="-- Hz" FontSize="15" FontWeight="SemiBold"/></StackPanel>
+            <StackPanel Grid.Column="1"><TextBlock Text="已记录样本" FontSize="10" Foreground="#95B3CB"/><TextBlock x:Name="ProcessedCountText" Text="--" FontSize="15" FontWeight="SemiBold"/></StackPanel>
+            <StackPanel Grid.Column="2"><TextBlock Text="丢失计数" FontSize="10" Foreground="#95B3CB"/><TextBlock x:Name="LostCountText" Text="--" FontSize="15" FontWeight="SemiBold"/></StackPanel>
+           </Grid>
+           <TextBlock x:Name="OdrDisplayText" Grid.Row="3" Text="芯片 ODR 未读回 · 处理率≠ODR" Foreground="#C4AD88" FontSize="10" TextTrimming="CharacterEllipsis" Margin="0,5,0,0" ToolTip="ODR 是芯片内部配置；处理率是本机实际处理样本数/秒，两者不是同一概念"/>
+          </Grid>
+         </glass:LiquidGlassPane>
+
+        </Grid>
+        <!-- Row 2: Main attitude and real plotted data -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+         <Grid.ColumnDefinitions><ColumnDefinition Width="1.06*"/><ColumnDefinition Width="1.02*"/></Grid.ColumnDefinitions>
+         <glass:LiquidGlassPane Style="{StaticResource LiquidGlassCard}" Padding="15" Margin="0,0,10,0">
+          <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+           <DockPanel Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock Text="姿态显示    Attitude" Style="{StaticResource PanelHeading}" DockPanel.Dock="Left"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+             <Button x:Name="AbsoluteAngleButton" Content="ABS 绝对倾角" Click="AbsoluteAngle_Click" Style="{StaticResource PrimaryAction}" Padding="8,3" MinHeight="27"/>
+             <Button x:Name="RelativeAngleButton" Content="REL 相对倾角" Click="RelativeAngle_Click" Padding="8,3" MinHeight="27"/>
+            </StackPanel>
+           </DockPanel>
+           <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="205"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Grid Grid.Column="0" Margin="0,0,8,0">
+             <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+             <Border Grid.Row="0" CornerRadius="9" BorderBrush="#365D7C9F" BorderThickness="1" Margin="0,0,0,7" Background="#3C0B192B">
+              <DockPanel Margin="12,8"><Border Width="4" Background="#E4A47A" CornerRadius="2" DockPanel.Dock="Left" Margin="0,0,9,0"/><TextBlock Text="ROLL 横滚角" Foreground="#B8C9DB" FontSize="11" VerticalAlignment="Center" DockPanel.Dock="Left"/><TextBlock x:Name="RollText" Text="--.---°" Foreground="#F4AD80" FontSize="24" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
+             </Border>
+             <Border Grid.Row="1" CornerRadius="9" BorderBrush="#365D7C9F" BorderThickness="1" Margin="0,0,0,7" Background="#3C0B192B">
+              <DockPanel Margin="12,8"><Border Width="4" Background="#73BFFF" CornerRadius="2" DockPanel.Dock="Left" Margin="0,0,9,0"/><TextBlock Text="PITCH 俯仰角" Foreground="#B8C9DB" FontSize="11" VerticalAlignment="Center" DockPanel.Dock="Left"/><TextBlock x:Name="PitchText" Text="--.---°" Foreground="#70C3FF" FontSize="24" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
+             </Border>
+             <Border Grid.Row="2" CornerRadius="9" BorderBrush="#365D7C9F" BorderThickness="1" Background="#3C0B192B">
+              <DockPanel Margin="12,8"><Border Width="4" Background="#7ACA9E" CornerRadius="2" DockPanel.Dock="Left" Margin="0,0,9,0"/><TextBlock Text="YAW 相对航向" Foreground="#B8C9DB" FontSize="11" VerticalAlignment="Center" DockPanel.Dock="Left"/><TextBlock x:Name="YawText" Text="不可观测" Foreground="#91E7BE" FontSize="17" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
+             </Border>
+            </Grid>
+            <Grid Grid.Column="1" MinWidth="230">
+             <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*" MinHeight="130"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+             </Grid.RowDefinitions>
+             <Grid Grid.Row="0" Margin="2,0,2,4">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+              <TextBlock Text="3D  ·  设备姿态" Foreground="#D8E6F6" FontSize="11"
+                         FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <TextBlock x:Name="QualityText" Grid.Column="1" Text="等待有效数据" Foreground="#B8A17B" FontSize="9"
+                         TextAlignment="Right" TextTrimming="CharacterEllipsis" HorizontalAlignment="Right"/>
+             </Grid>
+             <Border Grid.Row="1" Background="#160A1521" BorderBrush="#29607782"
+                     BorderThickness="1" CornerRadius="9" ClipToBounds="True" Margin="1,0,1,5">
+              <Grid x:Name="AttitudeSceneSurface" Background="Transparent" ClipToBounds="True"
+                    MouseLeftButtonDown="AttitudeScene_MouseDown" MouseLeftButtonUp="AttitudeScene_MouseUp"
+                    MouseMove="AttitudeScene_MouseMove" MouseWheel="AttitudeScene_MouseWheel"
+                    ToolTip="左键拖动仅旋转观察镜头；滚轮缩放；真实姿态由 ESKF 决定。">
+               <Viewport3D x:Name="AttitudeViewport" ClipToBounds="True">
+                <Viewport3D.Camera><PerspectiveCamera Position="-6,-6,5" LookDirection="6,6,-5"
+                                    UpDirection="0,0,1" FieldOfView="42"/></Viewport3D.Camera>
+                <ModelVisual3D><ModelVisual3D.Content><Model3DGroup>
+                 <AmbientLight Color="#A1ACB4"/>
+                 <DirectionalLight Color="#FFFDF6" Direction="2,3,-6"/>
+                 <DirectionalLight Color="#D7E8EC" Direction="-4,-1,-2"/>
+                 <DirectionalLight Color="#899AA8" Direction="1,-4,0"/>
+                </Model3DGroup></ModelVisual3D.Content></ModelVisual3D>
+                <ModelVisual3D x:Name="ReferenceAxesVisual"/>
+                <ModelVisual3D x:Name="DeviceVisual"/>
+               </Viewport3D>
+              </Grid>
+             </Border>
+             <UniformGrid Grid.Row="2" Columns="4" Rows="1" Margin="0,0,0,2">
+              <Button Content="复位视角" Click="ResetAttitudeCamera_Click" Padding="3,3" MinHeight="27"
+                      ToolTip="恢复远景斜侧观察视角"/>
+              <Button x:Name="ToggleAxesButton" Content="隐藏坐标轴" Click="ToggleImuAxes_Click"
+                      Padding="3,3" MinHeight="27" ToolTip="显示或隐藏 XYZ 坐标轴"/>
+              <Button x:Name="AutoOrbitCameraButton" Content="环绕视角" Click="AutoOrbitCamera_Click"
+                      Padding="3,3" MinHeight="27" ToolTip="只旋转观察视角，不影响 IMU 的实际姿态"/>
+              <Button x:Name="SetRelativeZeroButton" Content="设置 REL 零点" Click="SetRelativeZero_Click"
+                      Padding="3,3" MinHeight="27" ToolTip="当前有效融合姿态作为相对参考零点"/>
+             </UniformGrid>
+             <DockPanel Grid.Row="3" Margin="3,1,3,0">
+              <TextBlock x:Name="FusedDataNotice" Text="等待真实融合数据" Foreground="#9AB0C7"
+                         FontSize="9" TextTrimming="CharacterEllipsis" Width="203" DockPanel.Dock="Left"/>
+              <TextBlock x:Name="DataFreshnessText" Text="未连接" Foreground="#7595B3"
+                         FontSize="9" TextAlignment="Right" TextTrimming="CharacterEllipsis"
+                         HorizontalAlignment="Right"/>
+             </DockPanel>
+            </Grid>
+           </Grid>
+          </Grid>
+         </glass:LiquidGlassPane>
+         <glass:LiquidGlassPane Grid.Column="1" Style="{StaticResource LiquidGlassCard}" Padding="14">
+          <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+           <DockPanel Grid.Row="0"><TextBlock Text="实时曲线    Realtime Curves" Style="{StaticResource PanelHeading}"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+             <Button x:Name="PlotPauseButton" Content="暂停画面" Click="PlotPause_Click" Padding="9,4" MinHeight="27"/>
+             <Button Content="清空曲线" Click="ClearPlot_Click" Padding="9,4" MinHeight="27"/>
+            </StackPanel>
+           </DockPanel>
+           <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="8,6,0,4">
+            <Ellipse Width="8" Height="8" Fill="#F4A77B" Margin="0,0,5,0" VerticalAlignment="Center"/><TextBlock Text="Roll 横滚" FontSize="10" Foreground="#BFCFE1" Margin="0,0,18,0"/>
+            <Ellipse Width="8" Height="8" Fill="#6BBAF5" Margin="0,0,5,0" VerticalAlignment="Center"/><TextBlock Text="Pitch 俯仰" FontSize="10" Foreground="#BFCFE1"/>
+           </StackPanel>
+           <Border Grid.Row="2" Background="#46061222" BorderBrush="#41678096" BorderThickness="1" CornerRadius="6" Margin="3,0,0,0" ClipToBounds="True">
+            <Grid Margin="9">
+             <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+             <Border Grid.Row="0" BorderBrush="#225D7A92" BorderThickness="0,0,0,1"/><Border Grid.Row="1" BorderBrush="#225D7A92" BorderThickness="0,0,0,1"/><Border Grid.Row="2" BorderBrush="#225D7A92" BorderThickness="0,0,0,1"/>
+             <Canvas x:Name="PlotCanvas" Grid.RowSpan="4" ClipToBounds="True" SizeChanged="PlotSizeChanged" Margin="7,5">
+              <Polyline x:Name="RollLine" Stroke="#F4A77B" StrokeThickness="2.1" StrokeLineJoin="Round"/>
+              <Polyline x:Name="PitchLine" Stroke="#6DBCF6" StrokeThickness="2.1" StrokeLineJoin="Round"/>
+             </Canvas>
+            </Grid>
+           </Border>
+           <TextBlock Grid.Row="3" x:Name="PlotCaptionText" Text="最近 250 个趋势点 · 等待采集" Foreground="#8FA5BF" FontSize="10" Margin="6,6,0,0"/>
+          </Grid>
+         </glass:LiquidGlassPane>
+        </Grid>
+        <!-- Row 3: Real calibration and quick commands wired to existing turntable motion controller -->
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+         <Grid.ColumnDefinitions><ColumnDefinition Width="0.95*"/><ColumnDefinition Width="1.22*"/></Grid.ColumnDefinitions>
+         <glass:LiquidGlassPane Style="{StaticResource LiquidGlassCard}" Padding="13" Margin="0,0,10,0">
+          <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+           <TextBlock Text="传感器标定    Calibration" Style="{StaticResource PanelHeading}"/>
+           <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,9,0,6">
+            <Button Content="导入 ACC 标定" Click="ImportAcc_Click" Style="{StaticResource PrimaryAction}" Padding="10,5" MinHeight="31"/>
+            <Button Content="导入 GYRO 标定" Click="ImportGyro_Click" Padding="10,5" MinHeight="31"/>
+            <Button x:Name="FusedOutputButton" Content="ESKF 融合" Click="FusedOutput_Click" Padding="10,5" MinHeight="31"/>
+           </StackPanel>
+           <StackPanel Grid.Row="2" Margin="3,2,0,0">
+            <TextBlock x:Name="OutputStatusText" Text="请先加载设备对应的标定参数" FontSize="11" Foreground="#C1B190" TextWrapping="Wrap" Margin="0,0,0,5"/>
+            <TextBlock x:Name="ModeText" Text="算法尚未运行" FontSize="11" Foreground="#B4C9DD" TextTrimming="CharacterEllipsis"/>
+            <TextBlock x:Name="AccComparisonText" Text="ACC 倾角：-- / --" FontSize="11" Foreground="#91B0CA" Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/>
+            <TextBlock x:Name="LiveSampleText" Text="六轴数据：未连接" FontSize="10" Foreground="#91B0CA" TextWrapping="Wrap" Height="47" Margin="0,3,0,0"/>
+           </StackPanel>
+           <Button Grid.Row="3" Content="详细标定与参数设置" Click="NavSettings_Click" HorizontalAlignment="Left" Padding="9,3" MinHeight="27"/>
+          </Grid>
+         </glass:LiquidGlassPane>
+         <glass:LiquidGlassPane Grid.Column="1" Style="{StaticResource LiquidGlassCard}" Padding="13">
+          <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+           <DockPanel><TextBlock Text="转台快捷控制    Turntable Control" Style="{StaticResource PanelHeading}"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><TextBlock x:Name="QuickTableConnectionText" Text="未连接" Foreground="#B6A687" FontSize="11" VerticalAlignment="Center" Margin="0,0,11,0"/>
+             <Button Content="完整控制台" Click="NavTurntable_Click" Padding="8,3" MinHeight="26"/></StackPanel>
+           </DockPanel>
+           <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,6,0,3">
+            <TextBlock Text="手动模式" Foreground="#A5BED6" FontSize="11" VerticalAlignment="Center" Margin="0,0,7,0"/>
+            <ComboBox x:Name="QuickPositionMode" Width="146" SelectedIndex="0" MinHeight="30">
+             <ComboBoxItem Content="相对增量 (°)"/><ComboBoxItem Content="绝对目标 (°)"/>
+            </ComboBox>
+            <TextBlock Text="速度 (°/s)" Foreground="#A5BED6" FontSize="10" VerticalAlignment="Center" Margin="10,0,5,0"/>
+            <TextBox x:Name="QuickMoveSpeed" Width="51" Text="1" Height="30"/>
+           </StackPanel>
+           <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="1,0,12,0">
+             <DockPanel><TextBlock Text="内轴 0 / Z" Foreground="#A6C1DB" FontSize="11" VerticalAlignment="Center"/>
+              <TextBlock x:Name="QuickInnerAngleText" Text="--.---°" Foreground="#F2F7FE" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/></DockPanel>
+             <StackPanel Orientation="Horizontal" Margin="0,6,0,0"><TextBox x:Name="QuickInnerCommand" Text="1" Width="72" Height="32"/><Button Content="执行内轴" Click="QuickInnerMove_Click" Style="{StaticResource PrimaryAction}" Padding="9,4" MinHeight="31"/></StackPanel>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Margin="12,0,1,0">
+             <DockPanel><TextBlock Text="外轴 2 / X" Foreground="#A6C1DB" FontSize="11" VerticalAlignment="Center"/>
+              <TextBlock x:Name="QuickOuterAngleText" Text="--.---°" Foreground="#F2F7FE" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/></DockPanel>
+             <StackPanel Orientation="Horizontal" Margin="0,6,0,0"><TextBox x:Name="QuickOuterCommand" Text="1" Width="72" Height="32"/><Button Content="执行外轴" Click="QuickOuterMove_Click" Style="{StaticResource PrimaryAction}" Padding="9,4" MinHeight="31"/></StackPanel>
+            </StackPanel>
+           </Grid>
+           <WrapPanel Grid.Row="3" HorizontalAlignment="Right" Margin="0,2,0,0">
+            <Button Content="双轴机械归零" Click="QuickHomeBoth_Click" Padding="9,4" MinHeight="30"/>
+            <Button Content="双轴软件停车" Click="QuickStopBoth_Click" Style="{StaticResource DangerAction}" Padding="9,4" MinHeight="30"/>
+           </WrapPanel>
+          </Grid>
+         </glass:LiquidGlassPane>
+        </Grid>
+        <!-- Bottom log: always present but compact -->
+        <glass:LiquidGlassPane Grid.Row="3" Style="{StaticResource LiquidGlassCard}" Padding="9" Margin="0,0,0,9">
+         <Expander x:Name="LogExpander" IsExpanded="True" Header="运行日志  /  SYSTEM LOG   ·   真实设备事件" Foreground="#D4E3F3" Background="Transparent">
+          <DockPanel LastChildFill="True" Margin="2,4,2,0">
+           <StackPanel DockPanel.Dock="Right" Margin="7,0,0,0">
+            <Button Content="复制日志" Click="CopyLog_Click" Padding="8,3" MinHeight="28"/>
+            <Button Content="打开日志目录" Click="OpenLogFolder_Click" Padding="8,3" MinHeight="28"/>
+           </StackPanel>
+           <TextBox x:Name="RunLog" Height="65" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontSize="10" FontFamily="Consolas" Background="#9E091629" Foreground="#C4DAE8"/>
+          </DockPanel>
+         </Expander>
+        </glass:LiquidGlassPane>
+        <Expander Grid.Row="4" x:Name="AdvancedPanel" Header="高级参数 / 采集时标、算法与诊断" IsExpanded="False" Foreground="#C3D7E9" Background="#24152539" Margin="0,0,0,6">
+         <StackPanel Margin="12">
+          <WrapPanel Margin="0,0,0,9">
+           <TextBlock Text="视觉设置（不影响 IMU 采集）" Foreground="#A9BFD5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+           <Button x:Name="GlassGpuToggleButton" Click="ToggleGpuGlass_Click" Content="关闭 GPU 折射" Padding="7,3"/>
+           <TextBlock Text="折射强度" Foreground="#A9BFD5" Margin="8,0,0,0" VerticalAlignment="Center"/>
+           <Slider x:Name="GlassStrengthSlider" Minimum="0" Maximum="1" Value="0.48" ValueChanged="GlassDistortion_ValueChanged" Width="125" VerticalAlignment="Center" Margin="7,0"/>
+           <TextBlock x:Name="GlassStatusText" Text="GPU 着色器 · 限速运行" FontSize="10" Foreground="#9AB3CC" VerticalAlignment="Center"/>
+          </WrapPanel>
+
+          <WrapPanel Margin="0,0,0,5">
+           <TextBlock Text="IMU 波特率" VerticalAlignment="Center"/><TextBox x:Name="ImuBaudInput" Text="1500000" Width="105"/>
+           <TextBlock Text="站号" VerticalAlignment="Center" Margin="8,0,0,0"/><TextBox x:Name="ImuSlaveInput" Text="1" Width="52"/>
+           <TextBlock Text="超时 ms" VerticalAlignment="Center" Margin="8,0,0,0"/><TextBox x:Name="ImuTimeoutInput" Text="1200" Width="72"/>
+           <CheckBox x:Name="DtrRtsChoice" Content="DTR/RTS" IsChecked="True" Foreground="#B8CDE2" VerticalAlignment="Center" Margin="12,0,0,0"/>
+          </WrapPanel>
+          <WrapPanel Margin="0,0,0,5">
+           <TextBlock Text="时标策略" VerticalAlignment="Center"/><ComboBox x:Name="TimingChoice" Width="245" SelectedIndex="0">
+            <ComboBoxItem Content="未确认：仅静态 ACC"/><ComboBoxItem Content="工程假设：Tick=最后样本"/><ComboBoxItem Content="固件已验证：Tick=最后样本"/>
+           </ComboBox>
+           <TextBlock Text="候选 ODR Hz" VerticalAlignment="Center" Margin="8,0,0,0"/><TextBox x:Name="OdrInput" Text="200" ToolTip="这是未经固件核实的 FIFO 时间重建假设，不是芯片实际 ODR。硬件工程师报告芯片配置833 Hz；核对寄存器、MCU tick 与实测样本数后再调整" Width="66"/>
+           <CheckBox x:Name="ResearchOverride" Content="研究级融合（非精度验收）" Foreground="#C7B496" VerticalAlignment="Center" Margin="10,0"/>
+           <ComboBox x:Name="TurntablePort" Width="85" Visibility="Collapsed"/>
+          </WrapPanel>
+          <WrapPanel>
+           <Button x:Name="RawOutputButton" Content="未校准原始 ACC" Click="RawOutput_Click"/>
+           <Button Content="ACC 模式" Click="AccMode_Click"/>
+           <Button Content="Mahony" Click="MahonyMode_Click"/>
+           <Button Content="ESKF" Click="EskfMode_Click"/>
+           <Button Content="启用研究级融合" Click="EnableEngineeringFusion_Click"/>
+           <Button Content="重置滤波器" Click="Reset_Click"/>
+           <Button x:Name="DiagnosticButton" Content="一次性通信检查" Click="DiagnoseModbus_Click"/>
+          </WrapPanel>
+          <TextBlock x:Name="FilterDiagnostic" Text="等待数据" Foreground="#9FB9CD" TextWrapping="Wrap" FontSize="11" Margin="5,8,0,0"/>
+          <TextBlock x:Name="ReferenceModeText" Text="当前 ABS：重力参考倾角；REL 未设零点" Foreground="#BDD3E8" FontSize="11" TextWrapping="Wrap"/>
+          <WrapPanel>
+           <Button Content="清除相对零点" Click="ClearRelativeZero_Click"/>
+           <Button Content="打开记录目录" Click="NavRecords_Click"/>
+           <TextBlock x:Name="RecordPathText" Text="记录路径：未开始" Foreground="#99ADC6" VerticalAlignment="Center"/>
+          </WrapPanel>
+          <TextBlock x:Name="TurntableText" Text="转台：未连接" Foreground="#97B8D8" FontSize="11"/>
+          <TextBlock x:Name="FooterText" Text="" Visibility="Collapsed"/>
+         </StackPanel>
+        </Expander>
+       </Grid>
+      </ScrollViewer>
+     </TabItem>
+     <TabItem Header="转台手动控制"><local:TurntableControlView x:Name="TurntablePanel"/></TabItem>
+    </TabControl>
+   </Grid>
+  </Grid>
+ </Grid>
+</Window>

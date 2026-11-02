@@ -1,0 +1,10 @@
+% 可复用表格：修改内容后重新编译 main.tex
+\begin{table}[H]\centering
+\caption{一个温度点的任务量}
+\noindent\begin{tabularx}{\linewidth}{@{}YccY@{}}\toprule
+工作项 & FIT & VAL & 说明\\\midrule
+ACC 静态多姿态 & 12 & 12 & 按常温姿态表执行\\
+GYRO 零速 & 1 & 1 & 拟合零速按配置 120 s，验证至少 10 s\\
+GYRO 动态（可选） & 18 & 12 & $\pm1,\pm2,\pm5$ 拟合；$\pm1.5,\pm3.5$ 验证\\\midrule
+关闭动态 GYRO & \multicolumn{2}{c}{\textbf{26 工况}} & 仅可生成 GYRO 零偏温补，不能声称完成比例因子温补\\
+启用动态 GYRO & \multicolumn{2}{c}{\textbf{56 工况}} & 5 个温度点总计 280 工况\\\bottomrule\end{tabularx}\end{table}

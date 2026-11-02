@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DynamicInclinometer.App/DynamicInclinometer.App.csproj" />
+    <Project Path="src/DynamicInclinometer.Core/DynamicInclinometer.Core.csproj" />
+    <Project Path="src/DynamicInclinometer.Devices/DynamicInclinometer.Devices.csproj" />
+    <Project Path="src/DynamicInclinometer.Infrastructure/DynamicInclinometer.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/"><Project Path="tests/DynamicInclinometer.SmokeTests/DynamicInclinometer.SmokeTests.csproj" /></Folder>
+</Solution>

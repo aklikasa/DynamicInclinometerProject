@@ -1,0 +1,267 @@
+<Application x:Class="DynamicInclinometer.App.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:glass="clr-namespace:DynamicInclinometer.App.Controls">
+ <Application.Resources>
+  <!-- UI system: neutral canvas, opaque readable surfaces, restrained teal instrumentation accents. -->
+  <LinearGradientBrush x:Key="Base" StartPoint="0,0" EndPoint="1,1">
+   <GradientStop Color="#111518" Offset="0"/><GradientStop Color="#23292C" Offset="0.5"/><GradientStop Color="#14181B" Offset="1"/>
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="Panel" Color="#1D2327"/>
+  <SolidColorBrush x:Key="Accent" Color="#B4CECA"/>
+  <SolidColorBrush x:Key="Ink" Color="#EAF0EF"/>
+  <SolidColorBrush x:Key="MutedInk" Color="#B0BFBE"/>
+  <SolidColorBrush x:Key="Line" Color="#52605F"/>
+
+  <Style x:Key="GlassCard" TargetType="Border">
+   <Setter Property="Background" Value="#19202E3E"/>
+   <Setter Property="CornerRadius" Value="16"/>
+   <Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="BorderBrush" Value="#628CA5C5"/>
+   <Setter Property="Effect"><Setter.Value><DropShadowEffect BlurRadius="20" Color="#446376" Opacity="0.075" ShadowDepth="3"/></Setter.Value></Setter>
+  </Style>
+
+  <!-- Native GPU glass cards: child x:Name belongs to hosting window, unlike UserControl content. -->
+  <Style x:Key="LiquidGlassCard" TargetType="{x:Type glass:LiquidGlassPane}">
+    <Setter Property="Padding" Value="16"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type glass:LiquidGlassPane}">
+          <Grid ClipToBounds="True" SnapsToDevicePixels="True">
+            <Rectangle x:Name="PART_GlassPixelSurface" RadiusX="21" RadiusY="21"/>
+            <Border CornerRadius="21" Background="#13FFFFFF" BorderThickness="1.2" IsHitTestVisible="False">
+              <Border.BorderBrush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                  <GradientStop Color="#BDEAF3F0" Offset="0"/>
+                  <GradientStop Color="#42CAD4D0" Offset="0.32"/>
+                  <GradientStop Color="#1A97A8A1" Offset="0.68"/>
+                  <GradientStop Color="#A0FCFCFC" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.BorderBrush>
+            </Border>
+            <Border CornerRadius="20" BorderThickness="0,1,0,0" Margin="2" IsHitTestVisible="False">
+              <Border.BorderBrush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                  <GradientStop Color="#00FFFFFF" Offset="0"/>
+                  <GradientStop Color="#BBFFFFFF" Offset="0.50"/>
+                  <GradientStop Color="#00FFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.BorderBrush>
+            </Border>
+            <ContentPresenter Margin="{TemplateBinding Padding}" ContentSource="Content"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="SectionLabel" TargetType="TextBlock">
+   <Setter Property="Foreground" Value="#EEF3F0"/>
+   <Setter Property="FontSize" Value="17"/>
+   <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+  <Style x:Key="FieldLabel" TargetType="TextBlock">
+   <Setter Property="Foreground" Value="#B3C1C0"/>
+   <Setter Property="FontSize" Value="12"/>
+   <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+  <Style x:Key="MutedCaption" TargetType="TextBlock">
+   <Setter Property="Foreground" Value="#9DAEAC"/>
+   <Setter Property="FontSize" Value="12"/>
+   <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style TargetType="TextBlock">
+   <Setter Property="Foreground" Value="#E7EEEE"/>
+   <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
+  </Style>
+  <Style TargetType="Button">
+   <Setter Property="Foreground" Value="#E8EFED"/>
+   <Setter Property="Background" Value="#30383B"/>
+   <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
+   <Setter Property="FontWeight" Value="SemiBold"/>
+   <Setter Property="FontSize" Value="12"/>
+   <Setter Property="BorderBrush" Value="#596567"/>
+   <Setter Property="Padding" Value="17,9"/>
+   <Setter Property="Margin" Value="3"/>
+   <Setter Property="MinHeight" Value="38"/>
+   <Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+    <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+     BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="#404C4F"/><Setter TargetName="Chrome" Property="BorderBrush" Value="#7E9996"/></Trigger>
+     <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Opacity" Value="0.78"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.45"/><Setter Property="Cursor" Value="Arrow"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="PrimaryAction" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+   <Setter Property="Background" Value="#1864BA"/>
+   <Setter Property="Foreground" Value="#F8FAF8"/>
+   <Setter Property="BorderBrush" Value="#78B7FF"/>
+   <Setter Property="Padding" Value="20,10"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+    <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+     BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="#2C7BD6"/><Setter TargetName="Chrome" Property="BorderBrush" Value="#81C7FF"/></Trigger>
+     <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Background" Value="#15559B"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.45"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="DangerAction" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+   <Setter Property="Background" Value="#523235"/>
+   <Setter Property="Foreground" Value="#FFD3CF"/>
+   <Setter Property="BorderBrush" Value="#9A5755"/>
+  </Style>
+  <!-- Important: center the SINGLE-LINE TextBox content host itself. Do not pad the outer
+       border: WPF's editable TextBoxView was being vertically clipped in the old template.
+       Multiline log fields explicitly stretch instead of being vertically centered. -->
+  <Style TargetType="TextBox">
+   <Setter Property="Foreground" Value="#F1F5F2"/>
+   <Setter Property="Background" Value="#263035"/>
+   <Setter Property="BorderBrush" Value="#606D70"/>
+   <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
+   <Setter Property="FontSize" Value="13"/>
+   <Setter Property="Padding" Value="0"/>
+   <Setter Property="MinHeight" Value="35"/>
+   <Setter Property="VerticalContentAlignment" Value="Center"/>
+   <Setter Property="CaretBrush" Value="#506D6A"/>
+   <Setter Property="SelectionBrush" Value="#758F88"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox">
+    <Border x:Name="Field" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+     BorderThickness="1" CornerRadius="10" SnapsToDevicePixels="True">
+     <ScrollViewer x:Name="PART_ContentHost" Focusable="False" Margin="13,0"
+      HorizontalAlignment="Stretch" VerticalAlignment="Center" HorizontalScrollBarVisibility="Hidden"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Field" Property="BorderBrush" Value="#95B1AA"/><Setter TargetName="Field" Property="BorderThickness" Value="1.5"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Field" Property="Opacity" Value="0.55"/></Trigger>
+     <Trigger Property="AcceptsReturn" Value="True"><Setter TargetName="PART_ContentHost" Property="VerticalAlignment" Value="Stretch"/><Setter TargetName="PART_ContentHost" Property="Margin" Value="12,8"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="ComboBox">
+   <Setter Property="Foreground" Value="#F1F5F2"/>
+   <Setter Property="Background" Value="#263035"/>
+   <Setter Property="BorderBrush" Value="#606D70"/>
+   <Setter Property="FontWeight" Value="SemiBold"/>
+   <Setter Property="FontSize" Value="13"/>
+   <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
+   <Setter Property="MinHeight" Value="39"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="{x:Type ComboBox}">
+    <Grid SnapsToDevicePixels="True">
+     <Border x:Name="Frame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="10">
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="30"/></Grid.ColumnDefinitions>
+       <ContentPresenter Grid.Column="0" Margin="13,0,2,0" VerticalAlignment="Center" HorizontalAlignment="Left"
+        Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+        ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" TextElement.Foreground="#F1F5F2"
+        RecognizesAccessKey="True" IsHitTestVisible="False">
+        <ContentPresenter.Resources><Style TargetType="TextBlock"><Setter Property="Foreground" Value="#F1F5F2"/><Setter Property="FontWeight" Value="SemiBold"/></Style></ContentPresenter.Resources>
+       </ContentPresenter>
+       <Path Grid.Column="1" Data="M 0 0 L 4 4 L 8 0" Stroke="#567386" StrokeThickness="1.8" Fill="Transparent" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Grid>
+     </Border>
+     <ToggleButton x:Name="DropToggle" Focusable="False" Background="Transparent" BorderThickness="0"
+      IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" ClickMode="Press">
+      <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent"/></ControlTemplate></ToggleButton.Template>
+     </ToggleButton>
+     <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+      PlacementTarget="{Binding ElementName=DropToggle}" AllowsTransparency="True" StaysOpen="False" Focusable="False">
+      <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+       Background="#1C2A3D" BorderBrush="#657D95" BorderThickness="1" CornerRadius="10">
+       <ScrollViewer MaxHeight="270" CanContentScroll="True"><ItemsPresenter/></ScrollViewer>
+      </Border>
+     </Popup>
+    </Grid>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Frame" Property="Opacity" Value="0.55"/></Trigger>
+     <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="#95B1AA"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="{x:Type ComboBoxItem}">
+   <Setter Property="Foreground" Value="#F1F5F2"/><Setter Property="Background" Value="#263035"/>
+   <Setter Property="FontFamily" Value="Microsoft YaHei UI"/><Setter Property="FontWeight" Value="SemiBold"/>
+   <Setter Property="FontSize" Value="13"/><Setter Property="MinHeight" Value="36"/><Setter Property="Padding" Value="12,8"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="{x:Type ComboBoxItem}">
+    <Border x:Name="ChoiceBorder" Background="#203044" Padding="11,9" SnapsToDevicePixels="True">
+     <TextBlock Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" Foreground="#F1F5F2"
+      FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="ChoiceBorder" Property="Background" Value="#3E4D4D"/></Trigger>
+     <Trigger Property="IsSelected" Value="True"><Setter TargetName="ChoiceBorder" Property="Background" Value="#425957"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ChoiceBorder" Property="Opacity" Value="0.45"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="{x:Type TabItem}">
+   <Setter Property="Foreground" Value="#B8C9C5"/><Setter Property="Background" Value="Transparent"/>
+   <Setter Property="FontFamily" Value="Microsoft YaHei UI"/><Setter Property="FontWeight" Value="SemiBold"/>
+   <Setter Property="Padding" Value="18,11"/><Setter Property="Margin" Value="0,0,8,0"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem">
+    <Border x:Name="TabChrome" Background="{TemplateBinding Background}" BorderBrush="Transparent"
+     BorderThickness="0,0,0,3" CornerRadius="4,4,0,0" Padding="{TemplateBinding Padding}">
+     <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsSelected" Value="True"><Setter TargetName="TabChrome" Property="Background" Value="#253B3A"/><Setter TargetName="TabChrome" Property="BorderBrush" Value="#506D6A"/><Setter Property="Foreground" Value="#B4CECA"/></Trigger>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TabChrome" Property="Background" Value="#293433"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="TabChrome" Property="Opacity" Value="0.45"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="SubtleCaption" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+   <Setter Property="Foreground" Value="#A8B8B5"/><Setter Property="FontSize" Value="12"/>
+  </Style>
+
+  <!-- Precision Glass: quiet navigation, readable instrumentation, and tinted glass. -->
+  <Style x:Key="ProductCard" TargetType="Border">
+   <Setter Property="Background" Value="#A41A2227"/>
+   <Setter Property="BorderBrush" Value="#59798684"/>
+   <Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="CornerRadius" Value="16"/>
+   <Setter Property="Padding" Value="14"/>
+  </Style>
+  <Style x:Key="NavAction" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+   <Setter Property="HorizontalContentAlignment" Value="Left"/>
+   <Setter Property="Background" Value="Transparent"/>
+   <Setter Property="BorderBrush" Value="Transparent"/>
+   <Setter Property="Foreground" Value="#C8D2CE"/>
+   <Setter Property="MinHeight" Value="51"/>
+   <Setter Property="Margin" Value="0,0,0,7"/>
+   <Setter Property="Template">
+    <Setter.Value>
+     <ControlTemplate TargetType="Button">
+      <Border x:Name="NavChrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="11" Padding="13,12">
+       <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+      </Border>
+      <ControlTemplate.Triggers>
+       <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavChrome" Property="Background" Value="#354542"/></Trigger>
+       <Trigger Property="IsPressed" Value="True"><Setter TargetName="NavChrome" Property="Opacity" Value="0.8"/></Trigger>
+       <Trigger Property="IsEnabled" Value="False"><Setter TargetName="NavChrome" Property="Opacity" Value="0.45"/></Trigger>
+      </ControlTemplate.Triggers>
+     </ControlTemplate>
+    </Setter.Value>
+   </Setter>
+  </Style>
+  <Style x:Key="NavSelected" TargetType="Button" BasedOn="{StaticResource NavAction}">
+   <Setter Property="Background" Value="#1F5AA0"/>
+   <Setter Property="BorderBrush" Value="#76B6F4"/>
+   <Setter Property="Foreground" Value="#FFFFFF"/>
+  </Style>
+  <Style x:Key="MetricLabel" TargetType="TextBlock">
+   <Setter Property="Foreground" Value="#B9C7C3"/>
+   <Setter Property="FontSize" Value="12"/>
+   <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+  <Style x:Key="PanelHeading" TargetType="TextBlock">
+   <Setter Property="Foreground" Value="#EEF6FF"/>
+   <Setter Property="FontWeight" Value="SemiBold"/>
+   <Setter Property="FontSize" Value="15"/>
+  </Style>
+ </Application.Resources>
+</Application>

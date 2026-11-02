@@ -1,0 +1,34 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{常温自动工况与数据采集}
+\section{常温 ACC：12 拟合 + 12 验证}
+2TD600 参考工况以 $(\beta,\alpha)$ 表示\textbf{（内轴角度、外轴角度）}，单位度。下列为当前\Code{production_calibration.py} 的实际列表。
+\input{tables/tbl_acc_fit_poses.tex}
+\input{tables/tbl_acc_validation_poses.tex}
+六个基本方向为矩阵可观测性提供基础，其余斜姿态进一步帮助识别耦合项。每个姿态的参考重力方向应由\textbf{已确认的转台运动学与真实角度反馈}求出，而不是按按钮目标值假定完全到位。
+
+\section{常温 GYRO：19 拟合 + 13 验证}
+\input{tables/tbl_gyro_schedule.tex}
+实际参考轴映射由源码给出：Z 使用内轴，X 使用外轴（内轴 $0^\circ$），Y 使用外轴（内轴 $270^\circ$）；具体正方向必须通过真实转台核对。左右轴/正负转向的参考角速度应采用\textbf{实际稳定段反馈}而非简单取下发的目标值。
+
+\section{为何低速点有用、也有边界}
+若某一轴 $y=k\omega+b+\epsilon$，等噪声、带截距最小二乘下
+\begin{equation}
+\operatorname{Var}(\hat k)=\frac{\sigma^2}{\sum_i(\omega_i-\bar\omega)^2}.
+\end{equation}
+在风机塔筒等低频缓慢姿态变化应用中，$\pm1\sim\pm5^\circ/\mathrm{s}$ 是有意义的低速校准区间；但它\textbf{不能凭自身证明}中高速非线性或整机动态精度满足要求。是否增加独立高速验证，应由实际角速度需求、转台计量能力、机械行程及线缆风险共同决定。配置中的更高速建议点处于\textbf{禁用状态}，不是现有生产工况。
+
+\section{单工况的真实执行步骤}
+\begin{enumerate}
+\item 检查转台通信、使能、伺服正常、反馈及时与样品配置一致。
+\item 下发目标姿态并等待位置/停车反馈；角度跨 $0/360^\circ$ 时按圆周等价处理。
+\item 静置等待（当前配置 3 s）；静态姿态采集 5 s；动态速率稳定后采集 5 s。
+\item GYRO 拟合零速当前配置 120 s（按最新配置文件），验证零速不少于 10 s。
+\item 从实时 IMU 帧取得 ACC、GYRO、芯片温度、转台姿态及反馈速率；记录工况编号与时间。
+\item 对帧内及跨帧异常做稳健筛除，检查采样长度、噪声、温漂和转台稳定性；失败有上限重试。
+\item 动态工况结束后下发停车，并等待停车反馈确认，才进入下一工况。
+\end{enumerate}
+
+\section{当前工程质量门限（\textbf{试运行}）}
+以下值来自最新\Code{production_quality_profile.json}，与未来正式生产验收值不同；工艺文件中的\Code{approved_for_production} 目前为 \Code{false}。
+\input{tables/04_ambient_test_schedule_table_4.tex}
+常温运行配置温度范围为 $15\sim35\, ^\circ\mathrm C$；静态采样最多允许 5 次重试、动态采样最多 3 次重试（具体计数含义以调用处为准）。质量门限用于拒绝不可用数据，\textbf{不会自动保证样本参考准确度}。

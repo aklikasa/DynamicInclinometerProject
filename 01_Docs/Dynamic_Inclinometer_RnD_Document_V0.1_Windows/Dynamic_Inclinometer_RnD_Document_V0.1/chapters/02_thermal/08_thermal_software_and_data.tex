@@ -1,0 +1,44 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{自动温补软件安全、异常与数据追溯}
+\section{任务开始条件}
+必须通过：正确的 2FDT 设备连接、两轴使能且无伺服异常、反馈有效、IMU 数据连续有效、标定配置冻结、PLC 读取新鲜且无报警、操作员安全勾选、PCB 唯一编号及保存目录有效。自动温控前必须确认\textbf{该台设备}的既有 PLC 页面确曾实际完成 PV 读取和 SP 写入。
+
+\section{运行中关键异常}
+\begin{table}[H]\centering\small
+\caption{异常触发与受控处理原则}
+\noindent\begin{tabularx}{\linewidth}{@{}p{40mm}YY@{}}\toprule
+异常 & 判定/动作 & 记录要求\\\midrule
+PLC 断线、报警、反馈过期 & 禁止使用缓存数据继续实验；请求中止 & 事件时间、PV/SP、报警码、通信状态\\
+温箱 SP 未回读生效 & 90 s 未确认则中止 & 目标、回读值、模式、运行标志\\
+温箱到温/芯片热平衡超时 & 不允许跳过条件 & 等待时间、芯片温度曲线\\
+IMU 断流、量程/ODR 改变、队列丢帧 & 本轮数据不可用于拟合 & 帧计数、丢帧数、原始量程\\
+位置未到位、动态速率不稳 & 限定等待或重试，失败中止 & 目标与实测、速率标准差、失败原因\\
+温度点中途失败 & 保存未完成原始记录，不生成可用生产参数 & 运行状态 INCOMPLETE / 原因\\
+停车命令返回失败 & 明确提示现场硬件急停，不声称停车成功 & 停车结果、设备状态、人为处置\\\bottomrule\end{tabularx}\end{table}
+当前软件的异常中止会尝试对两轴发送停车命令、停止温箱定值运行；但软件通信失败时必须\textbf{人工核对真实设备}。正常全部完成后默认自动将 PLC 设回 $25\, ^\circ\mathrm C$，确认 PV 连续到温再结束。
+
+\section{文件与字段约定}
+\begin{table}[p]
+\centering\footnotesize
+\caption{温补实验输出文件及其用途}\label{tab:thermal-files}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{61mm}Y@{}}\toprule
+输出文件/路径 & 含义和使用方法\\\midrule
+\Code{THERM_YYYYMMDD_HHMMSS/} & 单次实验目录，绑定 PCB 编号、配置与事件\\
+\Code{experiment_config.json} & 温度计划、FIT/VAL 划分、工艺配置、温箱模式、动态 GYRO 与回温设置\\
+\Code{imu_full_frames.jsonl} & IMU 原始逐帧、芯片温度、测量与反馈信息\\
+\Code{imu_frame_means.csv} & 时间、PV、转台角/速、ACC/GYRO 原始均值及反馈年龄\\
+\Code{temperature_measurements.csv} & 每个工况的温度、参考矢量、实测矢量和有效帧数\\
+\Code{temperature_measurements.json} & 实验状态、统计汇总与事件日志\\
+\Code{thermal_acc_candidate.json} & ACC 完整仿射温补候选参数（拟合成功时）\\
+\Code{thermal_gyro_candidate.json} & GYRO 完整温补候选参数（动态工况可辨识时）\\
+\Code{thermal_gyro_bias_only_candidate.json} & GYRO 零偏随温度变化的候选模型\\
+\Code{thermal_fit_status.json} & 各子模型拟合状态和失败原因\\
+\Code{thermal_calibration_report.xlsx} & 独立温度/工况验证和固定 25°C 对照\\\bottomrule
+\end{tabularx}
+\end{table}
+\begin{notice}
+输出字段中的\Code{temperature_mean_c} 是\textbf{IMU 芯片测温}的工况均值；\Code{temperature_target_c} 是温箱的设定点。模型拟合使用前者，而按后者划分 FIT/VAL 温度角色。这两个字段不能在数据清洗时混淆。
+\end{notice}
+
+\section{建议保存的元数据与校准链}
+正式量产记录建议至少保存：PCB 唯一编号、MCU 固件版本、量程/ODR/滤波、软件版本和代码提交号、转台计量证书、设备序列号、装夹治具编号、环境条件、温箱 PV 与芯片温度、实验操作者、原始帧哈希、参数哈希、异常码、拟合/验证划分及审批签名。候选 JSON 的\Code{production_release:false} 不得随意改为真。

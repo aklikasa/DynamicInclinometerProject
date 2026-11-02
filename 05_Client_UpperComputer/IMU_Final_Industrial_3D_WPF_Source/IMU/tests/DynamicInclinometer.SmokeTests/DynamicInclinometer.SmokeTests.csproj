@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType></PropertyGroup><ItemGroup><ProjectReference Include="../../src/DynamicInclinometer.Core/DynamicInclinometer.Core.csproj"/><ProjectReference Include="../../src/DynamicInclinometer.Devices/DynamicInclinometer.Devices.csproj"/></ItemGroup></Project>

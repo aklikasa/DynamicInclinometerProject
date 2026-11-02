@@ -1,0 +1,11 @@
+% 可复用表格：修改内容后重新编译 main.tex
+\begin{table}[H]\centering\small
+\caption{采样质量门限（软件当前值；并非计量标准通用规定）}
+\noindent\begin{tabularx}{\linewidth}{@{}Yp{32mm}Yp{32mm}@{}}\toprule
+项目 & 当前值 & 项目 & 当前值\\\midrule
+每工况最少有效帧 & 50 & 异常剔除比例上限 & 10\%\\
+ACC 稳健剔除 & $3\times\mathrm{MAD\mbox{-}\sigma}$ & GYRO 稳健剔除 & $6\times\mathrm{MAD\mbox{-}\sigma}$\\
+静止 ACC 单轴标准差上限 & 0.025 g & 静止 GYRO 单轴标准差上限 & 0.45 $^\circ$/s\\
+动态 GYRO 单轴标准差上限 & 0.55 $^\circ$/s & 转台参考速率标准差上限 & 0.18 $^\circ$/s\\
+转台速率均值偏离目标上限 & 0.30 $^\circ$/s & 静止反馈速率上限 & 0.05 $^\circ$/s\\
+转台反馈最大年龄 & 250 ms & 常温单工况芯片温度跨度 & 1.0 $^\circ$C\\\bottomrule\end{tabularx}\end{table}

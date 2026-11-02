@@ -1,0 +1,27 @@
+动态倾角仪 WPF + 2TD-600 自动找零/正弦运动 · 开机前必读
+
+[交付状态]
+本交付物为完整 WPF 源码工程和 Windows 发布脚本，不是已编译的 EXE 或经过真实转台验证的运行成品。本环境无法运行 WPF、串口 IMU 或 2TD-600。
+
+[实验操作先决条件]
+1) 先检查 2TD-600 控制柜实体急停（软件停车不是急停），观察人员距离旋转范围≥3m；运动前脱离锁紧装置并检查承载/工装/限位、滑环及线缆无干涉。
+2) 核对 IMU 设备号对应的 ACC 与 GYRO 标定文件，不重复执行内参标定。
+3) 完成 Roll/Pitch 安装轴、正向约定以及“内轴0 / 外轴2”的现场确认；未确认不要直接信任角度误差报告。
+4) 首次实际找零可能运行较大角度。在确认完整找零路径不会与夹具干涉之前，不可允许自动找零。
+5) Windows 安装 .NET 10 SDK 后运行：构建和测试.ps1；再运行：一键发布_Windows.ps1。编译不过不得驱动硬件。
+6) 真机调试建议先在空载或经厂商认可的安全工况测试；首次采用小幅度/低频率逐步验证，再尝试参考 SST810 的 ±5° / 0.3Hz 工况。
+7) 无时钟同步证明、无量程/ODR/MCU Tick固件确认前，输出只能作为工程实时动态姿态显示与研发报告，不得标注精度验收合格。
+
+[软件具体行为]
+- 查询机械找零标志（独立于位置显示的0°）；未找零时受控找零；连续确认完成、停稳后定位起始角；启动单轴正弦摇摆。
+- 限位/驱动故障/轴锁紧/双轴异常运动/通信与IMU断流/用户停止时请求受控停车。
+- 停车无法从传感器反馈确认时，必须由现场人员通过独立实体急停处置。
+
+[源码目录]
+README.md
+src/DynamicInclinometer.App/MainWindow.xaml, .cs
+src/DynamicInclinometer.App/TurntableControlView.xaml, .cs
+src/DynamicInclinometer.Devices/ImuSources.cs, TurntableTelemetry.cs
+src/DynamicInclinometer.Core/Attitude.cs, ErrorStateKalmanFilter.cs
+vendor/2TD600.dll
+docs/20261027_2TD600自动测试技术与风险说明.md

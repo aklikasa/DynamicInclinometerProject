@@ -1,0 +1,11 @@
+% 可复用表格：修改内容后重新编译 main.tex
+\begin{table}[H]\centering
+\caption{GYRO 速率点选择（当前试运行工艺）}
+\noindent\begin{tabularx}{\linewidth}{@{}p{25mm}p{45mm}p{28mm}Y@{}}\toprule
+阶段 & 参考角速度 & 工况数 & 目的\\\midrule
+拟合静止 & $0^\circ/\mathrm{s}$ & 1 & 三轴零偏基准\\
+拟合动态 & $\pm1,\pm2,\pm5^\circ/\mathrm{s}$，参考 X/Y/Z 各执行 & 18 & 三轴比例与耦合矩阵\\
+验证静止 & $0^\circ/\mathrm{s}$ & 1 & 未参与拟合的静止残差\\
+验证动态 & $\pm1.5,\pm3.5^\circ/\mathrm{s}$，参考 X/Y/Z 各执行 & 12 & 独立的速度幅值和方向检查\\\midrule
+总计 &  & \textbf{32} & \textbf{19 拟合 + 13 验证}\\\bottomrule
+\end{tabularx}\end{table}

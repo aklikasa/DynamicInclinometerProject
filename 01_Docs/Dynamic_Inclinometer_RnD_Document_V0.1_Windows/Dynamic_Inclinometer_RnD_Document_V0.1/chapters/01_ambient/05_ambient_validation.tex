@@ -1,0 +1,43 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{常温独立验证、报告与示例解释}
+\section{验证指标与定义}
+对独立验证工况 $i\in\mathcal V$，有
+\begin{align}
+\vect e_i&=\hat{\vect r}_i-\vect r_i,\\
+\mathrm{RMSE}_{v}&=\sqrt{\frac1{N_V}\sum_{i\in\mathcal V}\norm{\vect e_i}^2},\\
+E_{v,\max}&=\max_{i\in\mathcal V}\norm{\vect e_i}.
+\end{align}
+ACC 方向误差与模长误差分别为
+\begin{align}
+\theta_i&=\cos^{-1}\!\left(\operatorname{clip}\frac{\hat{\vect a}_i^\mathsf T\vect g_i}{\norm{\hat{\vect a}_i}\norm{\vect g_i}},-1,1\right),\\
+E_{g,i}&=\big|\norm{\hat{\vect a}_i}-1\big|\quad (g).
+\end{align}
+GYRO 另检查零速矢量残差、非目标方向分量（交叉轴残差）及动态方向误差。静止工况的角度方向没有定义，不应强行算作动态方向误差。
+
+\section{候选模型判定逻辑}
+\begin{enumerate}
+\item 拟合能否求解、矩阵是否可逆、设计矩阵条件数是否正常。
+\item 每个模型在同一独立验证集上的 RMSE、最大误差、方向及耦合残差。
+\item 按\textbf{当前试运行配置}判断是否满足质量门限；超标保留失败说明。
+\item 在质量通过的候选中按照独立验证矢量 RMSE 排序，但不自动替换既有常温 C 方案参数。
+\end{enumerate}
+\begin{warningbox}
+\textbf{严禁把试运行 PASS 误读成量产放行。} 现有配置中 ACC 矢量 RMSE 门限 0.015 g、最大方向误差门限 $1.2^\circ$ 等属于软件试运行阈值，明显不能直接当成对标高精度动态倾角仪的最终制造工艺指标。正式门限应基于误差预算、转台参考不确定度、整机融合算法和多板 GR\&R 批准。
+\end{warningbox}
+
+\section{已上传实验结果示例（仅用于解释读表）}
+\begin{table}[H]\centering\small
+\caption{ACC 三方案汇总（来自用户提供的 \Code{model_comparison_acc.csv}）}
+\noindent\begin{tabularx}{\linewidth}{@{}p{17mm}Yp{27mm}p{29mm}p{23mm}@{}}\toprule
+方案 & 状态 & 验证矢量 RMSE & 最大方向误差 & 最大模长误差\\\midrule
+A & FAIL & 1.429227 g & $113.5113^\circ$ & 4.499 mg\\
+B & PILOT PASS & 2.473 mg & $0.1574^\circ$ & 3.070 mg\\
+C & PILOT PASS & \textbf{0.787 mg} & \textbf{$0.0674^\circ$} & \textbf{0.742 mg}\\\bottomrule\end{tabularx}\end{table}
+\begin{table}[H]\centering\small
+\caption{GYRO 三方案汇总（来自用户提供的 \Code{model_comparison_gyro.xlsx}）}
+\noindent\begin{tabularx}{\linewidth}{@{}p{15mm}Yp{35mm}p{35mm}@{}}\toprule
+方案 & 状态 & 验证矢量 RMSE & 最大交叉轴残差\\\midrule
+A & FIT FAILED & --- & ---\\
+B & PILOT PASS & 0.015797 $^\circ$/s & 0.020862 $^\circ$/s\\
+C & PILOT PASS & \textbf{0.013127 $^\circ$/s} & \textbf{0.011896 $^\circ$/s}\\\bottomrule\end{tabularx}\end{table}
+上述示例说明\textbf{这批数据的 C 模型验证残差较小}，但不能据此直接得出芯片三轴正交性、全量程性能或量产重复性结论；GYRO 报告中的比例系数量级还应结合底层单位换算确认。A 方案方向失配还与参考系定义有关。样本原始帧、装夹、实际温度、转台计量报告、跨板样本数量等证据尚需归档。

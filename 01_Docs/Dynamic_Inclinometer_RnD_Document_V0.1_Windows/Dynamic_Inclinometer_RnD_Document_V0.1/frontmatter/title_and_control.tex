@@ -1,0 +1,49 @@
+\begin{titlepage}
+\thispagestyle{empty}
+\vspace*{13mm}
+{\sffamily\bfseries\color{teal}\Large ENGINEERING RESEARCH DOCUMENT}\par
+\vspace{5mm}\noindent\color{teal}\rule{46mm}{2pt}\par
+\vspace{20mm}
+{\sffamily\bfseries\color{navy}\fontsize{30}{43}\selectfont
+动态倾角仪研发技术文档\par}
+\vspace{8mm}
+{\LARGE\sffamily\color{blue}常温 IMU 内参标定与自动温度补偿}\par
+\vspace{6mm}
+{\large\sffamily\color{muted}ASM330LHHX · 2TD600 · 2FDT600WK · PLC}\par
+\vspace{14mm}
+\begin{notice}
+\textbf{V0.1 · 研发阶段技术母版}\par
+本文面向动态倾角仪完整研发生命周期；本版仅详细记录正在开展的\textbf{常温内参标定}和\textbf{自动温度补偿}。噪声建模、姿态融合、固件应用、整机验证及量产工艺在项目路线中保留，未作为已完成的章节。
+\end{notice}
+\vfill
+\noindent\begin{tabularx}{\linewidth}{@{}p{33mm}Y@{}}\toprule
+文档编号 & DI-RND-TECH-001\\
+当前版本 & V0.1（2026-11-01）\\
+适用范围 & 动态倾角仪研发；当前工作包为 ACC/GYRO 常温标定与温补\\
+软件背景 & Python + PySide6 上位机及其 2FDT 温补集成分支\\
+适用设备 & ASM330LHHX、2TD600、2FDT600WK、PLC 温箱\\
+当前状态 & \textbf{研发文件；未经量产审批，未完成整机验收}\\\bottomrule
+\end{tabularx}
+\end{titlepage}
+\pagenumbering{Roman}
+\chapter*{文档控制与使用说明}
+\addcontentsline{toc}{chapter}{文档控制与使用说明}
+\noindent\begin{tabularx}{\linewidth}{@{}p{31mm}Y@{}}\toprule
+用途 & 统一记录实验方法、软件现状、算法定义、工况、风险和可复核证据。\\
+状态 & 当前软件配置、研发候选指标和实测示例必须明确标识，不得互相替代。\\
+依据 & 原工作台源码、当前温补集成工程、如洋设备说明书及用户提供的示例结果。\\
+后续扩展 & 未来每个研发阶段单独新增章节并附实测数据；本版不预写已完成结论。\\
+审批 & 制订：\rule{22mm}{.3pt}\quad 审核：\rule{22mm}{.3pt}\quad 批准：\rule{22mm}{.3pt}\\\bottomrule
+\end{tabularx}
+\begin{warningbox}
+\textbf{操作安全：} 本文涉及真实高低温箱和双轴转台运动。离线数值测试不能替代现场安全和计量验收。首次联合运行由专业人员现场监护，硬件急停、限位、装夹、线束与温度报警须独立核实。
+\end{warningbox}
+\section*{版本记录}
+\noindent\begin{tabularx}{\linewidth}{@{}p{17mm}p{29mm}Y@{}}\toprule
+版本 & 日期 & 内容\\\midrule
+V0.1 & 2026-11-01 & 建立完整研发文档框架，仅展开常温标定和自动温补；重构表格与布局，修正交叉引用、字体及分页问题。\\\bottomrule
+\end{tabularx}
+\tableofcontents
+\clearpage\listoffigures
+\clearpage\listoftables
+\clearpage\pagenumbering{arabic}

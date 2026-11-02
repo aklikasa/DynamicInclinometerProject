@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "dgSpecHash": "T+7mCy/233w=",
+  "success": true,
+  "projectFilePath": "D:\\工作杂事\\动态倾角仪研发\\演示测试上位机开发\\IMU_Final_Industrial_3D_WPF_Source\\IMU\\tests\\DynamicInclinometer.SmokeTests\\DynamicInclinometer.SmokeTests.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.android-arm.runtime.native.system.io.ports\\10.0.0\\runtime.android-arm.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.android-arm64.runtime.native.system.io.ports\\10.0.0\\runtime.android-arm64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.android-x64.runtime.native.system.io.ports\\10.0.0\\runtime.android-x64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.android-x86.runtime.native.system.io.ports\\10.0.0\\runtime.android-x86.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-arm.runtime.native.system.io.ports\\10.0.0\\runtime.linux-arm.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-arm64.runtime.native.system.io.ports\\10.0.0\\runtime.linux-arm64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-bionic-arm64.runtime.native.system.io.ports\\10.0.0\\runtime.linux-bionic-arm64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-bionic-x64.runtime.native.system.io.ports\\10.0.0\\runtime.linux-bionic-x64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-musl-arm.runtime.native.system.io.ports\\10.0.0\\runtime.linux-musl-arm.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-musl-arm64.runtime.native.system.io.ports\\10.0.0\\runtime.linux-musl-arm64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-musl-x64.runtime.native.system.io.ports\\10.0.0\\runtime.linux-musl-x64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.linux-x64.runtime.native.system.io.ports\\10.0.0\\runtime.linux-x64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.maccatalyst-arm64.runtime.native.system.io.ports\\10.0.0\\runtime.maccatalyst-arm64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.maccatalyst-x64.runtime.native.system.io.ports\\10.0.0\\runtime.maccatalyst-x64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.native.system.io.ports\\10.0.0\\runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.osx-arm64.runtime.native.system.io.ports\\10.0.0\\runtime.osx-arm64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\runtime.osx-x64.runtime.native.system.io.ports\\10.0.0\\runtime.osx-x64.runtime.native.system.io.ports.10.0.0.nupkg.sha512",
+    "C:\\Users\\cxygy\\.nuget\\packages\\system.io.ports\\10.0.0\\system.io.ports.10.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

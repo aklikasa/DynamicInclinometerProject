@@ -1,0 +1,55 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{常温内参标定：数学模型与三方案}
+\section{统一的正向测量与逆校正模型}
+在一个固定温度、固定传感器配置和固定公共参考系 $P$ 内，ACC/GYRO 的一阶线性测量模型写为
+\begin{equation}\label{eq:forward}
+\boxed{\vect y=\mathbf F\vect r+\vect b+\vect\epsilon},\qquad
+\boxed{\hat{\vect r}=\mathbf C(\vect y-\vect b),\ \mathbf C=\mathbf F^{-1}}.
+\end{equation}
+矩阵 $\mathbf F$ 包含传感器比例、轴间耦合及安装方向；$\vect b$ 是原始信号坐标中的零偏。对 ACC，$\vect r$ 是各姿态下的重力参考矢量；对 GYRO，则是参考角速度矢量。\textbf{原始单位先换算正确，才能解释 $\mathbf F$ 的数值。}
+
+\section{A：六参数，零偏与各轴比例}
+形式为
+\begin{equation}
+\mathbf F_A=\operatorname{diag}(s_x,s_y,s_z),\quad
+\hat{\vect r}_A=\operatorname{diag}(s_x^{-1},s_y^{-1},s_z^{-1})(\vect y-\vect b).
+\end{equation}
+参数为三轴零偏和三个正比例因子，共六个。\textbf{ACC 使用仅约束模长的轴对齐椭球拟合：}
+\begin{equation}
+\min_{\vect b,\,s_j>0}\sum_{i\in\mathcal F}
+\left(\sqrt{\sum_{j\in\{x,y,z\}}\left(\frac{y_{ij}-b_j}{s_j}\right)^2}-1\right)^2.
+\end{equation}
+该 ACC 方法没有使用转台参考方向来估计安装旋转；因此它的模长误差可能较低，而相对于 $P$ 的方向误差很大。不能将这类方向误差直接解释成芯片非正交误差。GYRO 的 A 方案使用各轴参考速度的一元带截距回归，要求获得合理、正向的比例因子。
+
+\section{B：九参数，轴向比例加刚体旋转}
+采用
+\begin{equation}
+\mathbf F_B=\operatorname{diag}(s_x,s_y,s_z)\mathbf R^\mathsf T,
+\qquad \mathbf R\in SO(3),\ \mathbf R^\mathsf T\mathbf R=\mathbf I,\ \det\mathbf R=1.
+\end{equation}
+参数为三零偏、三比例及旋转的三个自由度，共九个。该模型补偿 PCB/IMU 相对转台的刚体姿态失准，但不允许自由拟合额外的轴间剪切。
+
+\section{C：十二参数，完整 \texorpdfstring{$3\times 3$}{3x3} 仿射模型}
+采用
+\begin{equation}\label{eq:C}
+\mathbf F_C=\begin{bmatrix}f_{11}&f_{12}&f_{13}\\f_{21}&f_{22}&f_{23}\\f_{31}&f_{32}&f_{33}\end{bmatrix},
+\quad \vect b=\begin{bmatrix}b_x\\b_y\\b_z\end{bmatrix}.
+\end{equation}
+总计 12 个自由参数。令拟合工况 $\mathcal F$ 的参考和原始测量分别为 $\mathbf R\in\mathbb R^{N\times3}$ 与 $\mathbf Y\in\mathbb R^{N\times3}$，构造
+\begin{equation}\label{eq:ls}
+\mathbf X=\begin{bmatrix}\mathbf R&\vect 1\end{bmatrix}\in\mathbb R^{N\times4},\qquad
+\hat{\mathbf B}=\arg\min_{\mathbf B}\norm{\mathbf X\mathbf B-\mathbf Y}_F^2.
+\end{equation}
+$\hat{\mathbf B}$ 的前三行为 $\mathbf F_C^\mathsf T$，末行为 $\vect b^\mathsf T$。求解时应使用最小二乘法并检查 $\operatorname{rank}(\mathbf X)=4$、设计矩阵条件数、$\det\mathbf F_C$ 与 $\operatorname{cond}(\mathbf F_C)$；奇异或病态结果必须拒绝。
+
+\section{三方案公平比较的原则}
+\begin{itemize}
+\item 三个候选模型共用同一次\textbf{真实自动采集}的拟合样本；不得 A 用一批、B 用另一批。
+\item 同一批\textbf{独立验证工况}用于量化三者输出误差；不得用验证集调拟合参数。
+\item 先检查数学求解与质量门限，再比较独立验证矢量 RMSE，结果仅选取\textbf{研发候选}。
+\item A 的 ACC 只提供轴对齐模长校准，方向误差需注明名义轴系假设；B 与 C 可进行直接 $P$ 系向量比较。
+\item 必须保存失败原因和数值不确定性；更多参数的 C 不因为参数数目多就必然适合每块 PCB。
+\end{itemize}
+\begin{notice}
+当前常温页面的三方案并非手动上传 JSON 后离线比较：\textbf{ACC/GYRO 三方案自动对比按钮会先复用原 2TD600 的自动运动及采样流程，然后求解并独立验证三个模型。} 单方案按钮则按所选模型求解。\source{\Code{form/form_imu_calibration.py}、\Code{calibration_model_compare.py}。}
+\end{notice}

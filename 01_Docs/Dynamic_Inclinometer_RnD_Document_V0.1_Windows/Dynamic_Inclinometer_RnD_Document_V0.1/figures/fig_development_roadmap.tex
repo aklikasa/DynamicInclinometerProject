@@ -1,0 +1,15 @@
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, node distance=3mm, every node/.style={font=\footnotesize},
+  phase/.style={draw=border,fill=soft,rounded corners=1.5mm,minimum height=9mm,text width=113mm,align=center}]
+\node[phase] (a) {阶段 I\quad 常温 ACC/GYRO 内参标定及独立验证（已有软件与研发数据）};
+\node[phase,below=of a] (b) {阶段 II\quad 温箱+双轴转台联合温补采集与参数拟合（已集成，待实机验收）};
+\node[phase,below=of b] (c) {阶段 III\quad Allan 随机噪声分析与长期稳定性研究（规划）};
+\node[phase,below=of c] (d) {阶段 IV\quad MCU 温补参数应用与动态姿态融合算法（规划）};
+\node[phase,below=of d] (e) {阶段 V\quad 整机高低温、动态精度及环境验证（规划）};
+\node[phase,below=of e] (f) {阶段 VI\quad 量产工艺、GR\&R、出厂检验与现场监测（规划）};
+\foreach \p/\q in {a/b,b/c,c/d,d/e,e/f}{\draw[->,thick,teal](\p.south)--(\q.north);}
+\end{tikzpicture}
+\caption{动态倾角仪技术文档的分阶段扩展路线；“规划”内容并不表示工程已实现。}
+\label{fig:roadmap}
+\end{figure}

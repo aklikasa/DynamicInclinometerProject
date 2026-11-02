@@ -1,0 +1,42 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{标准操作规程（SOP）与交接模板}
+\section{SOP-A：一次常温自动标定}
+\begin{enumerate}
+\item 核对 PCB 编号、装夹、转台型号 2TD600、轴向参考、硬件急停与环境。
+\item 连接 2TD600 和 IMU，检查连续的真实数据；记录量程/ODR/固件版本。
+\item 载入并锁定\Code{production_quality_profile.json}，明确当前仍为 PILOT。
+\item 若对比模型，选 ACC 或 GYRO 的“三方案自动对比”；若只求单方案，先选 A/B/C 再开始原自动流程。
+\item 监控每工况到位、速率、采样与失败重试，动态工况结束确认停车。
+\item 保存拟合/独立验证结果及原始帧，核对异常项；候选不能未经审批覆盖正式标定参数。
+\item 导出 JSON、CSV、Excel，记录操作人和异常处置，签署研发阶段审查结论。
+\end{enumerate}
+
+\section{SOP-B：一次温箱自动温补实验}
+\begin{enumerate}
+\item 连接并验证 2FDT600WK 双轴及 PLC 温箱，确认 PV 可读、SP 可写并实际作用于本台温箱。
+\item 连接 IMU，核对温度字段、数据速率、量程、六轴输出和时钟同步；确认转台无转动。
+\item 输入 PCB 唯一编号，温度计划默认 $-20,0,25,45,70^\circ\mathrm C$；选择是否启用动态 GYRO。
+\item 确认门禁、机械锁、线缆、配平、急停、设备轴系及现场监护；运行前记录基准常温参数文件版本。
+\item 点击“启动自动温补实验”；依次观察 PLC 写 SP、回读、到温和芯片稳定，随后由程序完成转台工况。
+\item 正常完成后待温箱自动回到 $25^\circ\mathrm C$；检查实验目录完整、拟合成功与否、两个独立验证温度的补偿效果。
+\item 对有报警/中止的实验保留原始数据但\textbf{不可标为合格温补}；将异常与实机处理一起归档。
+\end{enumerate}
+
+\section{审批与验收记录空表}
+\begin{table}[htbp]\centering\small
+\caption{研发实验审核记录表}\label{tab:record}
+\begin{tabularx}{\linewidth}{@{}p{48mm}Y@{}}\toprule
+记录项 & 本次实验填写\\\midrule
+PCB 编号 / 固件 & \rule{65mm}{.3pt}\\[3mm]
+实验日期 / 操作员 & \rule{65mm}{.3pt}\\[3mm]
+转台型号及设备序列号 & \rule{65mm}{.3pt}\\[3mm]
+PLC 温箱型号 / IP / 驱动 & \rule{65mm}{.3pt}\\[3mm]
+ACC / GYRO FS、ODR & \rule{65mm}{.3pt}\\[3mm]
+常温 C 参数文件版本 & \rule{65mm}{.3pt}\\[3mm]
+温度 FIT / VAL 集合 & \rule{65mm}{.3pt}\\[3mm]
+温箱 PV / 芯片温度记录 & \rule{65mm}{.3pt}\\[3mm]
+ACC / GYRO 验证 RMSE & \rule{65mm}{.3pt}\\[3mm]
+温补改善率 / 失败原因 & \rule{65mm}{.3pt}\\[3mm]
+转台 / 温箱异常记录 & \rule{65mm}{.3pt}\\[3mm]
+审核结论 / 纠正措施 & \rule{65mm}{.3pt}\\[3mm]
+\bottomrule\end{tabularx}\end{table}

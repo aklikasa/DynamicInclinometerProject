@@ -1,0 +1,40 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{总则、目标与边界}
+\section{项目目标}
+本项目服务于基于 ASM330LHHX 的三轴角速度与三轴加速度采集系统，最终面向动态倾角仪。当前研发活动分为两条相关但相对独立的链路：
+\begin{enumerate}
+\item \textbf{常温内参标定}：在室温、固定量程和 ODR 下，辨识 ACC/GYRO 的零偏、比例因子、安装旋转与轴间耦合；通过未参与拟合的工况验证。
+\item \textbf{温度补偿}：在受控温度、可复现姿态或角速度下辨识参数随芯片温度的变化，并验证插值补偿是否降低残差。
+\end{enumerate}
+两条链路可以并行研发；但温补结果、常温参数和最终 MCU 数据路径必须建立\textbf{统一的矩阵定义、单位、坐标系及版本追踪}。
+
+\section{工作范围与不在范围内的事项}
+\noindent\begin{tabularx}{\linewidth}{@{}p{38mm}YY@{}}\toprule
+类别 & 本文覆盖 & 暂不构成本规范的功能\\\midrule
+常温内参 & A/B/C 模型、ACC/GYRO 自动工况、独立验证、候选参数 & 未经证明的全量程误差外推\\
+温度补偿 & 温箱自动调度、芯片热平衡、双轴工况、温度函数、独立温度验证 & 未在实机核对的无人值守量产运行\\
+产品性能 & 温补前后输入矢量误差、零速漂移等指标 & 直接等同于整机动态倾角精度认证\\
+后续工作 & 预留姿态融合、整机动态试验、温度循环与 GR\&R 接口 & 本版直接规定最终算法融合参数或工厂出厂阈值\\\bottomrule\end{tabularx}
+\section{基础定义与统一符号}
+\begin{table}[htbp]
+\centering\small
+\caption{本文常用数学与工程符号}\label{tab:notation}
+\begin{tabularx}{\linewidth}{@{}p{24mm}p{40mm}Y@{}}\toprule
+符号 & 含义 & 单位与约定\\\midrule
+$P$ & 转台参考坐标系 & 外轴 X、内轴 Z 的约定须现场核实，右手系\\
+$S$ & IMU 原始传感器坐标系 & 三轴排列、正负号与量程须冻结\\
+$\vect r$ & 参考向量 & ACC：$g$；GYRO：$^\circ/\mathrm{s}$\\
+$\vect y$ & 换算后的原始测量矢量 & ACC：$g$；GYRO：$^\circ/\mathrm{s}$；不是校正输出\\
+$\vect b$ & 零偏向量 & 与 $\vect y$ 单位一致\\
+$\mathbf F$ & 正向测量矩阵 & $\vect y=\mathbf F\vect r+\vect b$\\
+$\mathbf C$ & 逆校正矩阵 & $\mathbf C=\mathbf F^{-1}$\\
+$T_c$ & IMU 芯片温度 & $^\circ\mathrm C$；温补模型自变量\\
+PV / SP & 温箱实测值 / 设定值 & $^\circ\mathrm C$；两者不能互换\\
+FIT / VAL & 拟合 / 独立验证工况 & VAL 不参与参数拟合\\\bottomrule
+\end{tabularx}
+\end{table}
+\begin{notice}
+\textbf{坐标先于数学。} 不论常温还是温补，都应先确认转台角度反馈、绕轴正方向、PCB 安装法向、重力正号、陀螺仪原始单位及传感器轴定义。模型误差小不能自动证明这些定义正确。
+\end{notice}
+
+

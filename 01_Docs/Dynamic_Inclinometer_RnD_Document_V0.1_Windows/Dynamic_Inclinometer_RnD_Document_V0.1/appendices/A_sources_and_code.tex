@@ -1,0 +1,28 @@
+\chapter{参考资料与代码定位}
+
+\section{原始工程与集成版本}
+\begin{itemize}
+\item \textbf{原始工程：} 用户提供的《动态倾角仪工作台 ACC 轴系纠正、3Sigma、GYRO 诊断修订项目》第 10 版 ZIP。该工程是原始业务流程与设备接口的依据。
+\item \textbf{温补集成工程：} \Code{TiltSensorCalibration_PLC_AutoTempComp_WindowsCompatible.zip}。其中的功能有部分仅通过离线测试，真实 PLC、转台和 IMU 的联合安全验收仍未完成。
+\end{itemize}
+
+\section{相关软件模块}
+以下路径均是当前集成工程根目录的相对路径。对于不同软件版本，应以本机实际工程路径及提交记录为准。
+\begin{itemize}[itemsep=2pt]
+\item 常温算法与工况：\Code{production_calibration.py}
+\item 质量门限：\Code{production_quality_profile.json}
+\item A/B/C 模型比较：\Code{calibration_model_compare.py}
+\item 温度参数拟合：\Code{thermal_compensation.py}
+\item PLC 状态防护：\Code{chamber_auto_guard.py}
+\item 常温界面：\Code{form/form_imu_calibration.py}
+\item 温补界面：\Code{form/form_thermal_compensation.py}
+\item 温箱控制：\Code{temperature_chamber/temperature_chamber_comm.py}
+\item 温控转台通信：\Code{turntable/turntable_2FDT600WK_comm.py}
+\end{itemize}
+
+\section{设备资料与示例数据}
+\begin{itemize}
+\item \textbf{如洋设备说明书：} 《2FDT600WK 双轴温控转台使用说明书》（用户提供 DOCX，编号 2306001）。机械结构、RS-422 运动通信与温箱标称指标取自设备说明书。手册中速率精度部分公式在现有文本提取中不完整，本文不引用无法明确识读的数值。
+\item \textbf{实验报告示例：} \Code{model_comparison_acc.csv} 和 \Code{model_comparison_gyro.xlsx}。用于演示报告阅读方法；未经完整原始帧、计量证书及复测证据核验，不能作为产品性能或量产合格结论。
+\item \textbf{芯片数据手册：} ST 的 \Code{DS_asm330lhhx.pdf}。器件寄存器与灵敏度换算仍须按实装 PCB、固件和审核通过的数据手册版本核对。
+\end{itemize}

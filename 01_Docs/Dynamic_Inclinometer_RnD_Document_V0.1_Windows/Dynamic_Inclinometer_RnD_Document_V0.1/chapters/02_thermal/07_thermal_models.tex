@@ -1,0 +1,53 @@
+% 独立章节文件：可单独编辑，统一由 main.tex 引入。
+\chapter{温度模型：参数识别、补偿与验证}
+\section{现有软件采用的实际数学路线}
+\begin{warningbox}
+\textbf{实现差异必须保留在正式技术文件中：} 当前\Code{thermal_compensation.py} \textbf{不是}读取某份独立常温 C 方案 JSON 并在其上叠加一个零偏温度增量，而是在每个\textbf{拟合温度点}直接重新拟合完整正向矩阵 $\mathbf F(T)$ 和偏置 $\vect b(T)$，然后对这些参数拟合温度函数。其“25°C 固定参数对照”也来自温补拟合模型在 25°C 的取值，不等于另一套常温标定文件。
+\end{warningbox}
+\section{第一层：各温度点完整仿射拟合}
+给定某拟合温度 $T_j$ 下的\textbf{拟合工况} $\mathcal F_j$，使用式\eqref{eq:ls} 得到
+\begin{equation}
+\mathbf F_j,\ \vect b_j,
+\qquad \vect y_i=\mathbf F_j\vect r_i+\vect b_j+\vect\epsilon_i,
+\quad i\in\mathcal F_j.
+\end{equation}
+源码对每个拟合温度要求参考设计矩阵满秩并控制条件数，对正向矩阵检查非奇异及条件数；无充分三维角速度激励时，\textbf{不可从静态 GYRO 数据辨识完整 $3\times3$ 矩阵}，只能拟合零速温漂。
+
+\section{第二层：沿芯片温度做线性系数拟合}
+目前默认一次多项式，温度中心 $T_0=25\, ^\circ\mathrm C$：
+\begin{align}
+\vect b(T_c)&=\vect b_0+\vect b_1(T_c-T_0),\\
+\mathbf F(T_c)&=\mathbf F_0+\mathbf F_1(T_c-T_0).
+\end{align}
+此处 $\vect b_0,\mathbf F_0$ 是\textbf{温补回归曲线在 $25^\circ\mathrm C$ 的截距}，不保证严格等于一份独立常温 C 标定结果。输入温度采用每个采样工况的 IMU 内温平均值，\textbf{不是温箱 SP}。补偿公式为
+\begin{equation}\label{eq:thermal_apply}
+\boxed{\hat{\vect r}(T_c)=\mathbf F(T_c)^{-1}[\vect y-\vect b(T_c)]}.
+\end{equation}
+只允许在\textbf{实际拟合温度跨度}内插值，矩阵在当前温度病态时拒绝应用；软件不认可未验证外推。二次多项式在数值模块中有能力支持，但当前页面默认调用的是\textbf{一次模型}。
+
+\section{独立姿态与独立温度的双重留出}
+对温补实验，必须同时存在两个彼此独立的划分维度：
+\begin{itemize}
+\item \textbf{温度划分：} $\mathcal T_F=\{-20,25,70\}$ 和 $\mathcal T_V=\{0,45\}$（默认设定温度），且集合不交叠。
+\item \textbf{工况划分：} 各 $T\in\mathcal T_F$ 下有 FIT 姿态/速率与未参与拟合的 VAL 姿态/速率；在 $\mathcal T_V$ 仅使用 VAL 工况做温度插值评估。
+\end{itemize}
+输出分别为\Code{condition_holdout} 与\Code{temperature_holdout}。并另输出\Code{fixed_25c_holdout} 对照：把\textbf{同一温补模型}固定在 $25^\circ\mathrm C$ 时的误差；这不是独立常温文件对照。只有当外部常温参数另行加载、定义一致并锁定时，才能增加“独立常温 C 参数”基线。
+
+\section{仅 GYRO 零偏温补的退化模型}
+关闭动态 GYRO 时，只有静止样本，不足以求得 $\mathbf F_g(T)$。可以合法估计
+\begin{equation}
+\vect b_g(T_c)=\vect b_{g,0}+\vect b_{g,1}(T_c-25),
+\end{equation}
+并以独立温度静止零偏残差验证；该模型\textbf{不得}标称“完成陀螺比例因子/轴间耦合温补”。它单独输出为\Code{thermal_gyro_bias_only_candidate.json}。
+
+\section{未来 MCU 的参数关系与推荐改进}
+为了避免同一颗芯片被\textbf{常温 C 校正一次、温补完整矩阵再校正一次}，推荐将最终 MCU 路径统一成\textbf{一个}校正运算：
+\begin{equation}
+\vect x_{\mathrm{out}}=\mathbf C(T_c)[\vect y_{\mathrm{raw}}-\vect b(T_c)].
+\end{equation}
+如果希望强制以独立常温 C 文件为严格锚点，建议在后续版本中建立如下受约束增量表述：
+\begin{align}
+\mathbf F(T_c)&=\mathbf F_{25}^{\mathrm{ambient}}+\Delta\mathbf F(T_c),\quad \Delta\mathbf F(25)=\mathbf0,\\
+\vect b(T_c)&=\vect b_{25}^{\mathrm{ambient}}+\Delta\vect b(T_c),\quad \Delta\vect b(25)=\vect0.
+\end{align}
+此为\textbf{未来推荐接口}，\textbf{不是当前程序已经实现的算法}。更新前必须处理不同装夹、不同采样时序与 25°C 复装误差，否则强行锚定可能引入新的系统误差。

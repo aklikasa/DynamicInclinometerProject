@@ -1,0 +1,21 @@
+\chapter{术语、接口与版本实施约束}
+\section*{术语摘要}
+\noindent\begin{tabularx}{\linewidth}{@{}p{33mm}Y@{}}\toprule
+术语 & 技术含义\\\midrule
+内参标定 & 对原始 ACC/GYRO 各轴的零偏、比例、失准与耦合误差进行辨识\\
+外参/安装旋转 & IMU 传感器坐标相对公共参考系的刚体方向差\\
+拟合工况 & 用于估计参数的转台姿态或角速度参考条件\\
+独立验证 & 不参与拟合的姿态/速率；温补还要求未参与拟合的温度集合\\
+热滞回 & 同一温度下升温路径与降温路径得到的输出/参数不同\\
+候选参数 & 研究阶段可计算与保存，但未经工艺审批不得作为正式放行参数\\
+\bottomrule\end{tabularx}
+\section*{后续软件版本必须保证的兼容性约束}
+\begin{itemize}
+\item JSON 明确保存\textbf{正向矩阵或逆校正矩阵的定义}，防止 MCU 端把 $\mathbf F$ 当作 $\mathbf C$ 使用。
+\item ACC 单位 $g$、GYRO 单位 $^\circ/\mathrm{s}$、温度单位 $^\circ\mathrm C$，数据版本变化必须显式记录。
+\item 每次出厂参数必须能回溯到 PCB 编号、输入数据、温度/工况划分、软件版本、审批记录。
+\item 如果未来改用“常温 C 参数 + 温度增量”模型，必须升级 Schema 版本，不得与现有\Code{raw = F(T) @ reference + b(T)} 的 JSON 混用。
+\end{itemize}
+\begin{notice}
+\textbf{文档维护建议：} 本文件是技术母版。每次工况、模型、串口协议、量程或质量门限发生变动，应同步更新 LaTeX 源码、版本记录和经过批准的测试证据，不应只修改 PDF。
+\end{notice}

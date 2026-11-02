@@ -1,0 +1,10 @@
+% 可复用表格：修改内容后重新编译 main.tex
+\begin{table}[H]\centering\small
+\caption{IMU 内部温度稳定性要求}
+\noindent\begin{tabularx}{\linewidth}{@{}Yp{38mm}Y@{}}\toprule
+条件 & 默认值 & 技术说明\\\midrule
+到温后最短保温 & 1,800 s（30 min） & 不是只看温箱面板达到 SP\\
+最近 60 s 芯片温度波动 & $\le0.2\, ^\circ\mathrm C$ & 当前至少积累 20 个稳定检查样本\\
+芯片温度与 PV 差 & $\le10\, ^\circ\mathrm C$ & 宽松保护门限，\textbf{不等于计量级热平衡}\\
+热平衡等待超时 & 6 h & 超时中止\\
+单工况芯片温度跨度 & $\le0.5\, ^\circ\mathrm C$ & 温补任务的临时加强判据\\\bottomrule\end{tabularx}\end{table}

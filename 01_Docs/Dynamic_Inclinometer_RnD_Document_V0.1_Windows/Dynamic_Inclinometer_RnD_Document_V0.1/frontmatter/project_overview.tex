@@ -1,0 +1,20 @@
+\chapter*{项目总论与当前研发范围}
+\addcontentsline{toc}{chapter}{项目总论与当前研发范围}
+动态倾角仪面向持续变化和振动干扰条件下的倾斜角测量。整个项目未来包括器件基础测试、常温内参、温度补偿、随机噪声分析、嵌入式参数应用、姿态融合、整机性能验证和生产放行等研发阶段。各阶段必须共享明确的坐标系、量程、单位、设备计量与数据追溯体系。
+
+\begin{notice}
+\textbf{本版工作范围：}\textbf{第一阶段}详细记录常温 ACC/GYRO 参数辨识、A/B/C 模型比较及独立验证；\textbf{第二阶段}详细记录 2FDT600WK + PLC 温箱联合自动温补、数据采集、温度模型、验证与安全约束。\textbf{后续阶段}只写路线图，不预设研发结论。
+\end{notice}
+\input{figures/fig_development_roadmap.tex}
+\begin{table}[htbp]\centering\small
+\caption{研发阶段边界及当前文档状态}\label{tab:phases}
+\begin{tabularx}{\linewidth}{@{}p{30mm}Yp{33mm}@{}}\toprule
+阶段 & 阶段主要交付目标 & 文档状态\\\midrule
+I 常温内参 & A/B/C 标定、独立验证、原始记录与参数文件 & 本版已展开\\
+II 自动温补 & 温度点采集、补偿模型、温度独立验证、联锁与报告 & 本版已展开\\
+III 噪声分析 & Allan 测量、噪声建模、长期稳定性评估 & 后续阶段\\
+IV 固件与融合 & MCU 补偿应用、姿态融合、响应和抗干扰设计 & 后续阶段\\
+V 整机验证 & 动态倾角、温度、振动与可靠性试验 & 后续阶段\\
+VI 生产及现场 & 工艺能力、参数追溯、塔筒现场测试 & 后续阶段\\\bottomrule
+\end{tabularx}\end{table}
+\clearpage

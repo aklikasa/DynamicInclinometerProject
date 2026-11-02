@@ -1,0 +1,16 @@
+\begin{figure}[H]\centering
+\begin{tikzpicture}[>=Stealth,node distance=4.6mm, every node/.style={font=\footnotesize},task/.style={draw=border,fill=soft,rounded corners=1.5mm,minimum height=8mm,text width=108mm,align=center}]
+\node[task] (a) {设备与安全预检：2FDT、IMU、PLC、使能、限幅、坐标、配置锁定};
+\node[task,below=of a] (b) {PLC 设置定值模式 $\rightarrow$ 写 SP $\rightarrow$ 启动 $\rightarrow$ SP/运行状态回读确认};
+\node[task,below=of b] (c) {等 PV 在目标 $\pm1\, ^\circ\mathrm C$ 内连续 30 s；无报警且反馈新鲜};
+\node[task,below=of c] (d) {至少 30 min 保温 + 芯片温度 60 s 波动不大于 $0.2\, ^\circ\mathrm C$};
+\node[task,below=of d] (e) {ACC 24 姿态 + GYRO 零速；按选项加入 GYRO 正反转动态工况};
+\node[task,below=of e] (f) {逐工况质量检查、重试、停车反馈、记录原始帧和汇总};
+\node[task,below=of f] (g) {下一个温度点；全部采完后回 $25\, ^\circ\mathrm C$ 并验证 PV};
+\node[task,below=of g] (h) {温度拟合、独立温度验证、对照 RMSE、候选 JSON / Excel};
+\foreach \x/\y in {a/b,b/c,c/d,d/e,e/f,f/g,g/h}{\draw[->,thick,blue] (\x.south)--(\y.north);}
+\node[draw=amber,fill=amber!6,rounded corners=1mm,align=center,text width=36mm,right=5mm of d,font=\scriptsize] (stop) {任何报警/超时/数据断流\\受控中止 + 停车确认};
+\draw[->,thick,amber,dashed] (d.east)--(stop.west);
+\end{tikzpicture}
+\caption{自动温补状态机；上图为工程逻辑示意，现场安全链路必须独立于 UI。}
+\end{figure}

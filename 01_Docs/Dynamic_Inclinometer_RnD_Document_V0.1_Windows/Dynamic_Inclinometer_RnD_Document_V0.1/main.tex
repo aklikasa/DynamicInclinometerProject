@@ -1,0 +1,23 @@
+% !TeX program = xelatex
+% 多文件技术规范主入口：请仅在这里组织章节顺序。
+\documentclass[UTF8,openany,11pt,a4paper,fontset=none]{ctexrep}
+\input{config/preamble.tex}
+\begin{document}
+\input{frontmatter/title_and_control.tex}
+\input{frontmatter/project_overview.tex}
+\part{第一阶段：常温 IMU 内参标定}
+\input{chapters/01_ambient/01_scope.tex}
+\input{chapters/01_ambient/02_equipment_and_safety.tex}
+\input{chapters/01_ambient/03_ambient_models_ABC.tex}
+\input{chapters/01_ambient/04_ambient_test_schedule.tex}
+\input{chapters/01_ambient/05_ambient_validation.tex}
+\part{第二阶段：IMU 自动温度补偿}
+\input{chapters/02_thermal/06_thermal_experiment.tex}
+\input{chapters/02_thermal/07_thermal_models.tex}
+\input{chapters/02_thermal/08_thermal_software_and_data.tex}
+\input{chapters/02_thermal/09_validation_and_production.tex}
+\input{chapters/02_thermal/10_sop_and_handover.tex}
+\appendix
+\input{appendices/A_sources_and_code.tex}
+\input{appendices/B_terminology_and_schema.tex}
+\end{document}

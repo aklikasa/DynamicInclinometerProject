@@ -1,0 +1,3 @@
+静态检查结果：
+XAML/Project XML 与 JSON 解析正确，XAML event handler 可匹配，所需模块存在。
+当前环境无 Windows/.NET SDK，无法完成 WPF 编译、UI 渲染、实机转台运动验证。

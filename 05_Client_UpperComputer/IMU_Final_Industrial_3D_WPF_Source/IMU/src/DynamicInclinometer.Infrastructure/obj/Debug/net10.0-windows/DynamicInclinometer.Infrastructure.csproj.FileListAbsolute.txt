@@ -1,0 +1,15 @@
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\bin\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.deps.json
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\bin\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.dll
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\bin\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.pdb
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\bin\Debug\net10.0-windows\DynamicInclinometer.Core.dll
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\bin\Debug\net10.0-windows\DynamicInclinometer.Core.pdb
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.csproj.AssemblyReference.cache
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.AssemblyInfoInputs.cache
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.AssemblyInfo.cs
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.csproj.CoreCompileInputs.cache
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicI.AA3BC640.Up2Date
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.dll
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\refint\DynamicInclinometer.Infrastructure.dll
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\DynamicInclinometer.Infrastructure.pdb
+D:\工作杂事\动态倾角仪研发\演示测试上位机开发\IMU_Final_Industrial_3D_WPF_Source\IMU\src\DynamicInclinometer.Infrastructure\obj\Debug\net10.0-windows\ref\DynamicInclinometer.Infrastructure.dll

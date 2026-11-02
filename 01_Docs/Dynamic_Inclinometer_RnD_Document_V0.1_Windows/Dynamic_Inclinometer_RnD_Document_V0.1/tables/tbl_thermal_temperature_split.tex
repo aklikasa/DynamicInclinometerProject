@@ -1,0 +1,10 @@
+% 可复用表格：修改内容后重新编译 main.tex
+\begin{table}[H]\centering
+\caption{软件默认的五温度点自动实验计划}
+\begin{tabular}{@{}cccp{55mm}@{}}\toprule
+次序 & 目标 SP & 数据角色 & 实验目的\\\midrule
+1 & $-20\, ^\circ\mathrm C$ & FIT & 低温参数拟合\\
+2 & $0\, ^\circ\mathrm C$ & VAL & 独立温度验证（不得用于拟合）\\
+3 & $25\, ^\circ\mathrm C$ & FIT & 常温温度模型锚定\\
+4 & $45\, ^\circ\mathrm C$ & VAL & 独立中高温验证\\
+5 & $70\, ^\circ\mathrm C$ & FIT & 高温参数拟合\\\bottomrule\end{tabular}\end{table}

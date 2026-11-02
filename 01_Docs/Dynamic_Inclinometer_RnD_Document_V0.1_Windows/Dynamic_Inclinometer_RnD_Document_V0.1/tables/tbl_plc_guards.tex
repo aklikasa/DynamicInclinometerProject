@@ -1,0 +1,12 @@
+% 可复用表格：修改内容后重新编译 main.tex
+\begin{table}[H]\centering\small
+\caption{PLC 自动流程当前代码判据}
+\noindent\begin{tabularx}{\linewidth}{@{}Yp{41mm}Y@{}}\toprule
+项目 & 当前值 & 目的\\\midrule
+PV/SP/状态/报警等更新最大年龄 & 15 s & 禁止把缓存温度当成有效反馈\\
+SP 写入后回读允许误差 & $\pm0.2\, ^\circ\mathrm C$ & 检查设温命令确已应用\\
+模式与运行 & 定值模式 + 已启动 + 运行中 & 仅 SP 一致不足以开始试验\\
+SP 回读/启动确认超时 & 90 s & 拒绝控制器无响应\\
+到温判定 & PV 距目标 $\le1\, ^\circ\mathrm C$ 连续 30 s & 初步到温判定\\
+温箱到温超时 & 6 h & 避免无限等待\\
+PLC 报警/故障/断连 & 立即中止 & 防止失控状态下旋转和采样\\\bottomrule\end{tabularx}\end{table}
