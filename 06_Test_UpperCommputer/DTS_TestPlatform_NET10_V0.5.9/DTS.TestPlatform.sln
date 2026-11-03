@@ -1,0 +1,51 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.11.12324.101 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dts.Wpf", "src\Dts.Wpf\Dts.Wpf.csproj", "{BA6EB040-F3CB-4F28-B71F-F5F11EE18373}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dts.Core", "src\Dts.Core\Dts.Core.csproj", "{AD7B6905-4DE8-4C64-9B5F-68BC9FF7340B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dts.Devices", "src\Dts.Devices\Dts.Devices.csproj", "{CA13B503-5263-4B67-BC72-3AA4208C95EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dts.TestEngine", "src\Dts.TestEngine\Dts.TestEngine.csproj", "{841C1569-F02D-516D-90D8-71B96ECE6248}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dts.Tests", "src\Dts.Tests\Dts.Tests.csproj", "{817D939C-B385-5916-9CBF-E125335F322B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dts.SelfTest", "src\Dts.SelfTest\Dts.SelfTest.csproj", "{DFA7765F-3CD8-5266-AD48-D63A160F8A5C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA6EB040-F3CB-4F28-B71F-F5F11EE18373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA6EB040-F3CB-4F28-B71F-F5F11EE18373}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA6EB040-F3CB-4F28-B71F-F5F11EE18373}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA6EB040-F3CB-4F28-B71F-F5F11EE18373}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD7B6905-4DE8-4C64-9B5F-68BC9FF7340B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD7B6905-4DE8-4C64-9B5F-68BC9FF7340B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD7B6905-4DE8-4C64-9B5F-68BC9FF7340B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD7B6905-4DE8-4C64-9B5F-68BC9FF7340B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA13B503-5263-4B67-BC72-3AA4208C95EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA13B503-5263-4B67-BC72-3AA4208C95EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA13B503-5263-4B67-BC72-3AA4208C95EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA13B503-5263-4B67-BC72-3AA4208C95EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{841C1569-F02D-516D-90D8-71B96ECE6248}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{841C1569-F02D-516D-90D8-71B96ECE6248}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{841C1569-F02D-516D-90D8-71B96ECE6248}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{841C1569-F02D-516D-90D8-71B96ECE6248}.Release|Any CPU.Build.0 = Release|Any CPU
+		{817D939C-B385-5916-9CBF-E125335F322B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{817D939C-B385-5916-9CBF-E125335F322B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{817D939C-B385-5916-9CBF-E125335F322B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{817D939C-B385-5916-9CBF-E125335F322B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFA7765F-3CD8-5266-AD48-D63A160F8A5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFA7765F-3CD8-5266-AD48-D63A160F8A5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFA7765F-3CD8-5266-AD48-D63A160F8A5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFA7765F-3CD8-5266-AD48-D63A160F8A5C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

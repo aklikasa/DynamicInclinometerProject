@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Dts.Core/Dts.Core.csproj" />
+    <ProjectReference Include="../Dts.Devices/Dts.Devices.csproj" />
+    <ProjectReference Include="../Dts.TestEngine/Dts.TestEngine.csproj" />
+    <ProjectReference Include="../Dts.Tests/Dts.Tests.csproj" />
+    <Content Include="../../assets/tests.json" Link="assets/tests.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Dts.Core/Dts.Core.csproj" />
+    <ProjectReference Include="../Dts.TestEngine/Dts.TestEngine.csproj" />
+    <PackageReference Include="System.IO.Ports" Version="10.0.0" />
+    <None Include="../../vendor/2TD600.dll" Link="2TD600.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../vendor/2FDT600WK.dll" Link="2FDT600WK.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
