@@ -9,7 +9,7 @@ if hasattr(_platform_guard, '_wmi_query'):
     _platform_guard._wmi_query = _wmi_query_disabled
 
 from snap7 import client, util
-from snap7.types import Areas
+from snap7.type import Areas
 
 
 def plc_connect(ip: str, plc_model=3, rack=0, slot=1):

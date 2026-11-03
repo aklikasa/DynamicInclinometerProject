@@ -7,7 +7,7 @@
     <IncAverageNum>1</IncAverageNum>
     <IncAverageNumAIA>200</IncAverageNumAIA>
     <IncAIAEnable>True</IncAIAEnable>
-    <TurntableModel_UserSelected>2FDT600WK</TurntableModel_UserSelected>
+    <TurntableModel_UserSelected>2TD600</TurntableModel_UserSelected>
     <Turntable2TD600CommPort>COM4</Turntable2TD600CommPort>
     <Turntable2FDT600WKInnerAxisCommPort>COM4</Turntable2FDT600WKInnerAxisCommPort>
     <Turntable2FDT600WKOuterAxisCommPort>COM3</Turntable2FDT600WKOuterAxisCommPort>    
