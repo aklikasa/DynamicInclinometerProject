@@ -1,3 +1,16 @@
+// Read-only connection must be retained for diagnosis without mistaking it
+// for an energized/operational turntable. No hardware DLL is called here.
+var stationary = new TableSnapshot(
+    new AxisState(15, 0, true, false, "test", false, false, false),
+    new AxisState(0, 0, true, false, "test", false, false, false),
+    DateTimeOffset.UtcNow);
+Ensure(TdConnectionPolicy.CanAutoEnable(stationary), "healthy/stationary axes may proceed to explicit auto-enable");
+var faulted = stationary with { Inner = stationary.Inner with { Normal = false, Fault = true } };
+Ensure(!TdConnectionPolicy.CanAutoEnable(faulted), "a faulted axis must block auto-enable");
+var moving = stationary with { Outer = stationary.Outer with { SpeedDps = 0.5 } };
+Ensure(!TdConnectionPolicy.CanAutoEnable(moving), "a moving axis must block auto-enable");
+Console.WriteLine("PASS: 2TD safety policy - healthy/stationary vs. faulted/moving (synthetic data only)");
+
 using Dts.Core;
 using Dts.Devices;
 using Dts.TestEngine;

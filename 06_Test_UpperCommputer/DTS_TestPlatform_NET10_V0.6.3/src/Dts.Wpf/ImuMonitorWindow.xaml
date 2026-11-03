@@ -1,0 +1,35 @@
+<Window x:Class="Dts.Wpf.ImuMonitorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="实时六轴数据 · 独立查看" Width="1200" Height="800"
+        MinWidth="560" MinHeight="360" WindowState="Maximized"
+        Background="#F4F7FC" WindowStartupLocation="CenterScreen">
+  <Grid Margin="12">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <DockPanel Margin="4,1,4,10" LastChildFill="True">
+      <CheckBox x:Name="FollowLatest" DockPanel.Dock="Right" Content="自动滚动至最新帧" IsChecked="True" VerticalAlignment="Center" Margin="12,0,0,0"/>
+      <TextBlock Text="IMU 实时六轴数据" FontSize="21" FontWeight="Bold" Foreground="#194878"/>
+    </DockPanel>
+    <DataGrid x:Name="SamplesGrid" Grid.Row="1" IsReadOnly="True" AutoGenerateColumns="False"
+              CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
+              HeadersVisibility="Column" RowHeaderWidth="0" ColumnHeaderHeight="35" RowHeight="32"
+              FontSize="12" FontFamily="Consolas" AlternationCount="2" GridLinesVisibility="None"
+              Style="{StaticResource TelemetryGrid}" EnableRowVirtualization="True" EnableColumnVirtualization="True"
+              ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="时间" Binding="{Binding LocalTime}" Width="108"/>
+        <DataGridTextColumn Header="Tick" Binding="{Binding McuTickMs}" Width="82"/>
+        <DataGridTextColumn Header="帧" Binding="{Binding SampleIndex}" Width="47"/>
+        <DataGridTextColumn Header="Ax" Binding="{Binding Ax}" Width="*" MinWidth="70" ElementStyle="{StaticResource TelemetryNumber}"/>
+        <DataGridTextColumn Header="Ay" Binding="{Binding Ay}" Width="*" MinWidth="70" ElementStyle="{StaticResource TelemetryNumber}"/>
+        <DataGridTextColumn Header="Az" Binding="{Binding Az}" Width="*" MinWidth="70" ElementStyle="{StaticResource TelemetryNumber}"/>
+        <DataGridTextColumn Header="Gx" Binding="{Binding Gx}" Width="*" MinWidth="70" ElementStyle="{StaticResource TelemetryNumber}"/>
+        <DataGridTextColumn Header="Gy" Binding="{Binding Gy}" Width="*" MinWidth="70" ElementStyle="{StaticResource TelemetryNumber}"/>
+        <DataGridTextColumn Header="Gz" Binding="{Binding Gz}" Width="*" MinWidth="70" ElementStyle="{StaticResource TelemetryNumber}"/>
+        <DataGridTextColumn Header="单位" Binding="{Binding Units}" Width="115"/>
+        <DataGridTextColumn Header="温度 °C" Binding="{Binding TempText}" Width="75"/>
+        <DataGridTextColumn Header="质量状态" Binding="{Binding Status}" Width="205" ElementStyle="{StaticResource TelemetryStatus}"/>
+      </DataGrid.Columns>
+    </DataGrid>
+  </Grid>
+</Window>

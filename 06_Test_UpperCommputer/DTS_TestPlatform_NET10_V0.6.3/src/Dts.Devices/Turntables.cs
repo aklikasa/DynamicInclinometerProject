@@ -18,6 +18,8 @@ internal static class TdNative
     [DllImport("2TD600.dll",EntryPoint="GetAxisOverSpeed",CallingConvention=CallingConvention.Cdecl)] public static extern int GetAxisOverSpeed(int axis);
     [DllImport("2TD600.dll",EntryPoint="GetAxisOverDiff",CallingConvention=CallingConvention.Cdecl)] public static extern int GetAxisOverDiff(int axis);
     [DllImport("2TD600.dll",EntryPoint="SetAxisPosition",CallingConvention=CallingConvention.Cdecl)] public static extern int Position(int axis,double degrees,double speed);
+    // Actual incremental-position command exported by vendor DLL; signature matches provided Python ctypes driver.
+    [DllImport("2TD600.dll",EntryPoint="SetAxisOpposition",CallingConvention=CallingConvention.Cdecl)] public static extern int Opposition(int axis,double relativeDegrees,double speed);
     [DllImport("2TD600.dll",EntryPoint="SetAxisStop",CallingConvention=CallingConvention.Cdecl)] public static extern int Stop(int axis);
     [DllImport("2TD600.dll",EntryPoint="SetAxisEnable",CallingConvention=CallingConvention.Cdecl)] public static extern int Enable(int axis);
     [DllImport("2TD600.dll",EntryPoint="SetAxisDisable",CallingConvention=CallingConvention.Cdecl)] public static extern int Disable(int axis);
@@ -88,13 +90,18 @@ public sealed class Td600 : IRealTurntable
             bool normal=Bit(TdNative.GetAxisNormal(axis),"normal");
             bool enabled=Bit(TdNative.GetAxisEnable(axis),"enabled");
             bool inPlace=Bit(TdNative.GetAxisMoveInPlace(axis),"in_place");
-            bool faults=Bit(TdNative.GetAxisDriverFault(axis),"driver_fault") ||
-                Bit(TdNative.GetAxisUpLimit(axis),"up_limit") ||
-                Bit(TdNative.GetAxisDownLimit(axis),"down_limit") ||
-                Bit(TdNative.GetAxisOverSpeed(axis),"over_speed") ||
-                Bit(TdNative.GetAxisOverDiff(axis),"over_diff");
+            // Read every flag separately: OR short-circuiting would hide subsequent
+            // hardware faults and make first-connect failures hard to diagnose.
+            bool driverFault=Bit(TdNative.GetAxisDriverFault(axis),"driver_fault");
+            bool upLimit=Bit(TdNative.GetAxisUpLimit(axis),"up_limit");
+            bool downLimit=Bit(TdNative.GetAxisDownLimit(axis),"down_limit");
+            bool overSpeed=Bit(TdNative.GetAxisOverSpeed(axis),"over_speed");
+            bool overDiff=Bit(TdNative.GetAxisOverDiff(axis),"over_diff");
+            bool faults=driverFault||upLimit||downLimit||overSpeed||overDiff;
             return new AxisState(pos,speed,normal&&!faults,enabled,
-                $"使能={enabled}，已到位={inPlace}，故障/限位={faults}",inPlace,enabled,faults);
+                $"正常位={(normal?1:0)},使能位={(enabled?1:0)},到位位={(inPlace?1:0)}," +
+                $"驱动故障={(driverFault?1:0)},上限位={(upLimit?1:0)},下限位={(downLimit?1:0)}," +
+                $"超速={(overSpeed?1:0)},超差={(overDiff?1:0)}",inPlace,enabled,faults);
         }
         return new TableSnapshot(ReadAxis(0),ReadAxis(2),DateTimeOffset.UtcNow);
     }
@@ -112,13 +119,26 @@ public sealed class Td600 : IRealTurntable
     }
     public void MoveRelative(int axis,double delta,double speed)
     {
-        Check();
-        if(!double.IsFinite(delta)||Math.Abs(delta)>90)throw new ArgumentOutOfRangeException(nameof(delta),"单次相对运动不得超过90°");
-        var f=Read();double now=axis==0?f.Inner.PositionDeg:f.Outer.PositionDeg;
-        double target=now+delta;
-        // No modulo at 0/360: an absolute position command does NOT prove direction or number of turns.
-        if(target<0||target>360)throw new InvalidOperationException($"实际 {now:F4}° + 相对 {delta:F4}° = {target:F4}°，跨越0/360边界；厂商相对运动接口尚未验证，拒绝运动");
-        MoveAbsolute(axis,target,speed);
+        Check(); axis=Axis(axis);
+        // Incremental position (0xD6 in 2TD manual). No arbitrary ±90° or 0..360° clamp.
+        // The actual vendor SetAxisOpposition DLL entry point is used instead of adding
+        // the relative angle to the modulo-360 feedback and issuing an absolute command.
+        if(!double.IsFinite(delta) || delta==0 || !double.IsFinite(speed) || speed<0.01 || speed>60)
+            throw new ArgumentOutOfRangeException(nameof(delta),
+                "2TD 相对角度须为有限非零值；速率范围为0.01～60°/s");
+        var state=Read();
+        var moving=axis==0?state.Inner:state.Outer;
+        var other=axis==0?state.Outer:state.Inner;
+        if(!state.Inner.Normal || !state.Outer.Normal || !moving.Enabled)
+            throw new IOException("转台存在报警/限位或控制轴未使能，禁止运动");
+        if(Math.Abs(other.SpeedDps)>0.05)
+            throw new IOException("另一个轴仍在运动；不允许两轴互相干扰");
+        // 2TD manual: continuous inner-axis rotation requires the outer axis at 0°.
+        // This requirement cannot be bypassed merely because the UI supports multiple turns.
+        if(axis==0 && Math.Abs(delta)>=360 && Math.Abs(other.PositionDeg)>0.2)
+            throw new IOException("内轴连续多圈运动要求外轴保持零位；请先调整外轴并核实工装线缆");
+        if(TdNative.Opposition(axis,delta,speed)!=1)
+            throw new IOException("厂家相对位置指令 SetAxisOpposition 执行失败");
     }
     public void StopAxis(int axis){Check();if(TdNative.Stop(Axis(axis))!=1)throw new IOException("2TD 停车失败");}
     private static int Axis(int axis)=>axis is 0 or 2?axis:throw new ArgumentOutOfRangeException(nameof(axis));

@@ -1,4 +1,4 @@
-"""V0.5.9 source-only preflight. DOES NOT replace dotnet build / Windows real hardware checks."""
+"""V0.6.0 source-only preflight. DOES NOT replace dotnet build / Windows real hardware checks."""
 from pathlib import Path
 from collections import Counter
 import json,re,struct,xml.etree.ElementTree as ET
@@ -59,8 +59,8 @@ assert 'OnMainSizeChanged' in code and 'UpdateTileSizing' in code
 assert 'ToggleLogClick' in main and 'ToggleLogClick' in code
 # V0.5.7 layout contracts: test rail is two-column, equipment tabs occupy full right height.
 assert 'TestsColumn' in main and 'Width="500"' in main
-assert 'columns = usable >= 344 ? 2 : 1' in code
-assert 'testsWidth = ActualWidth >= 1800 ? 565' in code
+assert 'TestTileColumns' in code and 'UniformGrid Columns="{DynamicResource TestTileColumns}"' in main
+assert 'double desiredTestsWidth = ActualWidth >= 1800 ? 565' in code
 assert 'EquipmentTabs' in main and '设备控制工作台' in main
 assert '2TD-600 双轴转台' in main and '2FDT600WK 温控转台' in main and 'IMU / 采集 / 补偿' in main
 right = main[main.index('<Grid x:Name="DevicesPanel"'):main.index('<Border Grid.Row="3"')]
@@ -99,8 +99,11 @@ for f in (root/'vendor').glob('*.dll'):
 print('PASS: XAML well-formed, Thickness checked, WPF handlers resolved')
 print('PASS: 84 IDs / 84 independent .cs files; 4 actual entry points; 80 blocked placeholders')
 print('PASS: CT-05 dedicated window, output path selector, dual-axis manual motion UI')
-for axis_control in ('TdAxisEnableClick','TdAxisDisableClick','TdAxisRelativeClick','TdAxisStopClick',
-                     'FdtAxisEnableClick','FdtAxisDisableClick','FdtAxisRelativeClick','FdtAxisStopClick'):
+# 2TD auto-enables after operator safety confirmation: explicit enable controls become status.
+for axis_control in ('TdAxisEnableClick','TdAxisDisableClick'):
+    assert 'Click="'+axis_control+'"' not in main, axis_control
+for axis_control in ('TdAxisRelativeClick','TdAxisStopClick','FdtAxisEnableClick',
+                     'FdtAxisDisableClick','FdtAxisRelativeClick','FdtAxisStopClick'):
     assert main.count('Click="'+axis_control+'" Margin="5,6,5,6"') == 2, axis_control
 print('PASS: V0.5.8 turntable button spacing and scroll-free two-axis controls')
 assert 'ImuSamplesGrid' in main and 'LiveRowsCountText' in main and 'StreamStatusText' in main
@@ -134,3 +137,37 @@ assert 'if(_imu?.Connected==true' in code and 'excluded.Add(_imu.PortName)' in c
 assert 'SetScanningUi(true)' in code and 'SetScanningUi(false)' in code
 print('PASS: independent persistent IMU capture root; report root unchanged')
 print('PASS: per-turntable verified read-only COM discovery and connected-IMU exclusions')
+
+# V0.6.0: screen-aware IMU layout, optional expanded data monitor and PMv2 manifest.
+monitor=(root/'src/Dts.Wpf/ImuMonitorWindow.xaml').read_text(encoding='utf8')
+monitor_code=(root/'src/Dts.Wpf/ImuMonitorWindow.xaml.cs').read_text(encoding='utf8')
+manifest=(root/'src/Dts.Wpf/app.manifest').read_text(encoding='utf8')
+csproj=(root/'src/Dts.Wpf/Dts.Wpf.csproj').read_text(encoding='utf8')
+assert 'GlobalPathsExpander' in main and 'ImuDetailsExpander' in main
+assert 'OpenImuMonitorClick' in main and 'ImuMonitorWindow(_liveRows)' in code
+assert 'SamplesGrid' in monitor and 'Binding Ax' in monitor and 'Binding Gz' in monitor
+assert 'CollectionChanged += FramesChanged' in monitor_code and 'CollectionChanged -= FramesChanged' in monitor_code
+assert 'PerMonitorV2' in manifest and 'ApplicationManifest>app.manifest' in csproj
+assert 'MinHeight="500"' in main and 'ApplyVerticalLayout()' in code
+assert 'SelectedTestRow' in main and 'HeaderRow' in main
+print('PASS: compact high-DPI layout + collapsible metadata + full-screen live-data monitor + PMv2 manifest')
+
+# V0.6.1 incremental vendor command and disconnect lifecycle checks.
+turntables=(root/'src/Dts.Devices/Turntables.cs').read_text(encoding='utf8')
+assert 'EntryPoint="SetAxisOpposition"' in turntables
+assert 'Math.Abs(delta)>90' not in turntables
+assert 'TdNative.Opposition(axis,delta,speed)' in turntables
+assert '速度范围为0.01～60' not in turntables or '速率范围为0.01～60' in turntables
+assert 'TdConnectButton' in main and 'FdtConnectButton' in main and 'ImuConnectButton' in main
+assert '安全断开' in code and '请先安全断开转台' in code
+print('PASS: V0.6.1 vendor incremental-position / connected-state toggles / safe-exit guards')
+
+# V0.6.3 UI regressions: deterministic 2-column tiles, three live status cards, shared telemetry style.
+assert 'TestTileWidth' not in main and 'TestTileWidth' not in (root/'src/Dts.Wpf/App.xaml').read_text(encoding='utf8')
+assert 'TestTileColumns' in (root/'src/Dts.Wpf/App.xaml').read_text(encoding='utf8')
+assert all(x in main for x in ('ImuStateDot','TdStateDot','FdtStateDot','ImuStateValue','TdStateValue','FdtStateValue'))
+assert all(x in code for x in ('_latestTdSnapshot','_latestFdtSnapshot','UpdateConnection();'))
+assert 'Content="连接并使能' not in main and 'Content="连接" Width="92"' in main
+assert 'Style="{StaticResource TelemetryGrid}"' in main and 'Style="{StaticResource TelemetryGrid}"' in monitor
+assert all(x in (root/'src/Dts.Wpf/App.xaml').read_text(encoding='utf8') for x in ('TelemetryRow','TelemetryCell','TelemetryHeader','DeviceStatusCard'))
+print('PASS: V0.6.3 two-column cards, bounded global paths, real device indicators, modern shared telemetry style')

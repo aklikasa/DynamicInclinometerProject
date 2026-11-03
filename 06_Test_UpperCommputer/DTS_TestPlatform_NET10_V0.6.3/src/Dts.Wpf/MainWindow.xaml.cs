@@ -32,6 +32,8 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<string> _logs=[];
     private readonly ObservableCollection<SelectedImuFrame> _liveRows=[];
     private const int MaxLiveRows = 240;
+    private ImuMonitorWindow? _imuMonitorWindow;
+    private bool? _lastCompactHeight;
     private readonly HashSet<string> _verifiedTd=new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _verifiedFdtInner=new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _verifiedFdtOuter=new(StringComparer.OrdinalIgnoreCase);
@@ -39,6 +41,12 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _poll=new(){Interval=TimeSpan.FromMilliseconds(900)};
     private RealImu? _imu;
     private IRealTurntable? _td,_fdt;
+    // True when the serial port is open but the two axes have not passed the
+    // verified auto-enable sequence. No motion is permitted in this state.
+    private bool _tdDiagnosticOnly;
+    // Last verified feedback is used only while the corresponding port remains connected.
+    private TableSnapshot? _latestTdSnapshot;
+    private TableSnapshot? _latestFdtSnapshot;
     private CancellationTokenSource? _recorder;
     private bool _busyScanning,_busyPolling;
     private CalibrationSet? _calibration;
@@ -54,7 +62,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _moduleRegistry = TestModuleRegistry.Discover(
             typeof(S0_04_Test).Assembly, Path.Combine(AppContext.BaseDirectory,"plugins"));
-        _testHardware = new LiveTestHardware(() => _imu, () => _td, _tdGate, () => _saveRoot,
+        _testHardware = new LiveTestHardware(() => _imu, () => _tdDiagnosticOnly ? null : _td, _tdGate, () => _saveRoot,
             () => CurrentRunForTests());
         _saveRoot = LoadOutputRoot();
         SaveRootText.Text=_saveRoot;
@@ -71,7 +79,7 @@ public partial class MainWindow : Window
         RefreshPorts();
         _poll.Tick+=async (_,_)=>await PollAsync();
         _poll.Start();
-        Log($"启动：模块化 V0.5.8。自动发现 {_moduleRegistry.Modules.Count} 个测试模块；可执行 {_moduleRegistry.Modules.Count(x=>x.IsExecutable)} 项子功能。");
+        Log($"启动：模块化 V0.6.2。自动发现 {_moduleRegistry.Modules.Count} 个测试模块；可执行 {_moduleRegistry.Modules.Count(x=>x.IsExecutable)} 项子功能。");
         foreach (var warning in _moduleRegistry.Warnings) Log("模块注册提示：" + warning);
         Log("真实硬件模式：不生成模拟数据；未实现的测试模块禁止执行，实测诊断不等于产品 PASS。");
     }
@@ -84,17 +92,20 @@ public partial class MainWindow : Window
             return; // SizeChanged may arrive while InitializeComponent is still constructing controls.
 
         // The right equipment workbench is the primary operational area.
-        // Keep the tests rail at a two-tile width; give all surplus width to equipment.
+        // Keep the tests rail compact; real two-column tiles fill it exactly.
         bool compact = ActualWidth < 1280;
         NavColumn.Width = compact ? new GridLength(0) : new GridLength(178);
         NavSidebar.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
         CompactStages.Visibility = compact ? Visibility.Visible : Visibility.Collapsed;
-        double testsWidth = ActualWidth >= 1800 ? 565
+        double desiredTestsWidth = ActualWidth >= 1800 ? 565
             : ActualWidth >= 1450 ? 515
-            : ActualWidth >= 1200 ? 475
-            : 430;
+            : ActualWidth >= 1200 ? 475 : 430;
+        // Reserve enough space for the equipment view, even at 125/150% Windows scaling.
+        double testsWidth = Math.Max(255, Math.Min(desiredTestsWidth,
+            ActualWidth - (compact ? 520 : 710)));
         TestsColumn.Width = new GridLength(testsWidth, GridUnitType.Pixel);
         DeviceColumn.Width = new GridLength(1, GridUnitType.Star);
+        ApplyVerticalLayout();
 
         // Coalesce rapid resize events; width update runs after the star columns are measured.
         if (_tileResizeQueued) return;
@@ -106,17 +117,53 @@ public partial class MainWindow : Window
         }), DispatcherPriority.Loaded);
     }
 
+    // The logical WPF height changes with the monitor DPI. Keep the live-data grid
+    // prioritized; secondary diagnostic text remains available under the Expander.
+    private void ApplyVerticalLayout()
+    {
+        if (IdentityBorder is null || ImuDetailsExpander is null || GlobalPathsExpander is null ||
+            SelectedTestRow is null || CaptureFileHint is null || WorkbenchDeviceHint is null || TestProcedure is null)
+            return;
+
+        bool compact = ActualHeight < 820;
+        bool veryCompact = ActualHeight < 650;
+        HeaderRow.Height = new GridLength(compact ? 45 : 54);
+        IdentityBorder.Padding = compact ? new Thickness(12, 4, 12, 4) : new Thickness(17, 9, 17, 9);
+        IdentityGap1.Height = new GridLength(compact ? 3 : 7);
+        SelectedTestRow.Height = new GridLength(veryCompact ? 102 : compact ? 122 : 155);
+        WorkbenchDeviceHint.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+        CaptureFileHint.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+        TestProcedure.Visibility = veryCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (_lastCompactHeight != compact)
+        {
+            // Do not override the operator's expand/collapse choice on every resize event.
+            ImuDetailsExpander.IsExpanded = !compact;
+            GlobalPathsExpander.IsExpanded = !compact;
+            _lastCompactHeight = compact;
+        }
+    }
+
+    private void OpenImuMonitorClick(object sender, RoutedEventArgs e)
+    {
+        if (_imuMonitorWindow is { IsVisible: true })
+        {
+            _imuMonitorWindow.Activate();
+            return;
+        }
+        var monitor = new ImuMonitorWindow(_liveRows);
+        _imuMonitorWindow = monitor;
+        monitor.Closed += (_, _) => _imuMonitorWindow = null;
+        monitor.Show();
+    }
+
     private void UpdateTileSizing()
     {
         if (TestsPanel is null || TestsPanel.ActualWidth <= 0) return;
-        // Card padding + stage padding + scrolling margin. Keep tiles usable rather than
-        // shrinking text indiscriminately on high-DPI/narrow screens.
-        double usable = Math.Max(260, TestsPanel.ActualWidth - 62);
-        // Two columns at all supported widths: the stage rail never consumes
-        // the space reserved for both turntable axes.
-        int columns = usable >= 344 ? 2 : 1;
-        double tileWidth = Math.Clamp(Math.Floor((usable - columns * 10) / columns), 155, 265);
-        Application.Current.Resources["TestTileWidth"] = tileWidth;
+        // UniformGrid gives each tile exactly half the available row width.
+        // WrapPanel + explicit tile widths used to leave a large empty right half
+        // on some 125%-150% DPI setups. At truly narrow widths, fall back to 1 column.
+        double available = Math.Max(0, TestsPanel.ActualWidth - 80);
+        Application.Current.Resources["TestTileColumns"] = available >= 312 ? 2 : 1;
     }
 
     private void ToggleLogClick(object sender, RoutedEventArgs e)
@@ -674,11 +721,25 @@ public partial class MainWindow : Window
 
     private async void ImuConnectClick(object sender,RoutedEventArgs e)
     {
-        if(_testRunner.IsRunning || _recorder is not null)
-        {Log("正在执行真实测试，不能重新连接IMU");return;}
+        if(_testRunner.IsRunning || _activeTest is not null || _recorder is not null)
+        {Log("正在执行真实测试，不能切换IMU连接");return;}
         try
         {
-            if(_imu?.Connected==true)throw new InvalidOperationException("IMU 已连接，请先关闭应用再换端口");
+            if(_imu?.Connected==true)
+            {
+                // Only disconnected while idle (checked above); no need to close the application.
+                var old = _imu;
+                _imu = null; // prevent new timer polls using this instance
+                await Task.Delay(100); // let any in-flight read-only preview settle
+                old.Dispose();
+                DeviceNumber.Text="--";
+                RawUid.Text="--";
+                ImuStatus.Text="IMU 已断开；串口已释放";
+                StreamStatusText.Text="IMU 已断开";
+                UpdateConnection();
+                Log("用户主动断开 IMU 串口");
+                return;
+            }
             string port=Selected(ImuPort);
             int baud=ParseInt(ImuBaud.Text,1500000);
             byte slave=checked((byte)ParseInt(ImuSlave.Text,1));
@@ -782,40 +843,174 @@ public partial class MainWindow : Window
         _activeTest?.Cancel();
         _recorder?.Cancel();
     }
-    private async void TdConnectClick(object sender,RoutedEventArgs e)
+    private static string DescribeTdAxis(string name, AxisState axis) =>
+        $"{name}: 角度={axis.PositionDeg:F4}°，速度={axis.SpeedDps:F4}°/s，" +
+        $"正常={(axis.Normal ? "是" : "否")}，使能={(axis.Enabled ? "是" : "否")}，" +
+        $"到位={(axis.InPlace == true ? "是" : axis.InPlace == false ? "否" : "未知")}；{axis.Detail}";
+
+    private async void TdConnectClick(object sender, RoutedEventArgs e)
     {
-        if(_busyScanning || _testRunner.IsRunning || _recorder is not null)
-        {Log("正在扫描/执行测试/采集，不能连接转台");return;}
+        if (_busyScanning || _testRunner.IsRunning || _recorder is not null)
+        { Log("扫描/测试/采集期间不能切换 2TD 连接"); return; }
         await _tdGate.WaitAsync();
         try
         {
-            if(_td!=null)throw new InvalidOperationException("2TD 已经连接");
-            string port=Selected(TdPort);
-            if(!_verifiedTd.Contains(port))throw new InvalidOperationException("2TD 串口尚未通过实际状态帧验证，请先扫描识别；不允许猜测 COM 口连接");
-            int baud=ParseInt(TdBaud.Text,115200);
-            var table=new Td600(port,baud);
-            try{await Task.Run(table.Connect);_td=table;}catch{table.Dispose();throw;}
-            Log($"真实 2TD 连接成功：{table.Ports}");UpdateConnection();
+            if (_td?.Connected == true)
+            {
+                // Diagnosis-only connection: no enable commands have succeeded
+                // as far as the software can verify. Do not blindly issue Disable.
+                var before = await Task.Run(_td.Read);
+                if (!TdConnectionPolicy.Stopped(before))
+                    throw new IOException("2TD 未确认双轴静止：禁止直接关闭串口。请先按厂家规定安全停车。");
+                if (_tdDiagnosticOnly && !before.Inner.Enabled && !before.Outer.Enabled)
+                {
+                    if (SafetyConfirm.IsChecked != true)
+                        throw new IOException("只读断开前请现场核实两轴已停稳、实体急停可用并勾选安全确认。");
+                    if (MessageBox.Show("已读取到双轴速度接近零且均未使能。请现场再次核实机械已停稳、装夹及负载已得到支撑。是否只关闭通信端口？\n注意：关闭串口不等于停车。",
+                            "2TD 只读诊断安全断开", MessageBoxButton.YesNo, MessageBoxImage.Warning)
+                        != MessageBoxResult.Yes) return;
+                    _td.Dispose(); _td = null; _tdDiagnosticOnly = false;
+                    TdStatus.Text = "2TD 诊断端口已关闭（无自动断使能命令）";
+                    Log(TdStatus.Text); UpdateConnection(); return;
+                }
+                if (!before.Inner.Normal || !before.Outer.Normal)
+                    throw new IOException("状态异常且已有使能状态；不可自动断使能/断开。请使用厂家操作规程处理，再确认安全状态。");
+                if (MessageBox.Show("双轴已反馈静止。断使能可能使轴失去保持力，请确认夹具/负载安全。是否断使能、验证后关闭端口？",
+                    "2TD 安全断开", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+                await Task.Run(() =>
+                {
+                    if (before.Inner.Enabled) _td.DisableAxis(0);
+                    if (before.Outer.Enabled) _td.DisableAxis(2);
+                    var after = _td.Read();
+                    if (after.Inner.Enabled || after.Outer.Enabled || !TdConnectionPolicy.Stopped(after))
+                        throw new IOException("无法确认双轴已断使能且静止；保持串口连接，禁止当作安全断开");
+                    _td.Dispose();
+                });
+                _td = null; _tdDiagnosticOnly = false;
+                TdStatus.Text = "2TD 已验证断使能并关闭串口";
+                Log(TdStatus.Text); UpdateConnection(); return;
+            }
+
+            string port = Selected(TdPort);
+            if (!_verifiedTd.Contains(port))
+                throw new InvalidOperationException("请先自动扫描并确认 2TD COM 端口有可校验的真实状态帧");
+            if (SafetyConfirm.IsChecked != true)
+                throw new InvalidOperationException("连接后可能自动使能：先确认实体急停、夹具、机械位置与线缆并勾选安全确认");
+            if (MessageBox.Show("先建立 2TD 通信并读取双轴状态。只有双轴确认正常且静止才会自动使能；否则保留只读诊断连接、禁止运动。确认现场安全？",
+                "2TD 安全连接", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+
+            var table = new Td600(port, ParseInt(TdBaud.Text, 115200));
+            try { await Task.Run(table.Connect); }
+            catch { table.Dispose(); throw; }
+            // Opening a COM port is not the same as confirming that axes can enable.
+            // Do not dispose the port because the first read returns "normal=0";
+            // that erases precisely the diagnostic state needed by the operator.
+            _td = table;
+            _tdDiagnosticOnly = true;
+            UpdateConnection();
+
+            TableSnapshot? snapshot = null;
+            string? readError = null;
+            // The vendor DLL can deliver a stale/empty first state after OpenPort.
+            // Make a few read-only attempts without sending any motor commands.
+            for (int attempt = 0; attempt < 4; attempt++)
+            {
+                try
+                {
+                    snapshot = await Task.Run(table.Read);
+                    if (TdConnectionPolicy.CanAutoEnable(snapshot)) break;
+                }
+                catch (Exception ex) { readError = ex.Message; }
+                if (attempt < 3) await Task.Delay(250);
+            }
+            if (snapshot is null)
+            {
+                TdStatus.Text = "2TD 串口已打开（只读），但未取得可信状态：" + (readError ?? "未知原因");
+                Log(TdStatus.Text); return;
+            }
+            string diagnostic = DescribeTdAxis("内轴", snapshot.Inner) + "；" +
+                                DescribeTdAxis("外轴", snapshot.Outer);
+            Log("2TD 连接初始状态：" + diagnostic);
+            if (!TdConnectionPolicy.CanAutoEnable(snapshot))
+            {
+                TdStatus.Text = "2TD 已连接·仅诊断（未自动使能）：" + diagnostic;
+                // A fault indication must not be bypassed simply to permit movement.
+                Log("2TD 自动使能条件未满足；保留状态读取，运动仍被设备层安全检查拦截");
+                return;
+            }
+
+            try
+            {
+                await Task.Run(() => { table.EnableAxis(0); table.EnableAxis(2); });
+                await Task.Delay(300);
+                var afterEnable = await Task.Run(table.Read);
+                if (!afterEnable.Inner.Enabled || !afterEnable.Outer.Enabled ||
+                    !afterEnable.Inner.Normal || !afterEnable.Outer.Normal)
+                    throw new IOException("发送使能后未获取双轴正常且已使能的反馈：" +
+                        DescribeTdAxis("内轴", afterEnable.Inner) + "；" +
+                        DescribeTdAxis("外轴", afterEnable.Outer));
+                _tdDiagnosticOnly = false;
+                TdStatus.Text = "2TD 已连接，双轴使能已由反馈确认";
+                Log(TdStatus.Text);
+            }
+            catch (Exception ex)
+            {
+                // One axis may already be enabled. Never silently release this
+                // port or claim that both axes are disabled after a partial failure.
+                _tdDiagnosticOnly = true;
+                TdStatus.Text = "2TD 已连接·使能未确认（禁止运动）：" + ex.Message;
+                Log(TdStatus.Text);
+            }
         }
-        catch(Exception ex){TdStatus.Text="2TD 连接失败："+ex.Message;Log(TdStatus.Text);}
-        finally{_tdGate.Release();}
+        catch (Exception ex)
+        {
+            TdStatus.Text = "2TD 连接/断开操作失败：" + ex.Message;
+            Log(TdStatus.Text);
+        }
+        finally { UpdateConnection(); _tdGate.Release(); }
     }
     private async void FdtConnectClick(object sender,RoutedEventArgs e)
     {
         if(_busyScanning || _testRunner.IsRunning || _recorder is not null)
-        {Log("正在扫描/执行测试/采集，不能连接转台");return;}
+        {Log("正在扫描/执行测试/采集，不能切换转台连接");return;}
         await _fdtGate.WaitAsync();
         try
         {
-            if(_fdt!=null)throw new InvalidOperationException("2FDT 已经连接");
+            if(_fdt?.Connected==true)
+            {
+                if(SafetyConfirm.IsChecked!=true)
+                    throw new InvalidOperationException("温控转台断开前，请先确认现场安全条件");
+                if(MessageBox.Show("2FDT 厂商状态码尚未确认能否判断已到位和速度。请先在现场确认两轴已停止。\n是否发送双轴软停车、断使能并关闭串口？",
+                    "温控转台断开确认",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+                await Task.Run(() =>
+                {
+                    _fdt.StopAxis(0); _fdt.StopAxis(2);
+                });
+                await Task.Delay(400);
+                var check=await Task.Run(_fdt.Read);
+                if(!check.Inner.Normal || !check.Outer.Normal)
+                    throw new IOException("温控转台状态异常；不能自动视为已安全停车，需现场处理");
+                if(MessageBox.Show("已经发送软停车但没有可信速度/到位反馈。确认现场观察到两个轴均已停稳，允许断使能和关闭通讯？",
+                    "再次确认实物停止",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+                await Task.Run(() =>
+                {
+                    _fdt.DisableAxis(0); _fdt.DisableAxis(2);
+                    _fdt.Dispose();
+                });
+                _fdt=null;
+                FdtStatus.Text="温控转台已发送断使能并释放端口（静止状态由现场确认）";
+                Log("用户主动断开 2FDT（现场确认停稳）");UpdateConnection();
+                return;
+            }
             string inner=Selected(FdtInnerPort),outer=Selected(FdtOuterPort);
             if(!_verifiedFdtInner.Contains(inner)||!_verifiedFdtOuter.Contains(outer))
-                throw new InvalidOperationException("温控转台内/外轴尚未分别通过 GetStateInfo 真实验证，请先扫描 COM 口");
+                throw new InvalidOperationException("温控转台内/外轴尚未分别通过状态查询验证，请先扫描");
             var table=new Fdt600(inner,outer);
             try{await Task.Run(table.Connect);_fdt=table;}catch{table.Dispose();throw;}
-            Log($"真实 2FDT 连接成功：{table.Ports}");UpdateConnection();
+            FdtStatus.Text="温控转台已连接，自动使能待厂家状态码核实（使用原使能控制）";
+            Log($"真实 2FDT 连接成功：{table.Ports}；使能语义仍待核验");UpdateConnection();
         }
-        catch(Exception ex){FdtStatus.Text="2FDT 连接失败："+ex.Message;Log(FdtStatus.Text);}
+        catch(Exception ex){FdtStatus.Text="2FDT 操作失败："+ex.Message;Log(FdtStatus.Text);}
         finally{_fdtGate.Release();}
     }
     private async Task PollAsync()
@@ -854,13 +1049,18 @@ public partial class MainWindow : Window
                     try
                     {
                         var snapshot=await Task.Run(_td.Read);
-                        TdStatus.Text=$"实际反馈 · 内轴速度 {snapshot.Inner.SpeedDps:F4}°/s · 外轴速度 {snapshot.Outer.SpeedDps:F4}°/s";
+                        _latestTdSnapshot = snapshot;
+                        TdStatus.Text=_tdDiagnosticOnly
+                            ? "仅诊断连接：" + DescribeTdAxis("内轴", snapshot.Inner) + "；" + DescribeTdAxis("外轴", snapshot.Outer)
+                            : $"已连接/反馈：内轴 {snapshot.Inner.SpeedDps:F4}°/s，外轴 {snapshot.Outer.SpeedDps:F4}°/s";
+                        TdInnerStateText.ToolTip=snapshot.Inner.Detail;
+                        TdOuterStateText.ToolTip=snapshot.Outer.Detail;
                         TdInnerStateText.Text=AxisLabel(snapshot.Inner);
                         TdOuterStateText.Text=AxisLabel(snapshot.Outer);
                         TdInnerAngleText.Text=snapshot.Inner.PositionDeg.ToString("+0.0000;-0.0000;0.0000",CultureInfo.InvariantCulture);
                         TdOuterAngleText.Text=snapshot.Outer.PositionDeg.ToString("+0.0000;-0.0000;0.0000",CultureInfo.InvariantCulture);
                     }
-                    catch(Exception e){TdStatus.Text="2TD 反馈异常："+e.Message;}
+                    catch(Exception e){_latestTdSnapshot=null;TdStatus.Text="2TD 反馈异常："+e.Message;}
                     finally{_tdGate.Release();}
                 }
             }
@@ -871,18 +1071,19 @@ public partial class MainWindow : Window
                     try
                     {
                         var snapshot=await Task.Run(_fdt.Read);
+                        _latestFdtSnapshot = snapshot;
                         FdtStatus.Text=$"真实反馈 · 内轴 {snapshot.Inner.Detail} / 外轴 {snapshot.Outer.Detail}";
                         FdtInnerStateText.Text=AxisLabel(snapshot.Inner);
                         FdtOuterStateText.Text=AxisLabel(snapshot.Outer);
                         FdtInnerAngleText.Text=snapshot.Inner.PositionDeg.ToString("+0.0000;-0.0000;0.0000",CultureInfo.InvariantCulture);
                         FdtOuterAngleText.Text=snapshot.Outer.PositionDeg.ToString("+0.0000;-0.0000;0.0000",CultureInfo.InvariantCulture);
                     }
-                    catch(Exception e){FdtStatus.Text="2FDT 反馈异常："+e.Message;}
+                    catch(Exception e){_latestFdtSnapshot=null;FdtStatus.Text="2FDT 反馈异常："+e.Message;}
                     finally{_fdtGate.Release();}
                 }
             }
         }
-        finally{_busyPolling=false;}
+        finally{_busyPolling=false;UpdateConnection();}
     }
     private static string AxisLabel(AxisState a) =>
         $"使能 {(a.EnableVerified is bool en?(en?"是":"否"):"待确认")} / 已到位 {(a.InPlace is bool place?(place?"是":"否"):"待确认")} / {(a.Normal?"正常":"故障/报警")}";
@@ -909,6 +1110,8 @@ public partial class MainWindow : Window
         try
         {
             if(table?.Connected!=true)throw new InvalidOperationException(name+"未连接");
+            if(ReferenceEquals(table,_td) && _tdDiagnosticOnly && !name.Contains("停车"))
+                throw new InvalidOperationException("2TD 当前仅可读取状态：尚未确认自动使能，禁止运动/归零/使能。先排查状态报警，现场安全确认后重新连接。");
             if(_testRunner.IsRunning && !name.Contains("停车"))
                 throw new InvalidOperationException("自动测试运行中，不允许手动使能或移动。请先停止自动测试。");
             if(requiresConfirmation&&!ConfirmMovement(name+" · "+(axis==0?"内轴":"外轴")))return false;
@@ -925,16 +1128,19 @@ public partial class MainWindow : Window
         try
         {
             double delta=ParseDouble(deltaBox.Text),speed=ParseDouble(speedBox.Text);
-            if(!double.IsFinite(delta)||!double.IsFinite(speed))throw new InvalidDataException("角度/速率必须为有限数字");
+            if(!double.IsFinite(delta)||!double.IsFinite(speed)||delta==0||speed<=0)
+                throw new InvalidDataException("角度必须为有限非零值；速率须为正值");
             var t=table??throw new IOException(name+"未连接");
+            if(ReferenceEquals(t,_td) && _tdDiagnosticOnly)
+                throw new IOException("2TD 当前是仅诊断连接，尚未确认安全使能；禁止发送相对运动指令");
             // Fresh feedback, never use a cached UI value to calculate relative movement.
             await gate.WaitAsync();
             TableSnapshot snapshot;
             try{snapshot=await Task.Run(t.Read);}
             finally{gate.Release();}
             double before=(axis==0?snapshot.Inner:snapshot.Outer).PositionDeg;
-            double target=before+delta;
-            if(!ConfirmMovement($"{name} {(axis==0?"内轴":"外轴")}：实际位置 {before:F4}° + 相对 {delta:+0.####;-0.####;0}° = 目标 {target:F4}°，速率 {speed:F3}°/s"))return;
+            double seconds=Math.Abs(delta)/speed; // ideal constant-speed estimate; excludes ramp-up/down
+            if(!ConfirmMovement($"{name} {(axis==0?"内轴":"外轴")}：当前反馈角 {before:F4}°；发送相对增量 {delta:+0.####;-0.####;0}°，速率 {speed:F3}°/s。理想匀速用时约 {seconds:F1} 秒（实际含加减速；跨360°使用厂家增量指令）。请核实对应转轴的连续转动与工装、线缆条件。"))return;
             await Operate(table,gate,axis,(obj,a)=>obj.MoveRelative(a,delta,speed),$"{name} 相对运行 {delta:+0.####;-0.####;0}° @ {speed}°/s",false);
         }
         catch(Exception ex){MessageBox.Show(ex.Message,"相对运动参数/安全限制",MessageBoxButton.OK,MessageBoxImage.Warning);}
@@ -1019,7 +1225,32 @@ public partial class MainWindow : Window
     private async void FdtStopClick(object sender,RoutedEventArgs e)=>await StopBoth(_fdt,_fdtGate,"2FDT");
     private void UpdateConnection()
     {
-        ConnectionStatus.Text=$"IMU {(_imu?.Connected==true?"已连接":"离线")} | 2TD {(_td?.Connected==true?"已连接":"离线")} | 2FDT {(_fdt?.Connected==true?"已连接":"离线")}";
+        bool imu=_imu?.Connected==true, td=_td?.Connected==true, fdt=_fdt?.Connected==true;
+        ConnectionStatus.Text=$"IMU {(imu?"已连接":"离线")} | 2TD {(td?"已连接":"离线")} | 2FDT {(fdt?"已连接":"离线")}";
+        if(ImuConnectButton!=null) ImuConnectButton.Content=imu?"断开":"连接 / 读 UID";
+        if(TdConnectButton!=null) TdConnectButton.Content=td?"安全断开":"连接";
+        if(FdtConnectButton!=null) FdtConnectButton.Content=fdt?"安全断开":"连接";
+        if(ImuStateValue is null || TdStateValue is null || FdtStateValue is null) return;
+
+        ImuStateValue.Text=imu?"已连接":"未连接";
+        ImuStateDetail.Text=imu ? $"{_imu!.PortName} · {_imu.Identity?.DtsId ?? "UID待确认"}" : "等待 UID";
+        ImuStateDot.Fill=imu ? Brushes.SeaGreen : Brushes.LightSlateGray;
+
+        if(!td) _latestTdSnapshot=null;
+        bool tdHealthy = td && !_tdDiagnosticOnly && _latestTdSnapshot is { } t &&
+                         DateTimeOffset.UtcNow - t.Time < TimeSpan.FromSeconds(4) &&
+                         t.Inner.Normal && t.Outer.Normal && t.Inner.Enabled && t.Outer.Enabled;
+        TdStateValue.Text=!td?"未连接":_tdDiagnosticOnly?"仅诊断":tdHealthy?"双轴正常":"状态待核实";
+        TdStateDetail.Text=td ? (_td?.Ports??"已连接") : "等待串口";
+        TdStateDot.Fill=!td?Brushes.LightSlateGray:tdHealthy?Brushes.SeaGreen:Brushes.DarkOrange;
+
+        if(!fdt) _latestFdtSnapshot=null;
+        bool fdtFeedbackFresh = _latestFdtSnapshot is { } ft &&
+                                DateTimeOffset.UtcNow - ft.Time < TimeSpan.FromSeconds(4);
+        FdtStateValue.Text=fdt ? (fdtFeedbackFresh?"状态已更新":"状态待核实") : "未连接";
+        FdtStateDetail.Text=fdt ? $"{_fdt?.Ports} · 使能待核验" : "等待内外轴";
+        // The 2FDT native state code has not been mapped to trusted enable bits.
+        FdtStateDot.Fill=fdt?Brushes.DarkOrange:Brushes.LightSlateGray;
     }
     private static string Selected(ComboBox box)=>box.SelectedItem as string ?? throw new InvalidOperationException("请先自动扫描并选择实际端口");
     private static int ParseInt(string? v,int defaultValue)=>int.TryParse(v,out var n)?n:defaultValue;
@@ -1045,6 +1276,14 @@ public partial class MainWindow : Window
             e.Cancel=true;
             MessageBox.Show("真实测试任务仍在执行；请先在测试子窗口停止并等待双轴停车反馈及检查点保存。",
                 "禁止运行中直接退出",MessageBoxButton.OK,MessageBoxImage.Warning);
+            return;
+        }
+        // ClosePort/Dispose only releases serial handles; it is NOT a motor stop.
+        if(_td?.Connected==true || _fdt?.Connected==true)
+        {
+            e.Cancel=true;
+            MessageBox.Show("有转台仍处于连接状态。请先按停止、确认实际转速为零，再通过对应页签执行安全断开。关闭WPF窗口不会保证物理轴停车。",
+                "请先安全断开转台",MessageBoxButton.OK,MessageBoxImage.Warning);
             return;
         }
         _poll.Stop();

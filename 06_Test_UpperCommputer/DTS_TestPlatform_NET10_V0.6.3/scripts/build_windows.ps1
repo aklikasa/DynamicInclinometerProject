@@ -10,7 +10,7 @@ $log = Join-Path $projectRoot ('build_logs\last_build_' + $Configuration.ToLower
 $exe = Join-Path $projectRoot ('src\Dts.Wpf\bin\' + $Configuration + '\net10.0-windows\Dts.TestPlatform.exe')
 
 Write-Host '======================================================'
-Write-Host ' 动态倾角仪研发平台 V0.5.7 — Windows 构建/EXE 诊断'
+Write-Host ' 动态倾角仪研发平台 V0.6.0 — Windows 构建/EXE 诊断'
 Write-Host '======================================================'
 Write-Host ('工程：' + $projectRoot)
 Write-Host ('日志：' + $log)

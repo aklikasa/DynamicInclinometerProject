@@ -7,7 +7,7 @@
     <SolidColorBrush x:Key="Ink" Color="#213A5B"/>
     <SolidColorBrush x:Key="Muted" Color="#6E8298"/>
     <SolidColorBrush x:Key="Outline" Color="#DAE4F0"/>
-    <sys:Double xmlns:sys="clr-namespace:System;assembly=mscorlib" x:Key="TestTileWidth">182</sys:Double>
+    <sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib" x:Key="TestTileColumns">2</sys:Int32>
 
     <Style TargetType="Window">
       <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
@@ -54,6 +54,79 @@
       <Setter Property="BorderBrush" Value="#CEDCEE"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="Background" Value="White"/>
+    </Style>
+    <!-- V0.6.3: compact live status cards beside report/calibration paths. -->
+    <Style x:Key="DeviceStatusCard" TargetType="Border">
+      <Setter Property="Background" Value="#F2F7FE"/>
+      <Setter Property="BorderBrush" Value="#DAE6F5"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="9"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="Margin" Value="3,1"/>
+    </Style>
+    <!-- Shared visual language for both embedded and fullscreen IMU telemetry. -->
+    <Style x:Key="TelemetryHeader" TargetType="DataGridColumnHeader">
+      <Setter Property="Background" Value="#EAF2FC"/>
+      <Setter Property="Foreground" Value="#335A85"/>
+      <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Padding" Value="7,7"/>
+      <Setter Property="BorderBrush" Value="#D7E5F5"/>
+      <Setter Property="BorderThickness" Value="0,0,1,1"/>
+    </Style>
+    <Style x:Key="TelemetryRow" TargetType="DataGridRow">
+      <Setter Property="Background" Value="White"/>
+      <Setter Property="BorderBrush" Value="#E9F0F8"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Style.Triggers>
+        <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+          <Setter Property="Background" Value="#F8FAFE"/>
+        </Trigger>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="Background" Value="#EAF3FF"/>
+        </Trigger>
+        <Trigger Property="IsSelected" Value="True">
+          <Setter Property="Background" Value="#DCEBFF"/>
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="TelemetryCell" TargetType="DataGridCell">
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="7,3"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#243F61"/>
+      <Style.Triggers>
+        <Trigger Property="IsSelected" Value="True">
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="Foreground" Value="#153A68"/>
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="TelemetryGrid" TargetType="DataGrid">
+      <Setter Property="Background" Value="White"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="HorizontalGridLinesBrush" Value="#EDF2F9"/>
+      <Setter Property="GridLinesVisibility" Value="None"/>
+      <Setter Property="RowStyle" Value="{StaticResource TelemetryRow}"/>
+      <Setter Property="CellStyle" Value="{StaticResource TelemetryCell}"/>
+      <Setter Property="ColumnHeaderStyle" Value="{StaticResource TelemetryHeader}"/>
+    </Style>
+    <Style x:Key="TelemetryNumber" TargetType="TextBlock">
+      <Setter Property="FontFamily" Value="Consolas"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="TextAlignment" Value="Right"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Foreground" Value="#224E80"/>
+    </Style>
+    <Style x:Key="TelemetryStatus" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="#A06322"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+      <Setter Property="ToolTip" Value="{Binding Status}"/>
     </Style>
     <Style x:Key="Card" TargetType="Border">
       <Setter Property="Background" Value="White"/>
@@ -158,9 +231,9 @@
       <Setter Property="Margin" Value="0,0,0,5"/>
     </Style>
     <Style x:Key="TestTile" TargetType="Button" BasedOn="{StaticResource RoundedButton}">
-      <Setter Property="MinWidth" Value="148"/>
-      <Setter Property="Width" Value="{DynamicResource TestTileWidth}"/>
-      <Setter Property="Height" Value="92"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Height" Value="100"/>
       <Setter Property="Margin" Value="0,0,9,9"/>
       <Setter Property="Padding" Value="0"/>
       <Setter Property="Background" Value="#F7FAFE"/>
