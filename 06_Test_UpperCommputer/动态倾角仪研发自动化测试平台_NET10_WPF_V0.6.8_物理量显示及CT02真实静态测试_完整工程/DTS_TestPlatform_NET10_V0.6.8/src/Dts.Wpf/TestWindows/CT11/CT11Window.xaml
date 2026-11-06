@@ -1,0 +1,119 @@
+<Window x:Class="Dts.Wpf.TestWindows.CT11.CT11Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-11 · GYRO 轴间耦合与低速线性 · 自动动态测试" Width="1240" Height="840"
+ MinWidth="1020" MinHeight="690" WindowStartupLocation="CenterOwner" Closing="OnClosing" Background="#F2F7FC">
+ <Grid Margin="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="17" Margin="0,0,0,10">
+   <StackPanel>
+    <TextBlock Text="CT-11  /  GYRO 轴间耦合与低速线性" FontSize="23" FontWeight="Bold" Foreground="#1B568B"/>
+    <TextBlock Text="真实转台低速正反旋转 · Gyro三轴动态采样 · 主轴增益/非线性 · 非主轴耦合斜率" Margin="0,6,0,0" Foreground="#637F98" TextWrapping="Wrap"/>
+    <TextBlock x:Name="UidText" Margin="0,6,0,0" Foreground="#235F9A" FontFamily="Consolas"/>
+   </StackPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="388"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel>
+     <Border Background="White" CornerRadius="11" Padding="15" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="① 真实硬件与常温补偿" FontSize="16" FontWeight="Bold" Foreground="#216195"/>
+       <TextBlock x:Name="BridgeText" Foreground="#A26933" TextWrapping="Wrap" Margin="0,9,0,0"/>
+       <TextBlock x:Name="CalibrationText" Foreground="#536F88" TextWrapping="Wrap" Margin="0,7,0,0"/>
+       <TextBlock Text="报告输出根目录" Foreground="#627F98" Margin="0,8,0,3"/>
+       <TextBlock x:Name="OutputText" Foreground="#255D8F" TextWrapping="Wrap" FontSize="12"/>
+      </StackPanel>
+     </Border>
+     <Border Background="White" CornerRadius="11" Padding="15" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="② 低速动态扫描参数" FontSize="16" FontWeight="Bold" Foreground="#216195"/>
+       <TextBlock Text="低速角速度档位 (°/s，至少3档，英文逗号分隔)" Margin="0,11,0,4"/>
+       <TextBox x:Name="Speeds" Text="1,2,5" TextChanged="SettingsChanged"/>
+       <StackPanel Orientation="Horizontal" Margin="0,10,0,6">
+        <CheckBox x:Name="OuterAxis" IsChecked="True" Content="外轴 → Gyro-X" Checked="AxisChanged" Unchecked="AxisChanged" Margin="0,0,12,0"/>
+        <CheckBox x:Name="InnerAxis" IsChecked="False" Content="内轴 → Gyro-Z" Checked="AxisChanged" Unchecked="AxisChanged"/>
+       </StackPanel>
+       <UniformGrid Columns="2" Margin="0,5,0,0">
+        <StackPanel Margin="0,0,6,9"><TextBlock Text="每档正反配对次数"/><TextBox x:Name="RepeatCount" Text="1" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,9"><TextBlock Text="准备定位速度 °/s"/><TextBox x:Name="SetupSpeed" Text="1" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,9"><TextBlock Text="扫描起点 °"/><TextBox x:Name="TravelMin" Text="60" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,9"><TextBlock Text="扫描终点 °"/><TextBox x:Name="TravelMax" Text="100" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,9"><TextBlock Text="现场批准下限 °"/><TextBox x:Name="ApprovedMin" Text="0" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,9"><TextBlock Text="现场批准上限 °"/><TextBox x:Name="ApprovedMax" Text="180" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,9"><TextBlock Text="起点静置时间 s"/><TextBox x:Name="SettleSeconds" Text="3" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,9"><TextBlock Text="有效匀速偏差比例"/><TextBox x:Name="SpeedTolerance" Text="0.15" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,9"><TextBlock Text="编码器微分窗口 s"/><TextBox x:Name="EncoderWindow" Text="0.5" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,9"><TextBlock Text="每段最少有效帧"/><TextBox x:Name="MinFrames" Text="20" TextChanged="SettingsChanged"/></StackPanel>
+       </UniformGrid>
+       <CheckBox x:Name="InvertOuter" Content="外轴Gyro-X信号方向反转" Margin="0,6,0,5" Checked="AxisChanged" Unchecked="AxisChanged"/>
+       <CheckBox x:Name="InvertInner" Content="内轴Gyro-Z信号方向反转" Margin="0,0,0,7" Checked="AxisChanged" Unchecked="AxisChanged"/>
+       <Button x:Name="PreviewButton" Content="预览完整低速正反扫描计划" Click="PreviewClick" Padding="8"/>
+       <TextBlock x:Name="PlanSummary" TextWrapping="Wrap" Foreground="#536F87" Margin="0,8,0,0" FontSize="12"/>
+      </StackPanel>
+     </Border>
+     <Border Background="White" CornerRadius="11" Padding="15">
+      <StackPanel>
+       <TextBlock Text="③ 现场运动安全确认" FontWeight="Bold" FontSize="16" Foreground="#216195"/>
+       <CheckBox x:Name="MotionApproval" Content="已检查全部运动路径、线缆及机械允许行程" Margin="0,10,0,7"/>
+       <CheckBox x:Name="EmergencyApproval" Content="现场有人监护，实体急停功能已确认" Margin="0,0,0,7"/>
+       <CheckBox x:Name="MappingApproval" Content="已核验Gyro-X/Gyro-Z与转台轴向符号" Margin="0,0,0,7"/>
+       <TextBlock Text="软件允许范围不能代替机械限位。未核验动态时间质量与转台实际限速时，禁止启动。" TextWrapping="Wrap" Foreground="#9D6A36" FontSize="12"/>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+   </ScrollViewer>
+   <Grid Grid.Column="2">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="15" Margin="0,0,0,9">
+     <StackPanel>
+      <TextBlock Text="自动低速扫描计划" FontWeight="Bold" FontSize="16" Foreground="#216195"/>
+      <TextBlock Text="预览不启动设备；正反运动使用真实编码器速率和真实Gyro三轴响应" Foreground="#627C94" TextWrapping="Wrap" Margin="0,6,0,0"/>
+      <ProgressBar x:Name="RunProgress" Height="8" Minimum="0" Maximum="100" Value="0" Margin="0,10,0,0"/>
+      <TextBlock x:Name="StatusText" Text="等待设备与运动确认" Margin="0,6,0,0" Foreground="#386B98" TextWrapping="Wrap"/>
+     </StackPanel>
+    </Border>
+    <TabControl x:Name="Tabs" Grid.Row="1">
+     <TabItem Header="运动计划">
+      <DataGrid x:Name="PlanGrid" IsReadOnly="True" CanUserAddRows="False" AutoGenerateColumns="False">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="轴" Binding="{Binding Axis}" Width="65"/>
+        <DataGridTextColumn Header="角速度 °/s" Binding="{Binding CommandDps}" Width="*"/>
+        <DataGridTextColumn Header="方向" Binding="{Binding Direction}" Width="*"/>
+        <DataGridTextColumn Header="重复" Binding="{Binding Repetition}" Width="*"/>
+        <DataGridTextColumn Header="起点 °" Binding="{Binding StartDeg}" Width="*"/>
+        <DataGridTextColumn Header="终点 °" Binding="{Binding EndDeg}" Width="*"/>
+       </DataGrid.Columns>
+      </DataGrid>
+     </TabItem>
+     <TabItem Header="真实三轴结果">
+      <DataGrid x:Name="ResultGrid" IsReadOnly="True" CanUserAddRows="False" AutoGenerateColumns="False">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="旋转轴" Binding="{Binding Axis}" Width="72"/>
+        <DataGridTextColumn Header="方向" Binding="{Binding Direction}" Width="75"/>
+        <DataGridTextColumn Header="参考°/s" Binding="{Binding Reference}" Width="*"/>
+        <DataGridTextColumn Header="Gyro-X" Binding="{Binding X}" Width="*"/>
+        <DataGridTextColumn Header="Gyro-Y" Binding="{Binding Y}" Width="*"/>
+        <DataGridTextColumn Header="Gyro-Z" Binding="{Binding Z}" Width="*"/>
+        <DataGridTextColumn Header="有效帧" Binding="{Binding Frames}" Width="80"/>
+       </DataGrid.Columns>
+      </DataGrid>
+     </TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="14" Margin="0,10,0,0">
+     <StackPanel>
+      <TextBlock Text="低速线性、轴间耦合与报告" FontWeight="Bold" FontSize="16" Foreground="#216195"/>
+      <TextBlock x:Name="MetricsText" Text="等待真实动态扫描；结果仅研发待验收，不自动PASS。" TextWrapping="Wrap" Foreground="#28689A" Margin="0,7,0,0"/>
+      <TextBlock x:Name="ReportText" Text="报告包含 JSON / CSV / Excel / SVG 图文HTML；保留逐帧原始计数证据。" TextWrapping="Wrap" Foreground="#667F96" FontSize="12" Margin="0,6,0,0"/>
+     </StackPanel>
+    </Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" LastChildFill="False" Margin="0,12,0,0">
+   <Button DockPanel.Dock="Right" Content="关闭" Click="CloseClick" Padding="15,7" Margin="3"/>
+   <Button DockPanel.Dock="Right" x:Name="ReportButton" Content="打开HTML图文报告" Click="ReportClick" IsEnabled="False" Padding="12,7" Margin="3"/>
+   <Button DockPanel.Dock="Right" x:Name="StopButton" Content="取消 / 双轴软停车" Click="StopClick" IsEnabled="False" Padding="14,7" Margin="3" Background="#FFE2D3"/>
+   <Button DockPanel.Dock="Right" x:Name="StartButton" Content="▶ 一键自动低速测试" Click="StartClick" Padding="15,7" Margin="3" Background="#CBE6FF"/>
+  </DockPanel>
+ </Grid>
+</Window>

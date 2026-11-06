@@ -1,0 +1,75 @@
+<Window x:Class="Dts.Wpf.TestWindows.CT02.CT02Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-02 常温零位与静态零速残差 · 真实检测" Width="950" Height="670" MinWidth="820" MinHeight="560"
+ WindowStartupLocation="CenterOwner" Closing="OnClosing">
+ <Grid Margin="18">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,10"><StackPanel>
+   <TextBlock Text="CT-02  /  常温零位与静态零速残差" Style="{StaticResource Title}" FontSize="22"/>
+   <TextBlock Text="真实 IMU · 静态常温验证 · 无转台运动 · 单姿态子项 · 待人工验收" Foreground="#547090" Margin="0,6,0,0"/>
+   <TextBlock x:Name="UidText" Foreground="#2369B7" FontFamily="Consolas" Margin="0,7,0,0"/>
+  </StackPanel></Border>
+  <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="360"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" Margin="0,0,12,0" VerticalScrollBarVisibility="Auto"><StackPanel>
+    <Border Style="{StaticResource Card}" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Style="{StaticResource Title}" Text="① 标定文件与报告目录"/>
+     <TextBlock Text="模型由主窗口按完整 UID 匹配，本窗口不另选 JSON。" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="#557394"/>
+     <TextBlock x:Name="CalibrationText" Text="等待常温标定模型" TextWrapping="Wrap" Margin="0,7,0,0" Foreground="#2A639C"/>
+     <TextBlock Text="报告根目录" Foreground="#667D91" Margin="0,12,0,3"/>
+     <TextBlock x:Name="RootText" TextWrapping="Wrap" Foreground="#315F95"/>
+    </StackPanel></Border>
+    <Border Style="{StaticResource Card}" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Text="② 静止采样" Style="{StaticResource Title}"/>
+     <TextBlock Text="采样时间（秒，5～1800）" Margin="0,10,0,4"/>
+     <TextBox x:Name="DurationBox" Text="30" Width="110" HorizontalAlignment="Left"/>
+     <TextBlock Text="机械平台 P 坐标系的零位参考方向" Margin="0,10,0,4" TextWrapping="Wrap"/>
+     <ComboBox x:Name="ReferenceBox">
+      <ComboBoxItem Content="参考 +Z = +1g" Tag="1"/>
+      <ComboBoxItem Content="参考 -Z = -1g" Tag="-1"/>
+     </ComboBox>
+     <TextBlock Text="请按已调平机械零位的 P 系方向手动选择，不根据原始 Az 自动猜测。" Foreground="#8F643C" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
+    </StackPanel></Border>
+    <Border Style="{StaticResource Card}"><StackPanel>
+     <TextBlock Text="③ 实机条件确认" Style="{StaticResource Title}"/>
+     <CheckBox x:Name="LevelConfirmed" Margin="0,8,0,7">
+      <TextBlock Text="已用可靠机械参考调平并确认零位与重力方向" TextWrapping="Wrap"/>
+     </CheckBox>
+     <CheckBox x:Name="StationaryConfirmed" Margin="0,0,0,8">
+      <TextBlock Text="转台静止、夹具固定、无人碰触 IMU" TextWrapping="Wrap"/>
+     </CheckBox>
+     <TextBlock Text="只读取真实IMU六轴，不发送运动指令；本版只完成已知零位的单姿态子项，未实现重新定位重复性，不自动判产品PASS。" TextWrapping="Wrap" Foreground="#865E42" FontSize="12"/>
+    </StackPanel></Border>
+   </StackPanel></ScrollViewer>
+   <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Style="{StaticResource Card}" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Style="{StaticResource Title}" Text="测试结果概览"/>
+     <TextBlock x:Name="SummaryText" Text="等待真实采集和参考确认" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="#35658C"/>
+     <TextBlock x:Name="MetricText" Text="" Margin="0,6,0,0" TextWrapping="Wrap" Foreground="#315C87"/>
+    </StackPanel></Border>
+    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,10"><DockPanel>
+     <TextBlock DockPanel.Dock="Top" Text="六轴均值与样本标准差" Style="{StaticResource Title}" Margin="0,0,0,9"/>
+     <DataGrid x:Name="MetricsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" RowHeight="30">
+      <DataGrid.Columns>
+       <DataGridTextColumn Header="轴" Binding="{Binding Axis}" Width="70"/>
+       <DataGridTextColumn Header="均值" Binding="{Binding Mean}" Width="*"/>
+       <DataGridTextColumn Header="标准差" Binding="{Binding Std}" Width="*"/>
+       <DataGridTextColumn Header="单位" Binding="{Binding Unit}" Width="66"/>
+      </DataGrid.Columns>
+     </DataGrid>
+    </DockPanel></Border>
+    <Border Grid.Row="2" Style="{StaticResource Card}"><StackPanel>
+     <TextBlock Text="任务状态 / 报告" Style="{StaticResource Title}"/>
+     <TextBlock x:Name="StatusText" Text="等待开始" Foreground="#28619F" TextWrapping="Wrap" Margin="0,6,0,0"/>
+     <TextBlock x:Name="FilesText" Text="采样后可打开本次 HTML 报告" Foreground="#657A90" TextWrapping="Wrap" Margin="0,4,0,0"/>
+    </StackPanel></Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" Margin="0,10,0,0" LastChildFill="False">
+   <Button DockPanel.Dock="Right" Content="关闭" Style="{StaticResource Action}" Click="CloseClick"/>
+   <Button DockPanel.Dock="Right" x:Name="ReportButton" Content="打开本次报告" Style="{StaticResource Action}" Click="ReportClick" IsEnabled="False"/>
+   <Button DockPanel.Dock="Right" x:Name="StopButton" Content="取消采集" Style="{StaticResource Warning}" Click="StopClick" IsEnabled="False"/>
+   <Button DockPanel.Dock="Right" x:Name="StartButton" Content="▶ 开始真实静态检测" Style="{StaticResource Primary}" Click="StartClick"/>
+  </DockPanel>
+ </Grid>
+</Window>

@@ -1,0 +1,13 @@
+{
+  "Enabled": false,
+  "FirmwareNewestSlotConfirmed": false,
+  "NewestFifoSlot": -1,
+  "FirmwareEvidence": "",
+  "InnerConfirmedSpeedLimitDps": 0,
+  "OuterConfirmedSpeedLimitDps": 0,
+  "SpeedLimitEvidence": "",
+  "MaximumImuReadMs": 0,
+  "MaximumEncoderReadMs": 0,
+  "MinimumEncoderRateHz": 0,
+  "MaxObservedTimingUncertaintyMs": 0
+}

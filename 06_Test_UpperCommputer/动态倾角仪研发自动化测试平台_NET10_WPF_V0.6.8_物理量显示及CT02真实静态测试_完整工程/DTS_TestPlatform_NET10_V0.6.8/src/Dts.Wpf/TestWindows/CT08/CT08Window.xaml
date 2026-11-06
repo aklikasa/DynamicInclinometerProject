@@ -1,0 +1,119 @@
+<Window x:Class="Dts.Wpf.TestWindows.CT08.CT08Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-08 · 正反路径回程差 · 全自动测试" Width="1250" Height="835"
+ MinWidth="1020" MinHeight="690" WindowStartupLocation="CenterOwner"
+ Closing="OnClosing" Background="#F3F7FC">
+ <Grid Margin="17">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Grid.Row="0" Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
+   <StackPanel>
+    <TextBlock Text="CT-08 / 正反路径回程差" Style="{StaticResource Title}" FontSize="23"/>
+    <TextBlock Text="内轴保持目标姿态；外轴从小角度和大角度分别接近同一目标 → 真实反馈确认 → 实时采集 → 成对计算" Foreground="#5B7895" Margin="0,5,0,0" TextWrapping="Wrap"/>
+    <TextBlock x:Name="UidText" Foreground="#2363A0" Margin="0,7,0,0" FontFamily="Consolas"/>
+   </StackPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="392"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel>
+     <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="① 设备、UID、常温标定" Style="{StaticResource Title}"/>
+       <TextBlock Text="ACC/Gyro 参数按 MCU UID 匹配；按现有 JSON 拟合输入量程换算。测试不修改任何标定参数。" TextWrapping="Wrap" Foreground="#647D94" Margin="0,6,0,5"/>
+       <TextBlock x:Name="CalibrationText" Text="等待主窗口传入模型" TextWrapping="Wrap" Foreground="#1F6198" FontSize="12"/>
+       <TextBlock Text="报告根目录" Margin="0,8,0,3"/>
+       <TextBlock x:Name="RootText" Foreground="#25608E" TextWrapping="Wrap" FontSize="12"/>
+      </StackPanel>
+     </Border>
+     <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="② 正反路径自动扫描设置" Style="{StaticResource Title}"/>
+       <TextBlock Text="多个角度可用逗号分隔。外轴逐目标从 ±偏移角分别回到同一个目标；同一对中内轴不动。" TextWrapping="Wrap" Foreground="#637C94" FontSize="12" Margin="0,7,0,7"/>
+       <TextBlock Text="内轴固定角度列表 (°)"/>
+       <TextBox x:Name="InnerPositions" Text="90" TextChanged="SettingChanged" Margin="0,3,0,7"/>
+       <TextBlock Text="外轴目标角度列表 (°)"/>
+       <TextBox x:Name="OuterTargets" Text="60, 90, 120" TextChanged="SettingChanged" Margin="0,3,0,7"/>
+       <UniformGrid Columns="2" Margin="0,5,0,0">
+        <StackPanel Margin="0,0,6,8"><TextBlock Text="两侧接近偏移量 (°)"/><TextBox x:Name="ApproachOffset" Text="10" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,8"><TextBlock Text="每目标正反配对次数"/><TextBox x:Name="PairRepeat" Text="3" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,8"><TextBlock Text="运动速度 (°/s)"/><TextBox x:Name="MotionSpeed" Text="1" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,8"><TextBlock Text="到位后静置 (s)"/><TextBox x:Name="SettleSeconds" Text="3" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,8"><TextBlock Text="单次真实采样 (s)"/><TextBox x:Name="SampleSeconds" Text="5" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,8"><TextBlock Text="到位容差 (°)"/><TextBox x:Name="Tolerance" Text="0.10" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,8"><TextBlock Text="实际行程下界 (°)"/><TextBox x:Name="MinTravel" Text="0" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,8"><TextBlock Text="实际行程上界 (°)"/><TextBox x:Name="MaxTravel" Text="180" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,8"><TextBlock Text="至少有效帧数"/><TextBox x:Name="MinSamples" Text="100" TextChanged="SettingChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,8"><TextBlock Text="最大剔除比例 (0~0.30)"/><TextBox x:Name="MaxRejection" Text="0.15" TextChanged="SettingChanged"/></StackPanel>
+       </UniformGrid>
+       <Button x:Name="PreviewButton" Content="预览全部正反路径及边界" Style="{StaticResource Action}" Click="PreviewClick" Margin="0,5,0,0"/>
+       <TextBlock x:Name="PlanSummary" TextWrapping="Wrap" Foreground="#2F638D" FontSize="12" Margin="0,7,0,0"/>
+      </StackPanel>
+     </Border>
+     <Border Style="{StaticResource Card}">
+      <StackPanel>
+       <TextBlock Text="③ 运动安全确认（启动前）" Style="{StaticResource Title}"/>
+       <CheckBox x:Name="DirectionConfirmed" Content="已检查每一段正反路径、旋向、工装、线缆与限位" Margin="0,9,0,8"/>
+       <CheckBox x:Name="SafetyConfirmed" Content="实体急停可用；运动区域净空且有人现场监护" Margin="0,0,0,7"/>
+       <TextBlock Text="该版本以外轴正反接近为主；切换内轴固定位置前，采用现有安全路径先使外轴停在0°。不自动绕越0°/360°边界。" TextWrapping="Wrap" Foreground="#966329" FontSize="12"/>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+   </ScrollViewer>
+   <Grid Grid.Column="2">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Grid.Row="0" Style="{StaticResource Card}" Padding="14" Margin="0,0,0,10">
+     <StackPanel>
+      <TextBlock Text="自动路径 / 配对监控" Style="{StaticResource Title}"/>
+      <TextBlock Text="每目标对比：ACC校正残差(正向) − ACC校正残差(反向)；另列出转台实际编码器差。" Foreground="#647C93" TextWrapping="Wrap" Margin="0,5,0,0"/>
+      <TextBlock x:Name="SummaryText" Text="等待预览" FontWeight="SemiBold" Foreground="#235D95" Margin="0,8,0,0" TextWrapping="Wrap"/>
+      <ProgressBar x:Name="RunProgressBar" Height="8" Margin="0,10,0,0" Minimum="0" Maximum="100" Value="0"/>
+      <TextBlock x:Name="StatusText" Text="等待现场安全确认" Foreground="#58748C" Margin="0,6,0,0" TextWrapping="Wrap"/>
+     </StackPanel>
+    </Border>
+    <TabControl x:Name="ResultTabs" Grid.Row="1">
+     <TabItem Header="目标与正反路径">
+      <DataGrid x:Name="PlanGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="31">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="42"/>
+        <DataGridTextColumn Header="配对" Binding="{Binding PairIndex}" Width="54"/>
+        <DataGridTextColumn Header="轮" Binding="{Binding Cycle}" Width="45"/>
+        <DataGridTextColumn Header="内轴固定°" Binding="{Binding InnerTargetDeg, StringFormat=F2}" Width="*"/>
+        <DataGridTextColumn Header="外轴起点°" Binding="{Binding OuterDepartDeg, StringFormat=F2}" Width="*"/>
+        <DataGridTextColumn Header="外轴目标°" Binding="{Binding OuterTargetDeg, StringFormat=F2}" Width="*"/>
+        <DataGridTextColumn Header="接近方向" Binding="{Binding Side}" Width="*"/>
+       </DataGrid.Columns>
+      </DataGrid>
+     </TabItem>
+     <TabItem Header="真实正反配对结果">
+      <DataGrid x:Name="ResultGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="32">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="配对" Binding="{Binding Pair}" Width="52"/>
+        <DataGridTextColumn Header="内轴目标°" Binding="{Binding Inner}" Width="84"/>
+        <DataGridTextColumn Header="外轴目标°" Binding="{Binding Outer}" Width="84"/>
+        <DataGridTextColumn Header="ΔX mg" Binding="{Binding Dx}" Width="*"/>
+        <DataGridTextColumn Header="ΔY mg" Binding="{Binding Dy}" Width="*"/>
+        <DataGridTextColumn Header="ΔZ mg" Binding="{Binding Dz}" Width="*"/>
+        <DataGridTextColumn Header="回程差 mg" Binding="{Binding Magnitude}" Width="*"/>
+        <DataGridTextColumn Header="外轴反馈差°" Binding="{Binding Feedback}" Width="*"/>
+       </DataGrid.Columns>
+      </DataGrid>
+     </TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Style="{StaticResource Card}" Padding="12" Margin="0,10,0,0">
+     <StackPanel>
+      <TextBlock Text="汇总 / 自动报告" Style="{StaticResource Title}"/>
+      <TextBlock x:Name="MetricsText" Text="未采集前不会生成任何测试结论" Foreground="#246399" TextWrapping="Wrap" Margin="0,6,0,0"/>
+      <TextBlock x:Name="ReportText" Text="报告：逐帧真实数据 CSV、正反配对 CSV、JSON、Excel 和带三张 SVG 图的 HTML" Foreground="#687F92" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
+     </StackPanel>
+    </Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" LastChildFill="False" Margin="0,12,0,0">
+   <Button DockPanel.Dock="Right" x:Name="CloseButton" Content="关闭" Style="{StaticResource Action}" Click="CloseClick"/>
+   <Button DockPanel.Dock="Right" x:Name="ReportButton" Content="查看图文报告" Style="{StaticResource Action}" Click="ReportClick" IsEnabled="False"/>
+   <Button DockPanel.Dock="Right" x:Name="StopButton" Content="取消 / 双轴软停车" Style="{StaticResource Warning}" Click="StopClick" IsEnabled="False"/>
+   <Button DockPanel.Dock="Right" x:Name="StartButton" Content="▶ 一键执行全部正反路径" Style="{StaticResource Primary}" Click="StartClick"/>
+  </DockPanel>
+ </Grid>
+</Window>

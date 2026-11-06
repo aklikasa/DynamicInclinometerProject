@@ -1,0 +1,8 @@
+#ifndef MTPSERIAL_MASTER_PORT_LPUART1_H
+#define MTPSERIAL_MASTER_PORT_LPUART1_H
+
+extern MBSERIAL_MASTER_COMM_IF MBSerialMasterCommIf_LPUart1;
+
+#endif
+
+ 

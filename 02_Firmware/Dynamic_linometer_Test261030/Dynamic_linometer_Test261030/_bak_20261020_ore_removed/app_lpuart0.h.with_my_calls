@@ -1,0 +1,75 @@
+/*
+*********************************************************************************************************
+* 文件 : app_lpuart0.h
+* 作者 : zqh			
+* 版本 : V1.0
+* 日期 : 2026/8/31
+* 描述 : app_lpuart0.c的头文件：LPUART1 DMA收发Modbus从机数据
+* 历史 :
+*********************************************************************************************************
+*/
+
+#ifndef APP_LPUART0_H
+#define APP_LPUART0_H
+
+#include "stm32l4xx_hal.h"
+#include "mbserial_defs.h"
+#include "mbserial_config.h"
+
+/*
+*********************************************************************************************************
+*                                          宏定义
+*********************************************************************************************************
+*/
+
+#define MB_SLAVE_RECV_FRAME_LEN    (1 + 1 + 2 + 2 + 1 + MAX_HOLDING_REGISTERS_NUM * 2 + 2) // 写多个寄存器(RTU模式)：从机地址+功能码+起始地址+寄存器数量+字节数+寄存器值+CRC16
+#define MB_SLAVE_RESP_FRAME_LEN    (1 + 1 + 1 + MAX_HOLDING_REGISTERS_NUM * 2 + 2)         // 读多个寄存器(RTU模式)：从机地址+功能码+字节数+寄存器值+CRC16
+
+#define LPUART0_BAUDRATE           1500000        // LPUART1串口波特率(1M bps)
+#define LPUART0_MB_SLAVE_ADDR      0x01           // Modbus从机地址
+#define LPUART0_MB_PORT            0              // Modbus从机端口号
+
+/*
+*********************************************************************************************************
+*                                          外部变量声明
+*********************************************************************************************************
+*/
+
+extern UART_HandleTypeDef hlpuart1;        // LPUART1句柄
+extern DMA_HandleTypeDef hdma_lpuart_rx;   // LPUART1接收DMA句柄
+extern DMA_HandleTypeDef hdma_lpuart_tx;   // LPUART1发送DMA句柄
+
+/*
+*********************************************************************************************************
+*                                          UART收发Modbus帧控制结构体
+*********************************************************************************************************
+*/
+
+typedef struct uart_mb_slave_ctrl
+{
+    INT8U  RecvBuffer[MB_SLAVE_RECV_FRAME_LEN]; // UART接收缓冲区
+    INT8U  SendBuffer[MB_SLAVE_RESP_FRAME_LEN]; // UART发送缓冲区
+    INT32S RecvCount;                           // UART接收计数
+    INT32S SendCount;                           // UART发送计数
+    INT32S MBRespLen;                           // Modbus应答帧长度
+    BOLEAN MBFrameIsReceived;                   // 已收到完整Modbus帧标志
+    BOLEAN MBFrameIsSent;                       // Modbus应答帧发送完成标志
+} UART_MB_SLAVE_CTRL;
+
+extern UART_MB_SLAVE_CTRL LPUart0_MBSlaveCtrl;   // LPUART1 Modbus从机收发控制结构体
+
+/*
+*********************************************************************************************************
+*                                          函数声明
+*********************************************************************************************************
+*/
+
+HAL_StatusTypeDef   App_LPUart0Init(INT32U baudrate);      // LPUART1初始化(8N1帧格式，DMA收发)
+void                App_LPUart0DmaRxRecfg(void);           // 重新挂载DMA接收
+void                App_LPUart0OreFlagClear(void);         // 清除ORE(溢出)等接收错误标志
+void                App_LPUart0TCHandle(void);             // 收发完成复位处理
+void                App_LPUart0MBFramePolling(void);       // 轮询处理Modbus帧
+void                App_LPUart0RxEvent(uint16_t Size);     // 接收空闲中断事件处理
+void                App_LPUart0TxCplt(void);               // 发送完成中断事件处理
+
+#endif

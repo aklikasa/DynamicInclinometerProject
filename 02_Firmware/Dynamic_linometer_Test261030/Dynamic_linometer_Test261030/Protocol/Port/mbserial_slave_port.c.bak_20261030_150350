@@ -1,0 +1,357 @@
+/*
+*********************************************************************************************************
+* 文件 : mbserial_slave_port.c
+* 作者 : zqh			
+* 版本 : V1.0
+* 日期 : 2026/8/31
+* 描述 : Modbus从机从端口接口：寄存器地址映射到ASM330六轴数据
+* 历史 :
+*********************************************************************************************************
+*/
+
+#include <string.h>
+
+#include "mbserial_defs.h"
+#include "mbserial_slave.h"
+#include "app_spi.h"
+#include "Dynamic_linometer_parameter.h"
+
+/*
+*********************************************************************************************************
+*                                          宏定义
+*********************************************************************************************************
+*/
+
+#define MB_REG_ASM330_BASE_HR      1000    // 保持寄存器起始地址(功能码0x03/0x10)
+#define MB_REG_ASM330_BASE_IR      5000    // 输入寄存器起始地址(功能码0x04)
+#define MB_REG_PARAM_BASE_HR       3000    // 参数区起始地址(功能码0x03/0x04)：MCU唯一标识(只读)
+
+ASM330_DATA Asm330MBData;                   // Modbus寄存器映射的ASM330六轴数据
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_MBRegAddrToMemAdrr
+* 入口参数 : addr - Modbus寄存器地址
+* 返回值 : Modbus寄存器地址对应的内存地址
+* 说明 : 保持寄存器1000段、输入寄存器5000段映射到ASM330六轴数据
+*********************************************************************************************************
+*/
+
+static INT16U *MBSerialSlavePort_MBRegAddrToMemAdrr(INT16U addr) C51_REENTRANT
+{
+    INT16U *pwdata_base;
+    INT16U addr_off;
+    INT16U max_size;
+
+    if ((addr >= MB_REG_ASM330_BASE_HR) && (addr < MB_REG_ASM330_BASE_HR + sizeof(Asm330MBData) / 2)) {
+        addr_off    = addr - MB_REG_ASM330_BASE_HR;
+        max_size    = sizeof(Asm330MBData);
+        pwdata_base = (INT16U *)&Asm330MBData;
+    } else if ((addr >= MB_REG_ASM330_BASE_IR) && (addr < MB_REG_ASM330_BASE_IR + sizeof(Asm330MBData) / 2)) {
+        addr_off    = addr - MB_REG_ASM330_BASE_IR;
+        max_size    = sizeof(Asm330MBData);
+        pwdata_base = (INT16U *)&Asm330MBData;
+    } 
+      else {
+        return (INT16U *)0;
+    }
+
+    if (addr_off * 2 >= max_size) {        // 不能超过结构体的长度
+        return NULL;
+    } else {
+        return (pwdata_base + addr_off);
+    }
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_MBCoilAddrToMemAdrr
+* 入口参数 : coil_addr - 线圈地址
+*          mem_addr  - 内存地址
+*          bit       - 所在字节的位
+* 返回值 : 转换成功返回TRUE，转换失败返回FALSE
+* 说明 : 线圈地址转换(本工程未使用线圈功能，直接返回TRUE)
+*********************************************************************************************************
+*/
+
+static BOLEAN MBSerialSlavePort_MBCoilAddrToMemAdrr(INT16U coil_addr, INT8U **mem_addr, INT8U *bit)
+{
+    return TRUE;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_RegistersAddrCheck
+* 入口参数 : addr - 寄存器起始地址
+*          num  - 寄存器个数
+* 返回值 : 寄存器地址有效返回对应内存地址，无效返回NULL
+* 说明 : 检查寄存器Modbus地址是否有效，并获取对应的内存地址
+*********************************************************************************************************
+*/
+
+static INT16U *MBSerialSlavePort_RegistersAddrCheck(INT16U addr, INT16U num) C51_REENTRANT
+{
+    INT16U *pwdata;
+
+    pwdata = MBSerialSlavePort_MBRegAddrToMemAdrr(addr);
+    if (!pwdata) {
+        return (INT16U *)0;
+    }
+    if (!MBSerialSlavePort_MBRegAddrToMemAdrr(addr + num - 1)) {
+        return (INT16U *)0;
+    }
+
+    return pwdata;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_CoilsAddrCheck
+* 入口参数 : addr - 线圈起始地址
+*          num  - 线圈个数
+* 返回值 : 线圈地址未超限返回TRUE，超限返回FALSE
+* 说明 : 检查线圈Modbus地址范围是否有效
+*********************************************************************************************************
+*/
+
+static BOLEAN MBSerialSlavePort_CoilsAddrCheck(INT16U addr, INT16U num) C51_REENTRANT
+{
+    return TRUE;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_ReadCoils
+* 入口参数 : resp - 存放应答帧的地址
+*          addr - 线圈地址
+*          num  - 线圈个数
+* 返回值 : 读取成功返回MB_ERROR_FREE，读取失败返回错误码
+* 说明 : Modbus从机读线圈通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_ReadCoils(INT8U *resp, INT16U addr, INT16U num) C51_REENTRANT
+{
+    return MB_ERROR_UNSUPPORT_FUNC;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_ForceSingleCoil
+* 入口参数 : addr  - 线圈地址
+*          value - 强制值，0xFF00表示强制1，0x0000表示强制0
+* 返回值 : 强制单线圈成功返回MB_ERROR_FREE，失败返回错误码
+* 说明 : Modbus从机强制单线圈通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_ForceSingleCoil(INT16U addr, INT16U value) C51_REENTRANT
+{
+    return MB_ERROR_UNSUPPORT_FUNC;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_ReadHoldingRegisters
+* 入口参数 : presp_buf - 存放应答帧的地址
+*          addr      - 保持寄存器地址
+*          num       - 保持寄存器个数
+* 返回值 : 读取成功返回MB_ERROR_FREE，读取失败返回错误码
+* 说明 : Modbus从机读保持寄存器通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_ReadHoldingRegisters(INT16U *presp_buf, INT16U addr, INT16U num) C51_REENTRANT
+{
+    INT16U *pwdata;
+
+
+
+    // 参数区(3000起，只读)：MCU唯一标识(96位=6个寄存器，高16位在前)..
+    if ((addr >= MB_REG_PARAM_BASE_HR) && ((INT32U)addr + num <= (INT32U)MB_REG_PARAM_BASE_HR + PARAM_MCU_UID_REG_NUM)) {
+        memcpy(presp_buf, &DynamicLinometerParam.UidReg[addr - MB_REG_PARAM_BASE_HR], num * 2);
+        return MB_ERROR_FREE;
+    }
+	    // 刷新ASM330 FIFO最新数据(未读批次数为0时清空数据区，上位机据此判断无新数据)
+    App_Asm330FifoRefresh(&Asm330MBData);
+
+    pwdata = MBSerialSlavePort_RegistersAddrCheck(addr, num);//可读可写的地址
+    if (!pwdata) {
+        return MB_ERROR_ADDR;
+    }
+
+    memcpy(presp_buf, pwdata, num * 2);
+
+    return MB_ERROR_FREE;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_ReadInputRegisters
+* 入口参数 : presp_buf - 存放应答帧的地址
+*          addr      - 输入寄存器地址
+*          num       - 输入寄存器个数
+* 返回值 : 读取成功返回MB_ERROR_FREE，读取失败返回错误码
+* 说明 : Modbus从机读输入寄存器通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_ReadInputRegisters(INT16U *presp_buf, INT16U addr, INT16U num) C51_REENTRANT
+{
+    INT16U *pwdata;
+
+    // 刷新ASM330 FIFO最新数据(未读批次数为0时清空数据区，上位机据此判断无新数据)
+    App_Asm330FifoRefresh(&Asm330MBData);
+
+    // 参数区(3000起，只读)：MCU唯一标识(96位=6个寄存器，高16位在前)
+    if ((addr >= MB_REG_PARAM_BASE_HR) && ((INT32U)addr + num <= (INT32U)MB_REG_PARAM_BASE_HR + PARAM_MCU_UID_REG_NUM)) {
+        memcpy(presp_buf, &DynamicLinometerParam.UidReg[addr - MB_REG_PARAM_BASE_HR], num * 2);
+        return MB_ERROR_FREE;
+    }
+
+    pwdata = MBSerialSlavePort_RegistersAddrCheck(addr, num);
+    if (!pwdata) {
+        return MB_ERROR_ADDR;
+    }
+
+    memcpy(presp_buf, pwdata, num * 2);
+
+    return MB_ERROR_FREE;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_ForceMultipleCoils
+* 入口参数 : value - 线圈值
+*          addr  - 线圈起始地址
+*          num   - 线圈个数
+* 返回值 : 强制多个线圈成功返回MB_ERROR_FREE，失败返回错误码
+* 说明 : Modbus从机强制多个线圈通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_ForceMultipleCoils(INT8U *value, INT16U addr, INT16U num) C51_REENTRANT
+{
+    return MB_ERROR_UNSUPPORT_FUNC;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_PresetMultipleRegisters
+* 入口参数 : value - 寄存器值
+*          addr  - 寄存器起始地址
+*          num   - 寄存器个数
+* 返回值 : 预置成功返回MB_ERROR_FREE，预置失败返回错误码
+* 说明 : Modbus从机预置多个寄存器通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_PresetMultipleRegisters(INT16U *value, INT16U addr, INT16U num) C51_REENTRANT
+{
+    INT16U *pwdata;
+
+    pwdata = MBSerialSlavePort_RegistersAddrCheck(addr, num);
+    if (!pwdata) {
+        return MB_ERROR_ADDR;
+    }
+
+    memcpy(pwdata, value, num * 2);
+
+    return MB_ERROR_FREE;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_MaskWriteRegister
+* 入口参数 : addr    - 寄存器地址
+*          andmask - 与掩码
+*          ormask  - 或掩码
+* 返回值 : 写寄存器成功返回MB_ERROR_FREE，写失败返回错误码
+* 说明 : 掩码写寄存器
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_MaskWriteRegister(INT16U addr, INT16U andmask, INT16U ormask) C51_REENTRANT
+{
+    INT16U *pwdata;
+
+    pwdata = MBSerialSlavePort_RegistersAddrCheck(addr, 1);
+    if (!pwdata) {
+        return MB_ERROR_ADDR;
+    }
+
+    *pwdata = (*pwdata & andmask) | (ormask & ~andmask);
+
+    return MB_ERROR_FREE;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_ReadWriteMultipleRegisters
+* 入口参数 : value_rd    - 读寄存器值
+*          reg_addr_rd - 读寄存器地址
+*          num_rd      - 读寄存器个数
+*          value_wr    - 写寄存器值
+*          reg_addr_wr - 写寄存器地址
+*          num_wr      - 写寄存器个数
+* 返回值 : 读写成功返回MB_ERROR_FREE，读写失败返回错误码
+* 说明 : Modbus从机读写多个寄存器通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_ReadWriteMultipleRegisters(INT16U *value_rd, INT16U reg_addr_rd, INT16U num_rd, INT16U *value_wr, INT16U reg_addr_wr, INT16U num_wr) C51_REENTRANT
+{
+    INT16U *pwdata;
+
+    pwdata = MBSerialSlavePort_RegistersAddrCheck(reg_addr_rd, num_rd);
+    if (!pwdata) {
+        return MB_ERROR_ADDR;
+    }
+    memcpy(value_rd, pwdata, num_rd * 2);
+
+    pwdata = MBSerialSlavePort_RegistersAddrCheck(reg_addr_wr, num_wr);
+    if (!pwdata) {
+        return MB_ERROR_ADDR;
+    }
+    memcpy(pwdata, value_wr, num_wr * 2);
+
+    return MB_ERROR_FREE;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : MBSerialSlavePort_ReadDecreteInputs
+* 入口参数 : resp - 存放应答帧的地址
+*          addr - 输入地址
+*          num  - 输入个数
+* 返回值 : 读取成功返回MB_ERROR_FREE，读取失败返回错误码
+* 说明 : Modbus从机读离散输入通讯接口函数
+*********************************************************************************************************
+*/
+
+static INT32S MBSerialSlavePort_ReadDecreteInputs(INT8U *resp, INT16U addr, INT16U num) C51_REENTRANT
+{
+    return MBSerialSlavePort_ReadCoils(resp, addr, num);
+}
+
+/*
+*********************************************************************************************************
+*                                       Modbus从机通讯接口回调函数表
+*********************************************************************************************************
+*/
+
+const MBSERIAL_SLAVE_COMM_IF MBSerialSlavePort_CommIf =
+{
+    MBSerialSlavePort_ReadCoils,
+    MBSerialSlavePort_ReadDecreteInputs,
+    MBSerialSlavePort_ReadHoldingRegisters,
+    MBSerialSlavePort_ReadInputRegisters,
+    MBSerialSlavePort_ForceSingleCoil,
+    MBSerialSlavePort_ForceMultipleCoils,
+    MBSerialSlavePort_PresetMultipleRegisters,
+    MBSerialSlavePort_MaskWriteRegister,
+    MBSerialSlavePort_ReadWriteMultipleRegisters
+};
+
+const MBSERIAL_SLAVE_COMM_IF *MBSerialSlavePortCommIfPtr = &MBSerialSlavePort_CommIf;
+

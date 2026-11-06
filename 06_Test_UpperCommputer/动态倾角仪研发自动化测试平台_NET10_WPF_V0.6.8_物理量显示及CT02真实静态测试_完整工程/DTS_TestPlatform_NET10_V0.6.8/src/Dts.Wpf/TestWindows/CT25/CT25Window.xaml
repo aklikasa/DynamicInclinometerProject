@@ -1,0 +1,126 @@
+<Window x:Class="Dts.Wpf.TestWindows.CT25.CT25Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-25 · 常温小幅低频动态倾角基线" Width="1210" Height="820"
+ MinWidth="1000" MinHeight="665" WindowStartupLocation="CenterOwner"
+ Background="#F3F7FC" Closing="OnClosing">
+ <Grid Margin="15">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Grid.Row="0" Style="{StaticResource Card}" Padding="15" Margin="0,0,0,10">
+   <StackPanel>
+    <TextBlock Text="CT-25 / 常温小幅低频动态倾角基线" Style="{StaticResource Title}" FontSize="22"/>
+    <TextBlock Text="X/Y 正弦小幅低频扫描 · 使用真实编码器对比设备融合倾角 · 幅值/相位/Bias/RMSE/回零 · 必须先接入真正正弦轨迹与融合角时标" TextWrapping="Wrap" Foreground="#5C7792" Margin="0,5,0,0"/>
+    <TextBlock x:Name="UidText" Foreground="#225D97" FontFamily="Consolas" Margin="0,7,0,0" TextWrapping="Wrap"/>
+   </StackPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="378"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel>
+     <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="① 设备与融合角来源" Style="{StaticResource Title}"/>
+       <TextBlock x:Name="BridgeStatus" TextWrapping="Wrap" Foreground="#A06624" Margin="0,8,0,6"/>
+       <TextBlock x:Name="CalibrationText" Text="常温标定待加载" TextWrapping="Wrap" Foreground="#496D8C" FontSize="12"/>
+       <TextBlock x:Name="RootText" TextWrapping="Wrap" Foreground="#71879B" FontSize="12" Margin="0,7,0,0"/>
+      </StackPanel>
+     </Border>
+     <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="② 幅频、中心角与运动参数" Style="{StaticResource Title}"/>
+       <TextBlock Text="候选组合按真实认证速度、加速度、频率和行程筛选，以下均可修改。" TextWrapping="Wrap" Foreground="#657F99" FontSize="12" Margin="0,7,0,7"/>
+       <CheckBox x:Name="TestX" Content="测试 X 轴（外轴正弦运动）" IsChecked="True" Checked="OptionsChanged" Unchecked="OptionsChanged"/>
+       <CheckBox x:Name="TestY" Content="测试 Y 轴（内轴正弦运动）" IsChecked="True" Margin="0,5,0,9" Checked="OptionsChanged" Unchecked="OptionsChanged"/>
+       <TextBlock Text="幅值序列（°，以英文逗号分隔）"/>
+       <TextBox x:Name="AmplitudesInput" Text="0.5,1,3" TextChanged="OptionsTextChanged" Margin="0,3,0,8"/>
+       <TextBlock Text="频率序列（Hz，以英文逗号分隔）"/>
+       <TextBox x:Name="FrequenciesInput" Text="0.05,0.1,0.2,0.5" TextChanged="OptionsTextChanged" Margin="0,3,0,8"/>
+       <UniformGrid Columns="2">
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="每档周期数（≥6）"/><TextBox x:Name="CyclesInput" Text="6" TextChanged="OptionsTextChanged"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="重复次数"/><TextBox x:Name="RepeatsInput" Text="1" TextChanged="OptionsTextChanged"/></StackPanel>
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="内轴中心角 (°)"/><TextBox x:Name="InnerCenterInput" Text="90" TextChanged="OptionsTextChanged"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="外轴中心角 (°)"/><TextBox x:Name="OuterCenterInput" Text="90" TextChanged="OptionsTextChanged"/></StackPanel>
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="安全行程下界 (°)"/><TextBox x:Name="MinTravelInput" Text="0" TextChanged="OptionsTextChanged"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="安全行程上界 (°)"/><TextBox x:Name="MaxTravelInput" Text="180" TextChanged="OptionsTextChanged"/></StackPanel>
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="定位速度 (°/s)"/><TextBox x:Name="SetupSpeedInput" Text="1"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="静置时长 (s)"/><TextBox x:Name="SettleInput" Text="3"/></StackPanel>
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="回零观察 (s)"/><TextBox x:Name="RecoveryInput" Text="5"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="最大时间对齐误差(ms)"/><TextBox x:Name="ClockErrorInput" Text="10"/></StackPanel>
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="最大采样间隙(s)"/><TextBox x:Name="MaxGapInput" Text="0.15"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="稳态最少有效帧"/><TextBox x:Name="MinFramesInput" Text="100"/></StackPanel>
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="编码器正弦拟合R²下界"/><TextBox x:Name="EncoderR2Input" Text="0.97"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="实际幅值容差比例"/><TextBox x:Name="AmplitudeToleranceInput" Text="0.10"/></StackPanel>
+        <StackPanel Margin="0,0,5,8"><TextBlock Text="X参考方向(+1/-1)"/><TextBox x:Name="SignXInput" Text="1"/></StackPanel>
+        <StackPanel Margin="5,0,0,8"><TextBlock Text="Y参考方向(+1/-1)"/><TextBox x:Name="SignYInput" Text="1"/></StackPanel>
+       </UniformGrid>
+       <Button x:Name="PreviewButton" Content="预览全部幅频组合及超限项" Click="PreviewClick" Style="{StaticResource Action}" Margin="0,6,0,0"/>
+      </StackPanel>
+     </Border>
+     <Border Style="{StaticResource Card}">
+      <StackPanel>
+       <TextBlock Text="③ 运动与信号安全确认" Style="{StaticResource Title}"/>
+       <CheckBox x:Name="SafetyCheck" Content="逐段运动路径、线缆、限位和夹具均核验" Margin="0,9,0,5"/>
+       <CheckBox x:Name="EstopCheck" Content="实体急停可用，测试期间现场有人监护" Margin="0,0,0,5"/>
+       <CheckBox x:Name="MappingCheck" Content="已核验真实融合倾角 X/Y 与机台轴方向映射" Margin="0,0,0,5"/>
+       <TextBlock Text="动态接口未核验时，本窗口只允许预览，不会发出转台运动命令。" TextWrapping="Wrap" FontSize="12" Foreground="#95672E" Margin="0,7,0,0"/>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+   </ScrollViewer>
+   <Grid Grid.Column="2">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Grid.Row="0" Style="{StaticResource Card}" Padding="13" Margin="0,0,0,10">
+     <StackPanel>
+      <TextBlock Text="幅频组合与认证约束" Style="{StaticResource Title}"/>
+      <TextBlock x:Name="PlanSummary" TextWrapping="Wrap" Foreground="#26659B" Margin="0,7,0,0"/>
+      <ProgressBar x:Name="Progress" Height="8" Minimum="0" Maximum="100" Value="0" Margin="0,10,0,0"/>
+      <TextBlock x:Name="StatusText" Text="等待参数设置" Foreground="#637D94" TextWrapping="Wrap" Margin="0,7,0,0"/>
+     </StackPanel>
+    </Border>
+    <TabControl x:Name="ResultTabs" Grid.Row="1">
+     <TabItem Header="运动计划">
+      <DataGrid x:Name="PlanGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" RowHeight="29">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="36"/>
+        <DataGridTextColumn Header="轴" Binding="{Binding Axis}" Width="*"/>
+        <DataGridTextColumn Header="幅值°" Binding="{Binding AmplitudeDeg, StringFormat=F2}" Width="*"/>
+        <DataGridTextColumn Header="频率Hz" Binding="{Binding FrequencyHz, StringFormat=F3}" Width="*"/>
+        <DataGridTextColumn Header="峰值速度°/s" Binding="{Binding PeakSpeedDps, StringFormat=F3}" Width="*"/>
+        <DataGridTextColumn Header="峰值加速度" Binding="{Binding PeakAccelerationDps2, StringFormat=F3}" Width="*"/>
+        <DataGridTextColumn Header="允许" Binding="{Binding Eligible}" Width="55"/>
+        <DataGridTextColumn Header="原因" Binding="{Binding ExclusionReason}" Width="180"/>
+       </DataGrid.Columns>
+      </DataGrid>
+     </TabItem>
+     <TabItem Header="真实测试结果">
+      <DataGrid x:Name="ResultGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" RowHeight="29">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="35"/>
+        <DataGridTextColumn Header="轴" Binding="{Binding Axis}" Width="*"/>
+        <DataGridTextColumn Header="频率Hz" Binding="{Binding FrequencyCommandHz, StringFormat=F3}" Width="*"/>
+        <DataGridTextColumn Header="增益" Binding="{Binding Gain, StringFormat=F5}" Width="*"/>
+        <DataGridTextColumn Header="相位°" Binding="{Binding PhaseLagDegrees, StringFormat=F3}" Width="*"/>
+        <DataGridTextColumn Header="Bias°" Binding="{Binding DynamicBiasDeg, StringFormat=F4}" Width="*"/>
+        <DataGridTextColumn Header="RMSE°" Binding="{Binding DynamicRmseDeg, StringFormat=F4}" Width="*"/>
+        <DataGridTextColumn Header="回零残差°" Binding="{Binding FinalReturnResidualDeg, StringFormat=F4}" Width="*"/>
+       </DataGrid.Columns>
+      </DataGrid>
+     </TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Style="{StaticResource Card}" Padding="12" Margin="0,10,0,0">
+     <StackPanel>
+      <TextBlock Text="真实测量与报告" Style="{StaticResource Title}"/>
+      <TextBlock x:Name="MetricsText" Text="尚无真实动态数据；不模拟曲线，不自动判PASS。" TextWrapping="Wrap" Foreground="#255E94" Margin="0,7,0,0"/>
+      <TextBlock x:Name="ReportText" Text="就绪后自动输出 JSON、逐段真实帧 CSV、幅频计划 CSV、Excel 和 SVG 图文 HTML。" TextWrapping="Wrap" Foreground="#637A91" FontSize="12" Margin="0,7,0,0"/>
+     </StackPanel>
+    </Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" Margin="0,11,0,0" LastChildFill="False">
+   <Button DockPanel.Dock="Right" Content="关闭" Style="{StaticResource Action}" Click="CloseClick"/>
+   <Button DockPanel.Dock="Right" x:Name="ReportButton" Content="打开HTML报告" Style="{StaticResource Action}" IsEnabled="False" Click="ReportClick"/>
+   <Button DockPanel.Dock="Right" x:Name="StopButton" Content="取消 / 请求停车" Style="{StaticResource Warning}" IsEnabled="False" Click="StopClick"/>
+   <Button DockPanel.Dock="Right" x:Name="StartButton" Content="▶ 一键自动幅频测试" Style="{StaticResource Primary}" Click="StartClick"/>
+  </DockPanel>
+ </Grid>
+</Window>

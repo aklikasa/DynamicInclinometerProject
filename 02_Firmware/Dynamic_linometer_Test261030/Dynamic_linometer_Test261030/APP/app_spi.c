@@ -1,0 +1,838 @@
+/*
+*********************************************************************************************************
+* 文件 : app_spi.c
+* 作者 : zqh			
+* 版本 : V1.0
+* 日期 : 2026/8/31
+* 描述 : SPI1应用层：SPI1初始化、ASM330LHH的SPI读写接口及数据采集应用层(直读模式：定时节拍+STATUS_REG校验)
+* 历史 :
+*********************************************************************************************************
+*/
+
+#include "main.h"
+#include "app_spi.h"
+#include "app_tim.h"
+#include "mbserial_slave_port.h"
+
+SPI_HandleTypeDef hspi1;   // SPI1句柄
+
+static uint8_t Asm330FsAccel = ASM330_FS_2G;         // 当前加速度计量程
+static uint8_t Asm330FsGyro  = ASM330_FS_2000DPS;    // 当前陀螺仪量程
+static uint8_t Asm330SensorOk;                       // 器件在线标志
+
+// 轴数据环形队列(静态数组，无malloc，6轴各400个样本)
+ int16_t  s_AccX[ASM330_FIFO_DEPTH];
+ int16_t  s_AccY[ASM330_FIFO_DEPTH];
+ int16_t  s_AccZ[ASM330_FIFO_DEPTH];
+ int16_t  s_GyrX[ASM330_FIFO_DEPTH];
+ int16_t  s_GyrY[ASM330_FIFO_DEPTH];
+ int16_t  s_GyrZ[ASM330_FIFO_DEPTH];
+ volatile uint16_t s_WrIdx;                    // 轴队列写指针
+ volatile uint16_t s_RdIdx;                    // 轴队列读指针
+ volatile uint16_t s_DataUnRead;               // 未读取的FIFO批次数
+
+// 温度环形队列(器件52Hz批处理)
+static int16_t  s_TempBuf[ASM330_TEMP_DEPTH];
+static volatile uint16_t s_TempWrIdx;                // 温度队列写指针
+static volatile uint16_t s_TempRdIdx;                // 温度队列读指针
+static int16_t  s_LastTemp;                          // 最近一次有效温度
+
+// 一批样本暂存区(凑满一批后整体入队，保证队列中都是完整批次)
+static int16_t  s_StgAcc[3][ASM330_BATCH_SAMPLES];
+static int16_t  s_StgGyr[3][ASM330_BATCH_SAMPLES];
+static uint16_t s_StgCnt;
+
+static uint16_t s_FifoState;                         // FIFO状态(供上位机查看)
+static uint16_t s_SimTick;                           // 模拟数据节拍计数
+
+// 简单模式私有缓存：新采样只写这里，公共区只在应答帧发送结束后更新
+static int16_t  s_DirAccX[ASM330_UPLOAD_SAMPLES];
+static int16_t  s_DirAccY[ASM330_UPLOAD_SAMPLES];
+static int16_t  s_DirAccZ[ASM330_UPLOAD_SAMPLES];
+static int16_t  s_DirGyrX[ASM330_UPLOAD_SAMPLES];
+static int16_t  s_DirGyrY[ASM330_UPLOAD_SAMPLES];
+static int16_t  s_DirGyrZ[ASM330_UPLOAD_SAMPLES];
+static int16_t  s_DirTemp;
+static uint16_t s_DirFillCnt;                        // 缓存计数(0~16)
+
+/*
+*********************************************************************************************************
+* 函数名 : App_SpiChipSel
+* 入口参数 : bSel - 1:选中芯片(CS拉低)，0:释放芯片(CS拉高)
+* 返回值 : 无
+* 说明 : 控制ASM330LHH片选引脚
+*********************************************************************************************************
+*/
+
+static void App_SpiChipSel(uint8_t bSel)
+{
+    if (bSel) {
+        HAL_GPIO_WritePin(ASM330_CS_PORT, ASM330_CS_PIN, GPIO_PIN_RESET);
+    } else {
+        HAL_GPIO_WritePin(ASM330_CS_PORT, ASM330_CS_PIN, GPIO_PIN_SET);
+    }
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_SpiPortCfg
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 配置ASM330LHH片选引脚(推挽输出)；真实数据模式下同时配置INT2引脚为上升沿中断
+*********************************************************************************************************
+*/
+
+static void App_SpiPortCfg(void)
+{
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
+    // 片选引脚
+    GPIO_InitStruct.Pin   = ASM330_CS_PIN;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(ASM330_CS_PORT, &GPIO_InitStruct);
+    HAL_GPIO_WritePin(ASM330_CS_PORT, ASM330_CS_PIN, GPIO_PIN_SET); // CS默认拉高
+
+#if ((ASM330_DATA_SRC_SIM == 0) && (ASM330_DATA_SRC_DIRECT == 0))
+    // INT2(FIFO水印)引脚：上升沿触发(ASM330中断默认推挽高有效)
+    GPIO_InitStruct.Pin   = ASM330_INT_PIN;
+    GPIO_InitStruct.Mode  = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(ASM330_INT_PORT, &GPIO_InitStruct);
+
+    HAL_NVIC_SetPriority(ASM330_INT_EXTI_IRQn, 1, 0);
+    HAL_NVIC_EnableIRQ(ASM330_INT_EXTI_IRQn);
+#endif
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_SpiInit
+* 入口参数 : 无
+* 返回值 : 初始化成功返回HAL_OK，失败返回HAL_ERROR
+* 说明 : SPI1初始化：8位数据、主机模式3(CPOL=1/CPHA=1)、软件片选、时钟5MHz(80MHz/16)
+*********************************************************************************************************
+*/
+
+HAL_StatusTypeDef App_SpiInit(void)
+{
+    hspi1.Instance = SPI1;
+    hspi1.Init.Mode = SPI_MODE_MASTER;
+    hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+    hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+    hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+    hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
+    hspi1.Init.NSS = SPI_NSS_SOFT;
+    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+    hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+    hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    hspi1.Init.CRCPolynomial = 7;
+    hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+    hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+    if (HAL_SPI_Init(&hspi1) != HAL_OK) {
+        return HAL_ERROR;
+    }
+
+    App_SpiPortCfg();   // 配置片选与中断引脚
+	
+	ASM330_ReadRegByte(ASM330_WHO_AM_I_REG);//hal没有正确处理引脚这里先读一下
+
+    return HAL_OK;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_SpiReadRegByte
+* 入口参数 : reg - 寄存器地址
+* 返回值 : 读取到的寄存器值
+* 说明 : SPI读ASM330LHH单个寄存器
+*********************************************************************************************************
+*/
+
+uint8_t App_SpiReadRegByte(uint8_t reg)
+{
+    uint8_t tx_data;
+    uint8_t rx_data = 0;
+
+    App_SpiChipSel(1);                     // 选中芯片
+    tx_data = reg | ASM330_SPI_READ_MSK;   // 读命令：寄存器地址最高位置1
+    HAL_SPI_Transmit(&hspi1, &tx_data, 1, 1000);
+    HAL_SPI_Receive(&hspi1, &rx_data, 1, 1000);   // 读取数据
+    App_SpiChipSel(0);                     // 释放芯片
+
+    return rx_data;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_SpiWriteRegByte
+* 入口参数 : reg - 寄存器地址
+*          val - 要写入的寄存器值
+* 返回值 : 写寄存器成功返回ASM330_OK，失败返回ASM330_ERROR
+* 说明 : SPI写ASM330LHH单个寄存器
+*********************************************************************************************************
+*/
+
+int32_t App_SpiWriteRegByte(uint8_t reg, uint8_t val)
+{
+    uint8_t tx_data[2];
+
+    tx_data[0] = reg;                     // 写命令：寄存器地址最高位为0
+    tx_data[1] = val;
+
+    App_SpiChipSel(1);                    // 选中芯片
+    HAL_SPI_Transmit(&hspi1, tx_data, 2, 1000);
+    App_SpiChipSel(0);                    // 释放芯片
+
+    return ASM330_OK;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_SpiReadRegs
+* 入口参数 : reg  - 起始寄存器地址
+*          pbuf - 存放读取数据的缓冲区
+*          len  - 读取的寄存器个数
+* 返回值 : 读寄存器成功返回ASM330_OK，失败返回ASM330_ERROR
+* 说明 : SPI连续读ASM330LHH多个寄存器，CS在整个突发读期间保持低电平
+*********************************************************************************************************
+*/
+
+int32_t App_SpiReadRegs(uint8_t reg, uint8_t *pbuf, uint16_t len)
+{
+    uint8_t tx_data = 0;
+	uint8_t rx_data[200] = {0};
+
+    if (len == 0) {
+        return ASM330_OK;
+    }
+
+    App_SpiChipSel(1);                    // 选中芯片
+    tx_data = reg | ASM330_SPI_READ_MSK;  // 读命令：寄存器地址最高位置1
+    HAL_SPI_Transmit(&hspi1, &tx_data, 1, 1000);
+    HAL_SPI_TransmitReceive(&hspi1,rx_data,pbuf, len, 1000);   // 连续读取len个寄存器
+    App_SpiChipSel(0);                    // 释放芯片
+
+    return ASM330_OK;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_SpiWriteRegs
+* 入口参数 : reg  - 起始寄存器地址
+*          pbuf - 存放待写数据的缓冲区
+*          len  - 写入的寄存器个数
+* 返回值 : 写寄存器成功返回ASM330_OK，失败返回ASM330_ERROR
+* 说明 : SPI连续写ASM330LHH多个寄存器，CS在整个突发写期间保持低电平
+*********************************************************************************************************
+*/
+
+int32_t App_SpiWriteRegs(uint8_t reg, uint8_t *pbuf, uint16_t len)
+{
+    uint8_t tx_data;
+
+    if (len == 0) {
+        return ASM330_OK;
+    }
+
+    App_SpiChipSel(1);                    // 选中芯片
+    tx_data = reg;                        // 写命令：寄存器地址最高位为0
+    HAL_SPI_Transmit(&hspi1, &tx_data, 1, 1000);
+    HAL_SPI_Transmit(&hspi1, pbuf, len, 1000);   // 连续写入len个寄存器
+    App_SpiChipSel(0);                    // 释放芯片
+
+    return ASM330_OK;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330SetParam
+* 入口参数 : odr_accel - 加速度计输出数据速率(ASM330_ODR_x)
+*          fs_accel  - 加速度计满量程(ASM330_FS_xG)
+*          odr_gyro  - 陀螺仪输出数据速率(ASM330_ODR_x)
+*          fs_gyro   - 陀螺仪满量程(ASM330_FS_xDPS)
+* 返回值 : 参数配置成功返回ASM330_OK，失败返回ASM330_ERROR
+* 说明 : ASM330LHH设备参数变更：修改加速度计和陀螺仪的输出速率与量程
+*********************************************************************************************************
+*/
+
+int32_t App_Asm330SetParam(uint8_t odr_accel, uint8_t fs_accel, uint8_t odr_gyro, uint8_t fs_gyro)
+{
+    uint8_t val = 0;
+
+    // 配置加速度计：CTRL1_XL = ODR_XL[7:4] | FS_XL[3:2]
+    val = (uint8_t)((odr_accel << 4) | (fs_accel << 2));
+    ASM330_WriteRegByte(ASM330_CTRL1_XL_REG, val);
+
+    // 配置陀螺仪：CTRL2_G = ODR_G[7:4] | FS_G[3:1]，125dps量程需置FS_125[0]
+    if (fs_gyro == ASM330_FS_125DPS) {
+        val = (uint8_t)((odr_gyro << 4) | ASM330_FS_125_MSK);
+    } else {
+        val = (uint8_t)((odr_gyro << 4) | (fs_gyro << 2));
+    }
+    ASM330_WriteRegByte(ASM330_CTRL2_G_REG, val);
+
+    // 记录当前量程用于上报
+    Asm330FsAccel = fs_accel;
+    Asm330FsGyro  = fs_gyro;
+
+    return ASM330_OK;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330FifoClear
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 清空轴环形队列、温度环形队列与未读批次数
+*********************************************************************************************************
+*/
+
+static void App_Asm330FifoClear(void)
+{
+    s_WrIdx      = 0;
+    s_RdIdx      = 0;
+    s_StgCnt     = 0;
+    s_DataUnRead = 0;
+    s_TempWrIdx  = 0;
+    s_TempRdIdx  = 0;
+    s_LastTemp   = 0;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330StageSample
+* 入口参数 : 六轴原始值
+* 返回值 : 无
+* 说明 : 将一个样本放入当前批次的暂存区
+*********************************************************************************************************
+*/
+
+static void App_Asm330StageSample(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz)
+{
+    if (s_StgCnt >= ASM330_BATCH_SAMPLES) {
+        return;
+    }
+
+    s_StgAcc[0][s_StgCnt] = ax;
+    s_StgAcc[1][s_StgCnt] = ay;
+    s_StgAcc[2][s_StgCnt] = az;
+    s_StgGyr[0][s_StgCnt] = gx;
+    s_StgGyr[1][s_StgCnt] = gy;
+    s_StgGyr[2][s_StgCnt] = gz;
+    s_StgCnt++;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330CommitBatch
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 一批结束：把暂存的一批样本整体压入环形队列，并使未读批次数+1
+*********************************************************************************************************
+*/
+
+static void App_Asm330CommitBatch(void)
+{
+    uint16_t i, next;
+
+    if (s_StgCnt == 0) {
+        return;
+    }
+
+    for (i = 0; i < s_StgCnt; i++) {
+        next = s_WrIdx + 1;
+        if (next >= ASM330_FIFO_DEPTH) {
+            next = 0;
+        }
+        if (next == s_RdIdx) {              // 队列已满：丢弃最旧的样本
+            if (++s_RdIdx >= ASM330_FIFO_DEPTH) {
+                s_RdIdx = 0;
+            }
+        }
+
+        s_AccX[s_WrIdx] = s_StgAcc[0][i];
+        s_AccY[s_WrIdx] = s_StgAcc[1][i];
+        s_AccZ[s_WrIdx] = s_StgAcc[2][i];
+        s_GyrX[s_WrIdx] = s_StgGyr[0][i];
+        s_GyrY[s_WrIdx] = s_StgGyr[1][i];
+        s_GyrZ[s_WrIdx] = s_StgGyr[2][i];
+        s_WrIdx = next;
+    }
+    s_StgCnt = 0;
+
+    if (s_DataUnRead < ASM330_UNREAD_MAX) {
+        s_DataUnRead++;                     // 收到一批FIFO数据
+    }
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330PushTemp
+* 入口参数 : temp - 温度原始值
+* 返回值 : 无
+* 说明 : 温度样本入环形队列(队列满时丢弃最旧)
+*********************************************************************************************************
+*/
+
+static void App_Asm330PushTemp(int16_t temp)
+{
+    s_TempBuf[s_TempWrIdx] = temp;
+    if (++s_TempWrIdx >= ASM330_TEMP_DEPTH) {
+        s_TempWrIdx = 0;
+    }
+
+    if (s_TempWrIdx == s_TempRdIdx) {       // 队列满：丢弃最旧温度
+        if (++s_TempRdIdx >= ASM330_TEMP_DEPTH) {
+            s_TempRdIdx = 0;
+        }
+    }
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330SimStep
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 模拟数据模式节拍处理(每833Hz节拍调用一次)：
+*        生成一个模拟样本，每ASM330_BATCH_SAMPLES个节拍成一批提交；
+*        同时每ASM330_TEMP_SIM_STEP个节拍生成一个模拟温度(52Hz左右)
+*********************************************************************************************************
+*/
+
+void App_Asm330SimStep(void)
+{
+    int16_t ax, ay, az, gx, gy, gz;
+
+    // 生成可预期的模拟波形(各轴步长不同，便于上位机观察数据是否连续)
+    ax = (int16_t)((s_SimTick * 1) & 0x0FFF);
+    ay = (int16_t)((s_SimTick * 2) & 0x0FFF);
+    az = (int16_t)((s_SimTick * 3) & 0x0FFF);
+    gx = (int16_t)((s_SimTick * 4) & 0x0FFF);
+    gy = (int16_t)((s_SimTick * 5) & 0x0FFF);
+    gz = (int16_t)((s_SimTick * 6) & 0x0FFF);
+
+    App_Asm330StageSample(ax, ay, az, gx, gy, gz);
+
+    s_SimTick++;
+    if ((s_SimTick % ASM330_BATCH_SAMPLES) == 0) {          // 每16个节拍成一批
+
+        App_Asm330CommitBatch();
+        App_Asm330PushTemp((int16_t)(400 + ((s_SimTick / ASM330_TEMP_SIM_STEP) & 0x01FF)));  // 模拟温度(16LSB/℃)
+    }
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330GetUnread
+* 入口参数 : 无
+* 返回值 : 未读取的FIFO批次数
+* 说明 : 获取当前未读批次数
+*********************************************************************************************************
+*/
+
+uint16_t App_Asm330GetUnread(void)
+{
+    return s_DataUnRead;
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330FifoRefresh
+* 入口参数 : pdata - 上传数据结构指针
+* 返回值 : 无
+* 说明 : 串口问询时刷新上传数据：
+*        未读批次数为0时清空数据区，上位机通过DataUnRead=0判断本次没有新数据；
+*        否则未读批次数-1，从队列头取最旧16个样本(先进先出)，温度队列一直出队只保留最后一个
+*********************************************************************************************************
+*/
+
+void App_Asm330FifoRefresh(ASM330_DATA *pdata)
+{
+//    uint16_t i;
+
+//    if (pdata == 0) {
+//        return;
+//    }
+
+//    __disable_irq();                        // 与中断内的批次提交互斥，保证读到完整批次
+
+////    // 量程与速率等固定信息
+////    switch (Asm330FsAccel) {
+////        case ASM330_FS_4G:  pdata->AccLevel = 4;  break;
+////        case ASM330_FS_8G:  pdata->AccLevel = 8;  break;
+////        case ASM330_FS_16G: pdata->AccLevel = 16; break;
+////        case ASM330_FS_2G:
+////        default:            pdata->AccLevel = 2;  break;
+////    }
+////    switch (Asm330FsGyro) {
+////        case ASM330_FS_125DPS:  pdata->GyroLevel = 125;  break;
+////        case ASM330_FS_250DPS:  pdata->GyroLevel = 250;  break;
+////        case ASM330_FS_500DPS:  pdata->GyroLevel = 500;  break;
+////        case ASM330_FS_1000DPS: pdata->GyroLevel = 1000; break;
+////        case ASM330_FS_2000DPS:
+////        default:                pdata->GyroLevel = 2000; break;
+////    }
+////    pdata->DataODR   = ASM330_ODR_HZ;
+//    pdata->FIFO_State = (uint16_t)(s_FifoState
+//                        | (Asm330SensorOk ? ASM330_STATE_SENSOR_OK : 0)
+//                        | ((ASM330_DATA_SRC_SIM != 0) ? ASM330_STATE_SIM_MODE : 0));
+
+//    // 没有新数据：清空数据区，本次不上传有效数据
+//    if (s_DataUnRead == 0) {
+//        for (i = 0; i < ASM330_UPLOAD_SAMPLES; i++) {
+//            pdata->AccX[i] = 0; pdata->AccY[i] = 0; pdata->AccZ[i] = 0;
+//            pdata->GyrX[i] = 0; pdata->GyrY[i] = 0; pdata->GyrZ[i] = 0;
+//        }
+//        pdata->Temp      = 0;
+//        pdata->Time[0]   = 0;
+//        pdata->Time[1]   = 0;
+//        pdata->DataUnRead = 0;
+//        App_Asm330FifoClear();              // 数据全部清除
+//        __enable_irq();
+//        return;
+//    }
+
+//    // 从队列头取出最旧的16个样本(先进先出)，读指针随之前移
+//    for (i = 0; i < ASM330_UPLOAD_SAMPLES; i++) {
+//        pdata->AccX[i] = s_AccX[s_RdIdx];
+//        pdata->AccY[i] = s_AccY[s_RdIdx];
+//        pdata->AccZ[i] = s_AccZ[s_RdIdx];
+//        pdata->GyrX[i] = s_GyrX[s_RdIdx];
+//        pdata->GyrY[i] = s_GyrY[s_RdIdx];
+//        pdata->GyrZ[i] = s_GyrZ[s_RdIdx];
+//        if (++s_RdIdx >= ASM330_FIFO_DEPTH) {
+//            s_RdIdx = 0;
+//        }
+//    }
+
+//    // 温度：一直出队直到最后一个，只上传最后一个温度值
+//    while (s_TempRdIdx != s_TempWrIdx) {
+//        s_LastTemp = s_TempBuf[s_TempRdIdx];
+//        if (++s_TempRdIdx >= ASM330_TEMP_DEPTH) {
+//            s_TempRdIdx = 0;
+//        }
+//    }
+//    pdata->Temp = s_LastTemp;
+
+//    pdata->Time[0]    = (uint16_t)(HAL_GetTick() & 0xFFFF);
+//    pdata->Time[1]    = (uint16_t)((HAL_GetTick() >> 16) & 0xFFFF);
+//    pdata->DataUnRead = s_DataUnRead ;
+//	
+//	s_DataUnRead--;                         // 消耗一批
+
+//    __enable_irq();
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330Init
+* 入口参数 : 无
+* 返回值 : 初始化成功返回ASM330_OK，失败返回ASM330_ERROR
+* 说明 : ASM330LHH初始化：
+*        模拟数据模式(ASM330_DATA_SRC_SIM=1)：不访问SPI，仅置状态(无器件时验证读取链路)；
+*        真实数据模式(ASM330_DATA_SRC_SIM=0)：校验芯片ID、复位、配置833Hz输出、
+*        FIFO批处理(陀螺/加速度833Hz、温度52Hz)、水印阈值并打开FIFO与INT2水印中断
+*********************************************************************************************************
+*/
+
+int32_t App_Asm330Init(void)
+{
+    uint8_t val;
+	uint8_t dat[2];
+
+    Asm330FsAccel = ASM330_FS_2G;            // 默认量程±2g
+    Asm330FsGyro  = ASM330_FS_2000DPS;       // 默认量程±2000dps
+    Asm330SensorOk = 0;
+    s_FifoState   = 0;
+    s_SimTick     = 0;
+    App_Asm330FifoClear();
+
+#if (ASM330_DATA_SRC_SIM != 0)
+    // 模拟数据模式：无器件时用TIM6节拍模拟数据，验证串口读取链路
+    return ASM330_OK;
+#else
+    // 校验芯片ID
+
+    val = ASM330_ReadRegByte(ASM330_WHO_AM_I_REG);
+    if (val != ASM330_WHO_AM_I_VAL) {
+        return ASM330_ERROR;                 // 芯片ID错误
+    }
+    Asm330SensorOk = 1;
+
+    // 软件复位
+    ASM330_WriteRegByte(ASM330_CTRL3_C_REG, ASM330_SW_RESET_MSK);
+    HAL_Delay(4000);
+
+    // 设置BDU(数据块更新)、IF_INC(寄存器地址自动递增)
+    ASM330_WriteRegByte(ASM330_CTRL3_C_REG, ASM330_BDU_MSK | ASM330_IF_INC_MSK);
+	ASM330_ReadRegs(ASM330_CTRL3_C_REG,&dat[0],2);
+    // 使用SPI接口，禁用I2C
+    ASM330_WriteRegByte(ASM330_CTRL4_C_REG, ASM330_I2C_DISABLE_MSK);
+	ASM330_ReadRegs(ASM330_CTRL4_C_REG,&dat[0],2);
+
+#if ((ASM330_DATA_SRC_SIM == 0) && (ASM330_DATA_SRC_DIRECT == 0))
+    // 非直读模式(FIFO批量读取)才配置FIFO；直读模式只读输出寄存器+STATUS_REG
+    // 先旁路清空FIFO
+    ASM330_FifoReset();
+
+    // FIFO批处理速率：陀螺与加速度均833Hz
+    val = (uint8_t)((ASM330_BDR_833HZ << ASM330_FIFO_BDR_XL_POS) | ASM330_BDR_833HZ);
+    ASM330_WriteRegByte(ASM330_FIFO_CTRL3_REG, val);
+
+    // 温度批处理速率52Hz
+    ASM330_WriteRegByte(ASM330_FIFO_CTRL4_REG, ASM330_TEMP_BATCH_52HZ << 4 | ASM330_TIME_NOT_BATCHED << 6 );
+
+    // 水印阈值WTM[8:0]
+    ASM330_WriteRegByte(ASM330_FIFO_CTRL1_REG, (uint8_t)(ASM330_FIFO_WTM_WORDS & 0x00FF));
+    ASM330_WriteRegByte(ASM330_FIFO_CTRL2_REG,
+                        (uint8_t)(((ASM330_FIFO_WTM_WORDS >> 8) & 0x01) | ASM330_FIFO_CFG_DIS_MSK));
+
+    // FIFO水印中断输出到INT2引脚
+    ASM330_WriteRegByte(ASM330_INT2_CTRL_REG, ASM330_INT_FTH_MSK);
+#endif
+	
+	// 轴输出速率833Hz、量程±2g/±2000dps
+    App_Asm330SetParam(ASM330_ODR_833HZ, ASM330_FS_2G, ASM330_ODR_833HZ, ASM330_FS_2000DPS);
+
+	ASM330_ReadRegs(ASM330_CTRL1_XL_REG,&dat[0],2);
+	ASM330_ReadRegs(ASM330_WHO_AM_I_REG,&dat[0],8);
+    return ASM330_OK;
+#endif
+}
+
+#if ((ASM330_DATA_SRC_SIM == 0) && (ASM330_DATA_SRC_DIRECT == 0))
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330FifoReadBatch
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : FIFO水印中断中读取一批FIFO数据：
+*        按TAG解析(陀螺/加速度各6字节、温度2字节)，轴数据进暂存区，
+*        温度进温度队列，本批读完整体入队并使未读批次数+1
+*********************************************************************************************************
+*/
+
+static void App_Asm330FifoReadBatch(void)
+{
+    static uint8_t buf[ASM330_FIFO_READ_MAX];   // 移到静态区：避免在中断栈上占用512字节
+    uint8_t  flags = 0;
+    uint8_t  tag;
+    uint8_t  hasAcc, hasGyr;
+    uint16_t words = 0, bytes =16*7, i;
+    int16_t  ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
+
+    if (ASM330_ReadFifoStatus(&words, &flags) != ASM330_OK) {
+        return;
+    }
+
+    // FIFO状态标志
+    if (flags & ASM330_FIFO_STATUS_WTM_IA_MSK) {
+        s_FifoState |= ASM330_STATE_FIFO_WTM;
+    } else {
+        s_FifoState &= (uint16_t)(~ASM330_STATE_FIFO_WTM);
+    }
+    if (flags & ASM330_FIFO_STATUS_OVR_IA_MSK) {
+        s_FifoState |= ASM330_STATE_FIFO_OVR;
+    }
+    if (flags & ASM330_FIFO_STATUS_FULL_IA_MSK) {
+        s_FifoState |= ASM330_STATE_FIFO_FULL;
+    }
+    if (flags & ASM330_FIFO_STATUS_EMPTY_MSK) {
+        s_FifoState |= ASM330_STATE_FIFO_EMPTY;
+    }
+
+    if (words == 0) {
+        return;
+    }
+
+    bytes = (uint16_t)(words * 2);
+    if (bytes > ASM330_FIFO_READ_MAX) {
+        bytes = ASM330_FIFO_READ_MAX;
+    }
+	ASM330_ReadFifoData(buf, 16*7);
+
+
+    hasAcc = 0;
+    hasGyr = 0;
+    i = 0;
+    while (i < bytes) {
+        tag = (uint8_t)(buf[i] >> ASM330_FIFO_TAG_POS);
+        i++;
+
+        if (tag == ASM330_FIFO_TAG_GYRO) {
+            if ((uint16_t)(i + ASM330_FIFO_GYRO_LEN) > bytes) {
+                break;
+            }
+            gx = (int16_t)(((uint16_t)buf[i + 1] << 8) | (uint16_t)buf[i]);
+            gy = (int16_t)(((uint16_t)buf[i + 3] << 8) | (uint16_t)buf[i + 2]);
+            gz = (int16_t)(((uint16_t)buf[i + 5] << 8) | (uint16_t)buf[i + 4]);
+            hasGyr = 1;
+            i = (uint16_t)(i + ASM330_FIFO_GYRO_LEN);
+        } else if (tag == ASM330_FIFO_TAG_ACC) {
+            if ((uint16_t)(i + ASM330_FIFO_ACC_LEN) > bytes) {
+                break;
+            }
+            ax = (int16_t)(((uint16_t)buf[i + 1] << 8) | (uint16_t)buf[i]);
+            ay = (int16_t)(((uint16_t)buf[i + 3] << 8) | (uint16_t)buf[i + 2]);
+            az = (int16_t)(((uint16_t)buf[i + 5] << 8) | (uint16_t)buf[i + 4]);
+            hasAcc = 1;
+            i = (uint16_t)(i + ASM330_FIFO_ACC_LEN);
+        } else if (tag == ASM330_FIFO_TAG_TEMP) {
+            if ((uint16_t)(i + ASM330_FIFO_TEMP_LEN) > bytes) {
+                break;
+            }
+            App_Asm330PushTemp((int16_t)(((uint16_t)buf[i + 1] << 8) | (uint16_t)buf[i]));
+            i = (uint16_t)(i + ASM330_FIFO_ACC_LEN);
+        } else {
+            s_FifoState |= ASM330_STATE_TAG_UNKNOWN;   // 未知TAG：停止本次解析
+            continue;
+        }
+
+        if ((hasAcc != 0) && (hasGyr != 0)) {          // 陀螺与加速度到齐即构成一个样本
+            App_Asm330StageSample(ax, ay, az, gx, gy, gz);
+            hasAcc = 0;
+            hasGyr = 0;
+        }
+    }
+
+    App_Asm330CommitBatch();   // 一批结束：整体入队并使未读批次数+1
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : EXTI1_IRQHandler
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : ASM330 INT2(FIFO水印)中断服务函数，读取一批FIFO数据
+*********************************************************************************************************
+*/
+
+void EXTI1_IRQHandler(void)
+{
+    if (__HAL_GPIO_EXTI_GET_IT(ASM330_INT_PIN) != 0x00u) {
+        __HAL_GPIO_EXTI_CLEAR_IT(ASM330_INT_PIN);
+        App_Asm330FifoReadBatch();
+    }
+}
+#endif
+
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330DirectSample
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 直读模式：按定时节拍(999Hz，取1.2倍ASM330轴输出速率)读取一组六轴数据：
+*        1) 先判定时节拍标志(App_TimTickFlag)：没有节拍就直接返回，不访问SPI；
+*        2) 再查STATUS_REG(0x1E)的XLDA/GDA，没有新样本也直接返回，等下一个节拍；
+*        3) 有新样本才连续读温度+陀螺+加速度共14字节，存入私有缓存(不写公共区)；
+*        4) 未满16组持续缓存，满16组后停止更新，由应答帧发送完成后统一搬入公共区
+*********************************************************************************************************
+*/
+
+void App_Asm330DirectSample(void)
+{
+    uint8_t  buf[14];
+    uint16_t idx;
+#if (ASM330_DATA_SRC_SIM == 0)
+    uint8_t  status;
+#endif
+
+    if (App_TimTickFlag == 0) {                 // 定时节拍没到：本次不读，等下一个节拍
+        return;
+    }
+    App_TimTickFlag = 0;                        // 取走本节拍
+
+    idx = s_DirFillCnt;
+    if (idx >= ASM330_UPLOAD_SAMPLES) {         // 已缓存满16组：不再更新
+        return;
+    }
+
+#if (ASM330_DATA_SRC_SIM == 0)
+    // 查询ASM330是否产生了新样本(STATUS_REG: XLDA=加速度新数据、GDA=陀螺新数据)
+    status = ASM330_ReadRegByte(ASM330_STATUS_REG_REG);
+    if ((status & (ASM330_XLDA_MSK | ASM330_GDA_MSK)) != (ASM330_XLDA_MSK | ASM330_GDA_MSK)) {
+        return;                                 // 没有新样本：本节拍不读，等下一个节拍
+    }
+#endif
+
+    // 连续读取温度(2字节)+陀螺仪(6字节)+加速度计(6字节)
+    if (ASM330_ReadRegs(ASM330_OUT_TEMP_L_REG, buf, 14) != ASM330_OK) {
+        return;
+    }
+
+    s_DirTemp      = (int16_t)(((uint16_t)buf[1]  << 8) | (uint16_t)buf[0]);
+    s_DirGyrX[idx] = (int16_t)(((uint16_t)buf[3]  << 8) | (uint16_t)buf[2]);
+    s_DirGyrY[idx] = (int16_t)(((uint16_t)buf[5]  << 8) | (uint16_t)buf[4]);
+    s_DirGyrZ[idx] = (int16_t)(((uint16_t)buf[7]  << 8) | (uint16_t)buf[6]);
+    s_DirAccX[idx] = (int16_t)(((uint16_t)buf[9]  << 8) | (uint16_t)buf[8]);
+    s_DirAccY[idx] = (int16_t)(((uint16_t)buf[11] << 8) | (uint16_t)buf[10]);
+    s_DirAccZ[idx] = (int16_t)(((uint16_t)buf[13] << 8) | (uint16_t)buf[12]);
+
+    s_DirFillCnt = (uint16_t)(idx + 1);
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : App_Asm330DirectTxDone
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 简单模式：上位机读取完成(应答帧DMA发送结束)后才更新公共区：
+*        先清除旧的公共数据且DataUnRead清零，再把缓存中已满16组的数据写入公共区，
+*        最后把DataUnRead置1；缓存未满16组时公共区保持清零、DataUnRead保持0
+*********************************************************************************************************
+*/
+
+void App_Asm330DataRefreshTxDone(void)
+{
+    uint16_t i;
+    uint32_t tick;
+
+    // 1) 清除旧的公共数据并清标志
+    for (i = 0; i < ASM330_UPLOAD_SAMPLES; i++) {
+        Asm330MBData.AccX[i] = 0;
+        Asm330MBData.AccY[i] = 0;
+        Asm330MBData.AccZ[i] = 0;
+        Asm330MBData.GyrX[i] = 0;
+        Asm330MBData.GyrY[i] = 0;
+        Asm330MBData.GyrZ[i] = 0;
+    }
+    Asm330MBData.Temp       = 0;
+    Asm330MBData.Time[0]    = 0;
+    Asm330MBData.Time[1]    = 0;
+    Asm330MBData.DataUnRead = 0;
+
+    // 2) 缓存未满16组：不写公共区，等待下一轮缓存
+    if (s_DirFillCnt < ASM330_UPLOAD_SAMPLES) {
+        return;
+    }
+
+    // 3) 把缓存中的16组数据写入公共区
+    for (i = 0; i < ASM330_UPLOAD_SAMPLES; i++) {
+        Asm330MBData.AccX[i] = s_DirAccX[i];
+        Asm330MBData.AccY[i] = s_DirAccY[i];
+        Asm330MBData.AccZ[i] = s_DirAccZ[i];
+        Asm330MBData.GyrX[i] = s_DirGyrX[i];
+        Asm330MBData.GyrY[i] = s_DirGyrY[i];
+        Asm330MBData.GyrZ[i] = s_DirGyrZ[i];
+    }
+    Asm330MBData.Temp = s_DirTemp;
+
+    tick = HAL_GetTick();
+    Asm330MBData.Time[0] = (uint16_t)(tick & 0xFFFF);
+    Asm330MBData.Time[1] = (uint16_t)((tick >> 16) & 0xFFFF);
+
+    // 4) 置标志：公共区已有新数据
+    Asm330MBData.DataUnRead = 1;
+
+    // 5) 缓存复位，开始缓存下一批16组
+    s_DirFillCnt = 0;
+}
+
+

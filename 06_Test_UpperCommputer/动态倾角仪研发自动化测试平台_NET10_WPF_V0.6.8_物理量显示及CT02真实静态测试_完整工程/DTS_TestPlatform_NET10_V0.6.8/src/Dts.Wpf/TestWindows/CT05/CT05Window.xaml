@@ -1,0 +1,81 @@
+<Window x:Class="Dts.Wpf.TestWindows.CT05.CT05Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-05 静态角度精度 · 自动检测" Width="1120" Height="795" MinWidth="1000" MinHeight="680"
+ WindowStartupLocation="CenterOwner" Closing="OnClosing">
+ <Grid Margin="18"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Style="{StaticResource Card}" Padding="17" Margin="0,0,0,11"><StackPanel>
+   <TextBlock Text="CT-05  /  静态角度检测工作台" Style="{StaticResource Title}" FontSize="22"/>
+   <TextBlock Text="源于 Python 静态角度检测 V1.4 · 真实 2TD-600 逐点定位 + IMU 原始采样 + ACC 校准 JSON + 独立报告" Foreground="#547090" Margin="0,5,0,0"/>
+   <TextBlock x:Name="UidText" Text="真实 UID 尚未读取" Margin="0,8,0,0" FontFamily="Consolas" Foreground="#2369B7"/>
+  </StackPanel></Border>
+  <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="440"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,12,0"><StackPanel>
+    <Border Style="{StaticResource Card}" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Text="① 设备、文件与保存位置" Style="{StaticResource Title}"/>
+     <TextBlock Text="输出根目录（由主程序设置）" Foreground="#61758B" Margin="0,9,0,3"/>
+     <TextBlock x:Name="RootText" TextWrapping="Wrap" Foreground="#235A9A"/>
+     <TextBlock Text="ACC 标定文件（raw_accel_bias_g / raw_to_platform_matrix）" Foreground="#61758B" Margin="0,10,0,4"/>
+     <TextBox x:Name="CalPath" Text="" IsReadOnly="True" VerticalAlignment="Center" ToolTip="由主窗口按UID和模式自动匹配的标定文件（支持子文件夹）"/>
+     <TextBlock x:Name="SelectedProcessingModeText" Text="标定状态：等待主窗口提供补偿模式" Foreground="#4A7098" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"/>
+     <CheckBox x:Name="CalibrationOwnership" Foreground="#A45D32" Margin="0,9,0,0">
+      <TextBlock Text="标定文件身份由主窗口统一确认，测试窗口只读" TextWrapping="Wrap"/>
+     </CheckBox>
+    </StackPanel></Border>
+    <Border Style="{StaticResource Card}" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Text="② 扫描计划和采样参数" Style="{StaticResource Title}"/>
+     <TextBlock Text="检测计划" Margin="0,9,0,4" Foreground="#657991"/>
+     <ComboBox x:Name="PlanBox" SelectedIndex="0" SelectionChanged="PlanChanged"><ComboBoxItem Content="小角度"/><ComboBoxItem Content="对称小角度"/><ComboBoxItem Content="全圈74点"/></ComboBox>
+     <Grid Margin="0,9,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <StackPanel Grid.Row="0" Margin="0,0,9,8"><TextBlock Text="静置时间 (s)"/><TextBox x:Name="Settle" Text="3"/></StackPanel>
+      <StackPanel Grid.Row="0" Grid.Column="1"><TextBlock Text="单点采样 (s)"/><TextBox x:Name="Sample" Text="5"/></StackPanel>
+      <StackPanel Grid.Row="1" Margin="0,0,9,8"><TextBlock Text="运动速度 (°/s)"/><TextBox x:Name="MotionSpeed" Text="1"/></StackPanel>
+      <StackPanel Grid.Row="1" Grid.Column="1"><TextBlock Text="到位容差 (°)"/><TextBox x:Name="Tolerance" Text="0.10"/></StackPanel>
+      <StackPanel Grid.Row="2" Margin="0,0,9,8"><TextBlock Text="批准的绝对行程下界 (°)"/><TextBox x:Name="MinTravel" Text="0"/></StackPanel>
+      <StackPanel Grid.Row="2" Grid.Column="1"><TextBlock Text="批准的绝对行程上界 (°)"/><TextBox x:Name="MaxTravel" Text="90"/></StackPanel>
+      <StackPanel Grid.Row="3" Grid.ColumnSpan="2"><CheckBox x:Name="FullTravelApproved" Content="已现场验证全圈行程/夹具/线缆安全（仅全圈计划）" Foreground="#9B5B37" Margin="0,2,0,6"/><CheckBox x:Name="NegativeDirectionApproved" Foreground="#9B5B37">
+       <TextBlock Text="已实机验证负角度映射到 0~360° 时的实际旋转方向" TextWrapping="Wrap"/>
+      </CheckBox></StackPanel>
+     </Grid>
+     <Button Content="刷新并预览扫描计划" Click="PreviewClick" Style="{StaticResource Action}" Margin="0,12,0,0"/>
+    </StackPanel></Border>
+    <Border Style="{StaticResource Card}"><StackPanel>
+     <TextBlock Text="③ 实机安全与结果性质" Style="{StaticResource Title}"/>
+     <CheckBox x:Name="SafetyConfirmed" Foreground="#9D5C3C" Margin="0,8,0,6">
+      <TextBlock Text="确认已使能并核实双轴状态、实体急停、行程、工装、人员与线缆" TextWrapping="Wrap"/>
+     </CheckBox>
+     <TextBlock Text="本测试有真实电机运动，途中停止将尝试双轴软件停车并保存检查点；软件不代替实体急停。报告为研发数据，不自动判 PASS。" Foreground="#855A3A" TextWrapping="Wrap" FontSize="12"/>
+    </StackPanel></Border>
+   </StackPanel></ScrollViewer>
+   <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="150"/></Grid.RowDefinitions>
+    <Border Style="{StaticResource Card}" Margin="0,0,0,9"><StackPanel><TextBlock Text="扫描计划预览" Style="{StaticResource Title}"/><TextBlock x:Name="PlanSummary" Foreground="#5B7898" Margin="0,6,0,0" TextWrapping="Wrap"/></StackPanel></Border>
+    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,9">
+     <TabControl x:Name="DataTabs" Background="White" BorderThickness="0">
+      <TabItem Header="姿态扫描计划"><DataGrid x:Name="PlanGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" RowHeight="27"><DataGrid.Columns>
+       <DataGridTextColumn Header="检测轴" Binding="{Binding Channel}" Width="75"/>
+       <DataGridTextColumn Header="内轴目标(°)" Binding="{Binding InnerTargetDeg}" Width="*"/>
+       <DataGridTextColumn Header="外轴逻辑角(°)" Binding="{Binding OuterSignedDeg}" Width="*"/>
+       <DataGridTextColumn Header="外轴指令(°)" Binding="{Binding OuterCommandDeg}" Width="*"/>
+      </DataGrid.Columns></DataGrid></TabItem>
+      <TabItem Header="测量结果 / 误差"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+       <TextBlock x:Name="StatsText" Text="未开始。真实测试结束后显示 Bias / RMSE / MaxAbs；完整报告导出为 Excel 和 HTML。" TextWrapping="Wrap" Foreground="#275E9D" Margin="7,9"/>
+       <DataGrid x:Name="ResultGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"><DataGrid.Columns>
+        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="42"/><DataGridTextColumn Header="轴" Binding="{Binding Channel}" Width="40"/>
+        <DataGridTextColumn Header="参考 (°)" Binding="{Binding ReferenceDeg, StringFormat=F4}" Width="*"/>
+        <DataGridTextColumn Header="实测 (°)" Binding="{Binding MeasuredDeg, StringFormat=F4}" Width="*"/>
+        <DataGridTextColumn Header="误差 (°)" Binding="{Binding ErrorDeg, StringFormat=F5}" Width="*"/>
+        <DataGridTextColumn Header="有效帧" Binding="{Binding AcceptedSamples}" Width="70"/>
+       </DataGrid.Columns></DataGrid>
+      </Grid></TabItem>
+     </TabControl></Border>
+    <Border Grid.Row="2" Style="{StaticResource Card}"><StackPanel><TextBlock Text="任务进度与文件" Style="{StaticResource Title}"/><ProgressBar x:Name="RunProgressBar" Minimum="0" Maximum="100" Value="0" Height="14" Margin="0,10,0,7"/><TextBlock x:Name="StatusText" Text="等待配置" Foreground="#28629F" TextWrapping="Wrap"/><TextBlock x:Name="FileText" Text="测试报告将保存到用户指定的根目录" Foreground="#657991" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" Margin="0,11,0,0" LastChildFill="False">
+   <Button DockPanel.Dock="Right" Content="关闭" Style="{StaticResource Action}" Click="CloseClick"/>
+   <Button DockPanel.Dock="Right" Content="打开本次报告" Style="{StaticResource Action}" Click="OpenReportClick"/>
+   <Button DockPanel.Dock="Right" x:Name="StopButton" Content="停止并保存部分报告" Style="{StaticResource Warning}" Click="StopClick" IsEnabled="False"/>
+   <Button DockPanel.Dock="Right" x:Name="StartButton" Content="▶ 开始真实自动检测" Style="{StaticResource Primary}" Click="StartClick"/>
+  </DockPanel>
+ </Grid>
+</Window>

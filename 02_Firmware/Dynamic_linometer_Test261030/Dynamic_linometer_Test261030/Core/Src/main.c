@@ -1,0 +1,117 @@
+/*
+*********************************************************************************************************
+* 文件 : main.c
+* 作者 : zqh			
+* 版本 : V1.0
+* 日期 : 2026/8/31
+* 描述 : 主程序：系统初始化调度与主循环
+* 历史 :
+*********************************************************************************************************
+*/
+
+#include "main.h"
+
+#include "app_sys.h"
+#include "app_dma.h"
+#include "app_spi.h"
+#include "app_lpuart0.h"
+#include "app_usart.h"
+#include "app_tim.h"
+#include "mbserial_slave_port.h"
+#include "Dynamic_linometer_parameter.h"
+uint8_t data[100];
+
+/*
+*********************************************************************************************************
+* 函数名 : main
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 主函数：HAL初始化后依次完成系统/外设/应用层初始化，然后进入主循环
+*********************************************************************************************************
+*/
+
+int main(void)
+{
+    HAL_Init();                          // HAL初始化：Flash接口与SysTick
+	
+    HAL_Delay (100);
+    // 系统级初始化：RCC时钟、GPIO、CAN1、RTC
+    if (App_SysInit() != HAL_OK) {
+        Error_Handler();
+    }
+
+    // 参数初始化：读取MCU唯一标识(0x1FFF7590，96位)生成Modbus寄存器映像(3000~3005)
+    DynamicLinometerSNInit();
+
+    // DMA控制器初始化：DMA1/DMA2时钟及通道中断
+	if (App_DmaInit() != HAL_OK) {
+        Error_Handler();
+    }
+
+
+    // SPI1初始化：含ASM330LHH片选引脚配置
+    if (App_SpiInit() != HAL_OK) {
+        Error_Handler();
+    }
+
+    // ASM330LHH初始化(FIFO配置；模拟数据模式下不访问器件)
+    if (App_Asm330Init() != ASM330_OK) {
+        Error_Handler();
+    }
+//	__disable_irq();
+    // LPUART1初始化：Modbus从机(8N1帧格式，DMA收发)
+    if (App_LPUart0Init(LPUART0_BAUDRATE) != HAL_OK) {
+        Error_Handler( );
+    }
+
+    // USART1初始化：Modbus从机(8N1帧格式，DMA收发，485上传)
+    if (App_USart1Init(USART1_BAUDRATE) != HAL_OK) {
+        Error_Handler();
+    }
+	
+//	__enable_irq();
+//	App_USart1Chip485DESet(1); // 485进入接收态
+//	HAL_UART_Transmit_DMA(&huart1, USart1_MBSlaveCtrl.SendBuffer, 3);//初始化完成了
+	
+    // TIM6节拍启动：节拍999Hz(取1.2倍ASM330轴输出速率833Hz)，为主循环直读提供节拍标志
+    if (App_TimInit() != HAL_OK) {
+        Error_Handler();
+    }
+
+    while (1) {
+        App_Asm330DirectSample();                // 内部先判定时节拍标志，再查STATUS_REG，有新数据才读一次
+//        App_LPUart0MBFramePolling();             // 轮询处理LPUART1的Modbus从机帧
+	    App_USart1MBFramePolling();              // 轮询处理USART1的Modbus从机帧
+    }
+}
+
+/*
+*********************************************************************************************************
+* 函数名 : Error_Handler
+* 入口参数 : 无
+* 返回值 : 无
+* 说明 : 错误处理函数：出错时关中断并死循环等待复位
+*********************************************************************************************************       
+*/
+
+void Error_Handler(void)
+{
+    __disable_irq();
+    while (1) {
+    }
+}
+
+#ifdef USE_FULL_ASSERT
+/**
+  * @brief Reports the name of the source file and the source line number
+  *        where the assert_param error has occurred.
+  * @param file: pointer to the source file name
+  * @param line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+    /* User can add his own implementation to report the file name and line number,
+       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+}
+#endif /* USE_FULL_ASSERT */

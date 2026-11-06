@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "application_revision": "imu-calibration-workbench-0.3-auto-calibration",
+  "run_id": "ACCEL_20261103_103629",
+  "device_serial": "DTS872028",
+  "device_uid_raw": "006400483252501820323350",
+  "experiment_type": "加速度计内参",
+  "start_time_local": "2026-11-03T10:36:29.858+08:00",
+  "end_time_local": "2026-11-03T11:02:12.192+08:00",
+  "status": "stopped",
+  "host_platform": "Windows-10-10.0.19045-SP0",
+  "python_version": "3.13.0",
+  "turntable": {
+    "model": "2TD600",
+    "port": "COM2",
+    "axis_mapping": {
+      "inner": 0,
+      "outer": 2
+    },
+    "feedback_polling": "使用现有转台轮询线程缓存值；记录主机时间戳和更新计数，不代表硬件时钟同步。"
+  },
+  "imu": {
+    "model": "ASM330 (项目当前数据模块)",
+    "serial_open": true,
+    "port": "COM3",
+    "baudrate": 1500000,
+    "acc_fs_g": 2,
+    "gyro_fs_dps": 2000,
+    "data_odr_hz": 0
+  },
+  "coordinate_convention": "尚需在实验规程中明确转台内外轴正方向、安装坐标系P及IMU轴方向；本文件不自动推断坐标变换。",
+  "timestamp_note": "imu_raw.csv 中样本级主机时间戳由帧接收时间和帧间隔估算；mcu_sample_ms_est 由帧tick和帧间隔估算。应结合设备时钟和通讯延迟评估同步不确定度。",
+  "notes": "",
+  "files": [
+    "imu_raw.csv",
+    "turntable_feedback.csv",
+    "events.csv",
+    "step_markers.csv",
+    "DTS872028_manifest.json"
+  ],
+  "row_counts": {
+    "imu_raw.csv": 1111296,
+    "turntable_feedback.csv": 29518,
+    "events.csv": 130,
+    "step_markers.csv": 24
+  },
+  "queue_drop_counts": {
+    "imu_frame_queue_drops": 0,
+    "turntable_feedback_queue_drops": 0
+  },
+  "result_files": [
+    "DTS872028_accel_calibration.json",
+    "DTS872028_accel_calibration.json",
+    "validation_comparison_ACC.xlsx"
+  ],
+  "axis_model": "outer_x_inner_z",
+  "fit_quality": {
+    "samples": 12,
+    "design_rank": 4,
+    "matrix_condition_number": 1.003791993989602,
+    "rmse_vector_g": 0.0004720528329505304,
+    "max_vector_error_g": 0.0008134201231978952
+  },
+  "auto_task": {
+    "type": "accel",
+    "success": true,
+    "device_serial": "DTS872028",
+    "static_retry_history": [],
+    "rate_retry_history": [],
+    "message": "流程完成；质量结论：PILOT_PASS_NOT_RELEASED；Excel对比报告：E:\\动态倾角仪生产测试\\测试\\acc\\ACCEL_20261103_103629\\validation_comparison_ACC.xlsx",
+    "end_time_local": "2026-11-03T11:02:12.188+08:00"
+  }
+}
