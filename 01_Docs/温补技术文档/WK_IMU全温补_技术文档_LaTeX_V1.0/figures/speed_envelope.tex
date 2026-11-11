@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+\begin{axis}[width=.94\linewidth,height=6.15cm,xlabel={摆动频率 $f$（Hz）},ylabel={最大角速度 $\omega_{max}$（°/s）},xmin=0,xmax=2.0,ymin=0,ymax=14,xtick={0,.2,.5,1,1.5,2},ytick={0,1,2,5,10,12},grid=both,minor tick num=1,grid style={gray!18},legend pos=north west,legend style={draw=gray!30,fill=white,font=\small}]
+\addplot[blue,thick,domain=0:2,samples=2] {2*pi*x*.1};\addlegendentry{幅度 $A=0.1^\circ$}
+\addplot[teal,thick,domain=0:2,samples=2] {2*pi*x*.5};\addlegendentry{幅度 $A=0.5^\circ$}
+\addplot[orange,thick,domain=0:2,samples=2] {2*pi*x*1.0};\addlegendentry{幅度 $A=1.0^\circ$}
+\addplot[red!55,densely dashed,domain=0:2,samples=2] {1};
+\addplot[red!55,densely dashed,domain=0:2,samples=2] {2};
+\addplot[red!55,densely dashed,domain=0:2,samples=2] {5};
+\node[font=\scriptsize,red] at (axis cs:1.72,5.3) {标定速率5°/s};
+\end{axis}
+\end{tikzpicture}

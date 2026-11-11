@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+\begin{axis}[width=.95\linewidth,height=6.0cm,xmin=0,xmax=4,ymin=-29,ymax=71,xtick={0,.5,1,1.5,2,2.5,3,3.5,4},xticklabels={起点,,第1趟终点,,第2趟终点,,第3趟终点,,第4趟终点},xlabel={扫描顺序（概念时间）},ylabel={温箱目标 SP（°C）},ytick={-20,0,20,40,60},grid=major,grid style={gray!20},axis line style={gray!60},tick label style={font=\scriptsize}]
+\addplot[blue,line width=2pt,mark=*,mark size=1.5pt] coordinates {(0,-20)(1,60)};
+\addplot[orange,line width=2pt,mark=*,mark size=1.5pt] coordinates {(1,60)(2,-20)};
+\addplot[teal,line width=2pt,mark=*,mark size=1.5pt] coordinates {(2,-20)(3,60)};
+\addplot[red,line width=2pt,mark=*,mark size=1.5pt] coordinates {(3,60)(4,-20)};
+\node[blue,font=\scriptsize,rotate=28] at (axis cs:.45,30) {循环1升温};
+\node[orange,font=\scriptsize,rotate=-28] at (axis cs:1.65,35) {循环1降温};
+\node[teal,font=\scriptsize,rotate=28] at (axis cs:2.45,30) {循环2升温};
+\node[red,font=\scriptsize,rotate=-28] at (axis cs:3.65,35) {循环2降温};
+\end{axis}
+\end{tikzpicture}

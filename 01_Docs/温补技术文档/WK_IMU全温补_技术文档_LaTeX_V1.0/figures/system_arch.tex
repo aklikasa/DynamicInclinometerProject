@@ -1,0 +1,11 @@
+\begin{tikzpicture}[font=\small,>=Latex,box/.style={draw=blue!70,rounded corners=2mm,fill=light,minimum height=11mm,align=center,text width=3.55cm},sensor/.style={draw=teal!70,rounded corners=2mm,fill=lightTeal,minimum height=11mm,align=center,text width=3.55cm},control/.style={draw=orange!80,rounded corners=2mm,fill=lightOrange,minimum height=11mm,align=center,text width=3.55cm}]
+\node[control] (plc) at (-4.2,2) {PLC／温箱控制器\\设定SP，回读PV与状态};
+\node[box] (wk) at (0,2) {2FDT600WK 双轴转台\\角度／速率／伺服／停车};
+\node[sensor] (imu) at (4.2,2) {ASM330LHHX＋MCU\\ACC、GYRO、芯片温度};
+\node[box,text width=11.6cm,minimum height=12mm,fill=blue!7] (pc) at (0,-.15) {PySide6 R10上位机：温度与运动状态机、数据审计、质量暂停／中止};
+\node[sensor,text width=11.6cm,minimum height=12mm] (disk) at (0,-2.05) {原始逐帧 JSONL + 每工况均值 + PLC/WK回读 + 离线统一拟合／独立验证};
+\draw[<->,thick,orange] (plc.south) -- node[left,near start,font=\scriptsize] {SP请求／反馈} ($(pc.north)+(-4.2,0)$);
+\draw[<->,thick,blue] (wk.south)--node[right,font=\scriptsize]{运动指令／真实参考} (pc.north);
+\draw[->,thick,teal] (imu.south)--node[right,near start,font=\scriptsize]{六轴帧／温度} ($(pc.north)+(4.2,0)$);
+\draw[->,thick,blue] (pc.south) -- node[right,font=\scriptsize] {不可篡改记录与研究报告} (disk.north);
+\end{tikzpicture}

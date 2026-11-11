@@ -1,0 +1,786 @@
+% !TeX program = xelatex
+% 编译: xelatex -interaction=nonstopmode -halt-on-error main.tex (两遍)
+% R10 研究性技术基线；所有图形均可在 figures/ 中编辑。
+\documentclass[UTF8,a4paper,11pt,oneside,openany,fontset=none]{ctexbook}
+\usepackage[margin=23mm,top=25mm,bottom=25mm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\setmainfont{Liberation Serif}
+\setsansfont{Liberation Sans}
+\setmonofont{DejaVu Sans Mono}[Scale=0.82]
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\usepackage{amsmath,amssymb,amsthm,bm,mathtools}
+\usepackage{graphicx,booktabs,array,multirow,longtable,tabularx,makecell}
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric,shapes.misc,backgrounds,decorations.pathreplacing,angles,quotes}
+\pgfplotsset{compat=1.18}
+\usepackage[most]{tcolorbox}
+\usepackage{xcolor,enumitem,float,caption,subcaption}
+\usepackage{listings,fancyhdr,lastpage}
+\usepackage{hyperref}
+\definecolor{ink}{HTML}{17283A}
+\definecolor{blue}{HTML}{205C91}
+\definecolor{teal}{HTML}{00877F}
+\definecolor{orange}{HTML}{C9792B}
+\definecolor{red}{HTML}{B34845}
+\definecolor{muted}{HTML}{62768A}
+\definecolor{light}{HTML}{EDF4F9}
+\definecolor{lightTeal}{HTML}{EAF6F3}
+\definecolor{lightOrange}{HTML}{FFF4E8}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=teal,citecolor=blue,pdftitle={双轴WK转台六轴IMU全温补与动态倾角仪技术设计},pdfauthor={研发技术文档},pdfsubject={温控状态机、转台几何、六轴温补、动态倾角验证}}
+\ctexset{chapter={format=\huge\bfseries\color{ink},beforeskip=4pt,afterskip=16pt},section={format=\Large\bfseries\color{blue},beforeskip=16pt,afterskip=8pt},subsection={format=\large\bfseries\color{ink}}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.28em}
+\linespread{1.26}
+\setlist[itemize]{itemsep=2pt,topsep=3pt,leftmargin=2.5em}
+\setlist[enumerate]{itemsep=3pt,topsep=3pt,leftmargin=2.7em}
+\captionsetup{font=small,labelfont=bf,labelsep=quad}
+\renewcommand\arraystretch{1.32}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\footnotesize WK 双轴转台／六轴 IMU 温补技术文档}\fancyhead[R]{\footnotesize R10 基线 · 2026-11}\fancyfoot[C]{\thepage\,/\pageref{LastPage}}
+\newtcolorbox{keypoint}[1][]{colback=light,colframe=blue!45,boxrule=.55pt,arc=2mm,title={\bfseries 关键结论},fonttitle=\small,#1}
+\newtcolorbox{warningbox}[1][]{colback=lightOrange,colframe=orange!65,boxrule=.65pt,arc=2mm,title={\bfseries 风险与边界},fonttitle=\small,#1}
+\newtcolorbox{designbox}[1][]{colback=lightTeal,colframe=teal!65,boxrule=.6pt,arc=2mm,title={\bfseries 工程建议},fonttitle=\small,#1}
+\newcommand{\vct}[1]{\bm{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\degc}{\,^{\circ}\mathrm C}
+\newcommand{\dps}{\,^{\circ}/\mathrm s}
+\newcommand{\src}[1]{\par\noindent{\scriptsize\color{muted} 对照源码：\nolinkurl{#1}}\par}
+\newcommand{\figsrc}{\small\color{muted} 注：概念图按源码与运动学关系重绘，并非设备计量图或实测曲线。}
+\begin{document}
+\begin{titlepage}
+\centering
+\vspace*{16mm}
+{\sffamily\color{teal}\Large 内部研发技术设计文档 \quad / \quad 可维护 LaTeX 源码\par}
+\vspace{13mm}
+{\sffamily\bfseries\fontsize{29}{40}\selectfont\color{ink}WK 双轴转台六轴 IMU\\全温度补偿与统一坐标标定\par}
+\vspace{6mm}
+{\sffamily\fontsize{17}{25}\selectfont\color{blue}面向风机塔筒与建筑结构的动态倾角仪\par}
+\vspace{12mm}
+\begin{tikzpicture}[scale=1.0]
+\draw[teal,line width=1.9pt](-5.6,0)--(5.6,0);
+\node[draw=blue!65,fill=light,rounded corners=6pt,minimum width=3.1cm,minimum height=1.25cm,align=center] at (-3.8,-1.15){\sffamily WK双轴转台\\\small 位置／实测角速率};
+\node[draw=teal!80,fill=lightTeal,rounded corners=6pt,minimum width=3.1cm,minimum height=1.25cm,align=center] at (0,-1.15){\sffamily ASM330LHHX\\\small ACC + GYRO + 温度};
+\node[draw=orange!80,fill=lightOrange,rounded corners=6pt,minimum width=3.1cm,minimum height=1.25cm,align=center] at (3.8,-1.15){\sffamily PLC温箱\\\small SP/PV／热浸／安全};
+\draw[-{Latex[length=3mm]},thick,blue](-2.1,-1.15)--(-1.7,-1.15);
+\draw[-{Latex[length=3mm]},thick,teal](1.65,-1.15)--(2.1,-1.15);
+\end{tikzpicture}
+\vfill
+\begin{tabular}{ll}
+\toprule
+文件版本 & V1.0（依据 R10 上位机源码及 2026-11-10 实验日志）\\
+基准硬件 & 2FDT600WK 接口双轴温控转台；ASM330LHHX；PLC温箱\\
+当前扫描 & $-20\degc\sim60\degc$；$5\degc$步距；2次升降温循环\\
+文件属性 & 设计、算法、验证与失效模式的研究基线；非计量证书\\
+编译方式 & XeLaTeX；图表主要使用 TikZ/PGFPlots 源码\\
+\bottomrule
+\end{tabular}
+\vspace{12mm}
+{\small\color{muted} 版本日期：2026年11月11日 \quad · \quad 使用前请核对源代码版本与现场硬件配置}
+\end{titlepage}
+\frontmatter
+\chapter*{阅读指引与证据等级}
+本文不是一份设备合格证。为防止把数学模型误写成已经验收的实测性能，全文将陈述区分为四类：
+\begin{description}[leftmargin=3em,style=nextline]
+\item[【源码事实】] 对照本文附录所列 R10 源码与其默认参数可直接验证的实现细节。
+\item[【实验记录】] 用户提供的 2026-11-10 运行日志已实际显示的动作、状态及结果。
+\item[【理论推导】] 按明确坐标定义与假设推导的方程，数学成立不代表设备物理参数可唯一辨识。
+\item[【改进建议】] 目前 R10 尚未完成的验证方案、拟合改进或产品研发要求。
+\end{description}
+\begin{warningbox}
+2026-11-10 的低温实验在 PLC 运行状态未确认时中止；温箱目前已送修。此前记录\emph{不能}用于证明全部两次循环成功、整机达到对标动态精度、转台机械误差已被独立计量，或者 MCU 已实施了统一六轴参数。系统的研究性输出不能直接视为生产放行参数。
+\end{warningbox}
+\tableofcontents
+\mainmatter
+
+\chapter{研发目标、应用场景与总体结论}
+\section{产品定位：建筑物与风机塔筒的低频动态倾角}
+面向建筑物、风机塔筒、烟囱和大型结构的倾角监测，目标量既包括长时间平均的倾斜/缓慢漂移，也包括风载下的小角度低频摆动。这与高速姿态导航不同：\textbf{角速度很小、低频噪声与温漂突出，且水平平动加速度会污染 ACC 的倾角估计}。实际频率、幅度和安装高度需要由结构工程需求确定，不能仅凭几组示例代表全部风机。相关文献也强调风机塔筒低频倾角与线性加速度耦合问题\cite{TOWER,ADI}。
+
+对标产品为瑞芬 HDA436T：其公开网页列明 25°C 静态精度 $\pm0.05^\circ$、动态精度 $\pm0.1^\circ$ RMS、GYRO 量程 $\pm250\dps$，工作温度 $-40\degc\sim85\degc$（详见参考文献\cite{RION,RION2}）。\textbf{本项目的当前实验温区 $-20\degc\sim60\degc$ 与对标产品工作温区不等价}；静态/动态精度也必须在相同测试波形、频率、滤波、时间延迟和统计定义下比较。
+
+\begin{keypoint}
+现阶段总体方案值得保留：逐工况真实芯片温度、多姿态 ACC、GYRO 正反转多速率、统一参考系、两次升降温、独立验证及逐帧原始数据都具有实用价值。最迫切的改善点是\textbf{PLC可靠性、角速率参考可信度、六轴坐标实体验收、跨循环泛化和低频融合验证}，不是盲目增加高阶多项式。
+\end{keypoint}
+
+\section{整个系统的输入、输出与责任边界}
+\begin{figure}[htbp]\centering\input{figures/system_arch}\caption{真实系统架构与数据来源；温箱目标SP与真实温度PV／$T_{\rm chip}$严格区分。}\end{figure}
+PLC 负责温箱自己的温度控制和硬件保护；上位机通过既有 PLC 驱动请求目标 SP 并核验状态。WK 负责位置/角速率运动并返回编码器与伺服状态。MCU 持续报告六轴数据、芯片温度和时间戳。上位机只执行测量过程与研究性拟合，不承担独立安全控制器或计量标准的职责。
+
+\section{问题结构}
+整套技术必须分别解决四类问题：
+\begin{enumerate}
+\item \textbf{热环境：}温箱 PV 不严格等于芯片内部传感器温度；芯片温度也不完全等于器件内部所有机械/电路部件的热状态。
+\item \textbf{参考量：}转台命令角度或命令速率不等于真实机械参考；双轴几何、零位、夹具安装和编码器噪声会污染参考。
+\item \textbf{六轴联合：}ACC 与 GYRO 各自三轴拟合漂亮，不自动推出二者在同一产品 X/Y/Z 坐标系中对齐。
+\item \textbf{最终产品：}静态温补 RMSE 不等于建筑振动条件下的动态倾角 RMS；融合、延迟、平动加速度和长期稳定性同样决定性能。
+\end{enumerate}
+
+\chapter{现有设备与数据链路：能力、未知量和风险}
+\section{转台：2FDT600WK 双轴温控转台接口}
+【源码事实】R10 使用 \texttt{turntable/turntable\_2FDT600WK\_comm.py}、\texttt{2FDT600WK.dll} 与独立的内外轴状态读取线程。代码设定内轴编号 0、外轴编号 2；支持位置指令、角速率指令、停止与伺服状态检测。与另一套 \texttt{2TD600} 通讯分支并存，但\textbf{本次温补采用 2FDT600WK 分支}。
+\src{turntable/turntable_2FDT600WK_comm.py; turntable/turntable_data_get.py}
+
+请注意：本文没有取得你们这台序列号对应的 2FDT600WK 厂家计量报告，也没有得到其实际误差曲线。网络上的其他 2FDT 系列或 2DT600 型号参数\textbf{不可直接挪用为这台设备的性能保证}。
+
+\section{温箱、PLC与SP/PV}
+【源码事实】PLC通信路径使用原工程 \texttt{temperature\_chamber} 中的接口。每个温度点\textbf{直接写最终 SP}、读取 SP 回读并检查定值模式、已启动和运行；到温后等待、热浸及采样准入是上位机的质量判据，\textbf{不修改 PLC 的 SP 目标}。
+
+【实验记录】2026-11-10 日志在 18:12:35 确认目标与回读 SP 均为 $-20\degc$ 且运行状态为 True；19:30:28 确认初步到温、热浸和最终准入通过；随后发生温度质量暂停与恢复；20:19:59 左右由于 PLC 运行状态未确认而中止。该故障不应被归咎于“PV 设成 ±2°C就让温箱不制冷”，也不能不经现场排查就归因于单次反馈毛刺。
+
+\section{IMU：ASM330LHHX 与固件配置}
+【公开资料】ASM330LHHX 是 3轴 ACC + 3轴 GYRO 的 MEMS 传感器，可配置加速度计 $\pm2/4/8/16g$ 与陀螺仪多档量程。温度补偿实验必须记录实际的量程、ODR、数字滤波、FIFO/时间戳、量纲转换和 MCU 固件版本\cite{ST}。
+
+【实验记录】该批日志声称 GYRO 使用 $\pm250\dps$，但同时有 \texttt{MCU报告确认=False}。\textbf{因此量程与实际缩放尚未闭环验收，不应直接批准系数写入产品。}
+
+\section{当前转台参考中的主要误差源}
+\begin{longtable}{p{3.0cm}p{5.0cm}p{5.0cm}}
+\toprule
+误差源 & 对标定的影响 & 现有策略／待改进方式\\\midrule\endhead
+内、外轴零位与角位置误差 & ACC重力参考方向偏差；同姿态重复性变差 & 编码器实测均角、周期角均值；等效零位$\delta$；独立测角待验证\\
+双轴不正交／轴线倾角 & ACC和GYRO三轴参考方向均可能偏差 & 等效轴倾角$\varepsilon$统一进入参考；不能替代实体计量\\
+IMU与夹具安装偏差 & 可能与转台零位/轴倾误差混淆 & 按一次装夹冻结安装；需额外独立基准区分\\
+命令角速率与实速不一致 & GYRO比例因子与交叉轴系数偏差 & 编码器差分参考、稳速窗口、正反转及独立速率验证\\
+编码器差分噪声 & 低速参考速度方差变大 & 解缠、多点平滑／整段积分、时间戳对齐；报告不确定度\\
+时间戳/滤波延迟 & 产生运动学残差及动态相位误差 & 硬件时基/软件同步校准，估计固定延迟与抖动\\
+线缆、滑环和热膨胀 & 运动负载和传感器姿态可能随温度变化 & 机械检查、路径约束、升降温重复性及夹具稳定性记录\\
+温箱PV偏差、热滞后 & 相同SP并非相同芯片热状态 & 逐工况芯片均温；热浸+单工况跨度；升降温迟滞验证\\
+\bottomrule
+\end{longtable}
+
+\chapter{坐标系定义与双轴转台前向运动学}
+\section{三个需要严格分开的坐标系}
+定义：
+\begin{itemize}
+\item $\mathcal W$：实验室参考系，重力方向固定；
+\item $\mathcal P$：R10模型定义的随动台面参考系（\emph{modelled platen frame}）；
+\item $\mathcal A,\mathcal G$：ACC 与 GYRO 各自未经校正的传感器原始轴系；
+\item $\mathcal B$：最终产品外壳定义的右手X/Y/Z工程坐标系，\textbf{当前尚未独立验收其与$\mathcal P$的绝对关系}。
+\end{itemize}
+\begin{figure}[htbp]\centering\input{figures/frames}\caption{坐标系与两传感器标定链：目标同处$\mathcal P$，产品输出还需与$\mathcal B$一致。}\end{figure}
+
+用列向量表示单位重力参考 $\vct e_z=(0,0,1)^T$，记内轴位置角 $\phi$、外轴位置角 $\theta$。所有式子中的角度参与三角函数前转换为弧度。
+
+\section{理想转台的加速度参考}
+定义基本旋转矩阵：
+\begin{equation}
+R_z(\alpha)=\begin{bmatrix}\cos\alpha&-\sin\alpha&0\\\sin\alpha&\cos\alpha&0\\0&0&1\end{bmatrix}.
+\end{equation}
+理想外轴绕 $x$ 轴转动。以源码采用的被动参考变换约定，有
+\begin{equation}\label{eq:ideal_acc}
+\vct g_{P,0}(\theta,\phi)=R_z(-\phi)R_x(-\theta)\vct e_z.
+\end{equation}
+此处重力参考符号依据软件记录对齐，不应脱离 MCU 的 ACC 符号约定照搬到固件。由 $R_x(-\theta)\vct e_z=(0,\sin\theta,\cos\theta)^T$ 得到
+\begin{equation}
+\vct g_{P,0}=\begin{bmatrix}\sin\phi\sin\theta\\\cos\phi\sin\theta\\\cos\theta\end{bmatrix}.
+\end{equation}
+理想静态情况下 $\|\vct g_{P,0}\|=1$，若ACC数据以 g 为单位，则三轴参考量为上述单位向量。
+
+\section{M0～M3的等效几何参数}
+【源码事实】R10定义外轴零位等效偏移 $\delta$ 和外轴倾角 $\varepsilon$，不把二者称为已经计量得到的机械误差。其四个假设为：
+\begin{center}
+\begin{tabular}{lll}\toprule
+模型 & 自由参数 & 物理解释边界\\\midrule
+M0 & $\delta=0,\ \varepsilon=0$ & 名义理想几何\\
+M1 & $\delta$ & 外轴参考零位等效偏移\\
+M2 & $\varepsilon$ & 外轴轴线等效倾角\\
+M3 & $\delta,\varepsilon$ & 两者联合估计\\\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]\centering\input{figures/geometry}\caption{M0～M3的示意：$\delta$为姿态参考常数偏移，$\varepsilon$为转轴相对理想方向的等效倾斜。}\end{figure}
+
+设真实模型中的外轴单位方向写成
+\begin{equation}
+\vct a=(\cos\varepsilon,\ 0,\ \sin\varepsilon)^T,\quad \psi=\theta+\delta.
+\end{equation}
+Rodrigues公式对任意向量 $\vct v$ 为
+\begin{equation}\label{eq:rodrigues}
+R_{\vct a}(\alpha)\vct v=\vct v\cos\alpha+(\vct a\times\vct v)\sin\alpha+\vct a(\vct a^T\vct v)(1-\cos\alpha).
+\end{equation}
+取 $\alpha=-\psi$、$\vct v=\vct e_z$，利用
+\begin{equation}
+\vct a\times\vct e_z=(0,-\cos\varepsilon,0)^T,\qquad \vct a^T\vct e_z=\sin\varepsilon,
+\end{equation}
+得到中间向量
+\begin{equation}\label{eq:vpre}
+\vct q=R_{\vct a}(-\psi)\vct e_z=\begin{bmatrix}
+\cos\varepsilon\sin\varepsilon(1-\cos\psi)\\
+\cos\varepsilon\sin\psi\\
+\cos\psi+\sin^2\varepsilon(1-\cos\psi)
+\end{bmatrix}.
+\end{equation}
+随后再旋转至内轴随动参考系：
+\begin{equation}\boxed{\vct g_P(\theta,\phi;\delta,\varepsilon)=R_z(-\phi)\vct q.}\end{equation}
+写成三个分量：
+\begin{align}
+g_x&=\cos\phi\,q_x+\sin\phi\,q_y,\\
+g_y&=-\sin\phi\,q_x+\cos\phi\,q_y,\\
+g_z&=q_z.
+\end{align}
+令 $\delta=\varepsilon=0$，恢复式\eqref{eq:ideal_acc}，因此这个定义至少在名义极限上自洽。
+\src{wk_r2_engine/wk_joint_offline_R2.py:ref_acc}
+
+\section{陀螺仪角速度参考：为什么只出现$\varepsilon$？}
+对同一模型，把外轴角速度（编码器稳速段估计）记为 $\dot\theta$，内轴角速度记为 $\dot\phi$。外轴转速矢量在随动参考系中的投影为
+\begin{equation}
+\dot\theta\,R_z(-\phi)\vct a=\dot\theta\begin{bmatrix}\cos\varepsilon\cos\phi\\-\cos\varepsilon\sin\phi\\\sin\varepsilon\end{bmatrix}.
+\end{equation}
+内轴自身角速度贡献为 $(0,0,\dot\phi)^T$，因此
+\begin{equation}\boxed{\vct\omega_P=\begin{bmatrix}
+\cos\varepsilon\cos\phi\,\dot\theta\\
+-\cos\varepsilon\sin\phi\,\dot\theta\\
+\dot\phi+\sin\varepsilon\,\dot\theta
+\end{bmatrix}.}\label{eq:gyroref}
+\end{equation}
+\textbf{在R10当前的几何参数定义中}，$\delta$是固定的\emph{角度参考偏移}，其导数为零，故没有单独出现在上面的角速度方向表达式中；$\varepsilon$改变真实转轴方向，因此必须同时修正GYRO参考。工程实现对原始速度参考还有静止工况和符号约定的保护项，不能仅凭此简化公式替换现有代码。
+
+\begin{warningbox}
+“ACC使用$\delta,\varepsilon$，GYRO使用$\varepsilon$”是\textbf{R10这套特定等效模型内部一致的数学定义}，并不构成对所有真实安装误差模型的通用证明。如果$\delta$实际对应另一种物理装夹旋转、轴心偏移，或轴系拓扑与假设不同，就需要扩展参考模型并作独立几何验证。\textbf{不能因为两个模型都输出$\mathcal P$，就宣称ACC/GYRO物理六轴已自动对齐。}
+\end{warningbox}
+\src{wk_r2_engine/wk_joint_offline_R2.py:ref_gyro,substitute_reference; production_cycle_analysis.py:apply_geometry}
+
+\chapter{转台等效几何辨识：能修正什么，不能修正什么}
+\section{几何参数与ACC前向矩阵的联合估计}
+设第$i$个静态姿态的测量三轴原始均值为 $\vct y_i$，其转台参考为 $\vct g_i(\delta,\varepsilon)$，研究阶段可写为
+\begin{equation}
+\vct y_i\approx\mat F\vct g_i(\delta,\varepsilon)+\vct b(T_i)+\vct\eta_i.
+\end{equation}
+同时允许简单的温度零偏趋势，然后对给定 $\delta,\varepsilon$，通过线性最小二乘得到 $\hat{\mat F},\hat{\vct b}$，定义几何代价函数
+\begin{equation}
+J(\delta,\varepsilon)=\frac1N\sum_{i=1}^N\left\|\hat{\mat F}^{-1}\bigl(\vct y_i-\hat{\vct b}(T_i)\bigr)-\vct g_i(\delta,\varepsilon)\right\|_2^2.
+\end{equation}
+在M0、M1、M2、M3中分别固定或者优化参数。\textbf{仅用训练姿态拟合几何；同温度未参与拟合的ACC姿态选型；独立温度数据不参与几何选型。} 最终把同一组几何参数用于ACC与GYRO参考。
+
+\section{实际搜索边界及其性质}
+【源码事实】M1/M3中 $\delta\in[-0.8^\circ,0.8^\circ]$，M2/M3中 $\varepsilon\in[-0.25^\circ,0.25^\circ]$；M3采用多起点Nelder--Mead搜索。\textbf{这些界限是现有算法搜索域，不是转台实际误差的测量证据，也不是界面中可调的PV质量阈值。}
+\src{wk_r2_engine/wk_joint_offline_R2.py:geometry_fit}
+
+\section{不可辨识性：转台、夹具和IMU安装误差相互混淆}
+若IMU原始测量仅能观察组合变换，那么
+\begin{equation}
+\mat F\vct g_P\ \equiv\ (\mat F\mat Q^T)(\mat Q\vct g_P)
+\end{equation}
+对于适当的常值正交矩阵$\mat Q$可能生成等价观测，说明\textbf{不引入独立参考时，部分轴向旋转可以在参考变换与传感器矩阵之间交换}。这类“规范自由度”（gauge freedom）使软件无法唯一证明某个角度就是机械转台真实倾角，或者某个偏移一定来自PCB。
+
+因此推荐的结论标签是：
+\begin{itemize}
+\item \emph{几何模型M2/M3使独立姿态参考残差下降}——如果验证数据支持，可以这样报告；
+\item \emph{转台机械轴倾角已精确校正为$\varepsilon$}——没有独立机械基准时不能这样报告；
+\item \emph{六轴真实物理夹角已标定到某个小数}——不能仅凭ACC/GYRO各自线性拟合残差得出。
+\end{itemize}
+
+\section{增加独立验证的最低代价方法}
+不用立即更换转台：\textbf{同一装夹分别做正反向到位、不同起始角、两轴互换运动顺序、多轴轨迹和25°C复测}，记录编码器残差与ACC方向误差。若条件允许，再使用经过检定的数显倾角仪、电子水平仪或独立角基准，在若干特征姿态对照零位和垂直度。厂家设备检定和独立基准仍是区分机械误差与安装误差的最终依据。
+
+\chapter{真实角速度、低速误差与参考不确定度}
+\section{为什么不能直接拿命令速率当参考？}
+电机指令给出期望 $\omega_{cmd}$，但运动存在加速段、稳速段、摩擦、伺服动态、负载变化和速度反馈量化。GYRO 的比例因子校正必须以可信 $\omega_{ref}$ 为依据，而不是未经检验的 $\omega_{cmd}$。
+
+\section{编码器角度解缠与差分速度}
+编码器角度 $\theta_i$ 通常按$0\sim360^\circ$循环，需要采用
+\begin{equation}
+\Delta\theta_i=\operatorname{atan2}(\sin(\theta_i-\theta_{i-1}),\cos(\theta_i-\theta_{i-1})),\quad\hat\omega_i=\frac{\Delta\theta_i}{t_i-t_{i-1}}.
+\end{equation}
+角度在式中先转换为弧度；若速率输出需要 $\dps$ 再换算回来。在足够高、且没有跨越$180^\circ$混叠的真实采样频率下，上式可用于短间隔差分。
+
+对于固定稳速段，更有意义的参考往往是
+\begin{equation}
+\bar\omega=\frac{\theta_{\rm unwrap}(t_b)-\theta_{\rm unwrap}(t_a)}{t_b-t_a},\qquad
+\sigma_\omega\approx\frac{\sqrt2\,\sigma_\theta}{\Delta t}
+\end{equation}
+其中第二式是“两端独立角噪声的单次差分标准差近似”，说明采样间隔很小时速度差分可能非常吵。完整的回归斜率、稳速段积分及真实时间戳通常更鲁棒，且须检查加速度阶段是否剔除。
+
+\section{当前阈值不能等同于实际转台误差}
+【实验记录】这次使用的低速差分速度标准差限值约$0.260\dps$，高速（$\ge25\dps$）约$0.340\dps$，平均速率偏差限值$0.450\dps$，半段速度斜率差$0.520\dps$，位置残差RMS $0.475^\circ$。这些数是\textbf{研发采样放行门槛}，不是实际测出的每条数据误差，亦非厂家计量精度。
+
+例如对 $1\dps$参考，若实际达到 $0.45\dps$ 误差，上限相当于45\%；对$30\dps$则为1.5\%。\textbf{不应该把相同的绝对速度容差视为覆盖所有转速的高精度校准证明}。对低速（风机塔筒场景尤其重要），更推荐静态零偏长时间评价与高质量稳速数据相结合，低速率点不足够可信时用于诊断而不是高权重拟合。
+
+\section{长期零偏与Allan方差：塔筒产品为什么必须补测？}
+对低频、长周期的建筑结构倾角，GYRO静止零速噪声可能比高转速比例因子更影响产品稳态体验。按采样间隔$\Delta t$取得零角速率序列$\omega_j$，将相邻$m$帧组成一个不重叠块，平均时间$\tau=m\Delta t$，第$k$块的均值为
+\begin{equation}
+\bar\omega_k(\tau)=\frac1m\sum_{j=km}^{(k+1)m-1}\omega_j.
+\end{equation}
+两样本Allan方差可由
+\begin{equation}
+\sigma_A^2(\tau)=\frac1{2(K-1)}\sum_{k=0}^{K-2}\left[\bar\omega_{k+1}(\tau)-\bar\omega_k(\tau)\right]^2
+\end{equation}
+估计。白速率噪声主导时，Allan偏差在对数图中的斜率约为$-1/2$；某些零偏不稳定区域会出现较平坦的区段。但需足够长时间、安静的测试环境、固定ODR和滤波状态，且Allan统计不能替代温度变化下的零偏复测。\textbf{建议在25°C、低温和高温各做静止长时段，并对前后多次上电重复性分别报告。}
+
+\section{角速度测量误差向产品倾角传播}
+对短时间纯积分，若残余陀螺零偏 $b_\omega$ 近似常数，
+\begin{equation}\Delta\theta_{bias}(t)\approx b_\omega t.
+\end{equation}
+如残余 $0.01\dps$，10秒积分误差约 $0.1^\circ$。这是量级说明，融合中的ACC校正会改变最终误差，不能将该量直接称为整机动态RMS。
+
+若参考速率存在比例误差 $\eta$，则正弦摆动中角度幅值的一阶误差约 $\eta A$；若ACC和GYRO存在相对时间延迟$\tau_d$，在角度 $A\sin(2\pi ft)$ 下，瞬时相位误差的最大角度量级为
+\begin{equation}\Delta\theta_{\max}\simeq (2\pi f A)\tau_d.
+\end{equation}
+例如 $A=0.5^\circ$、$f=1\,\mathrm{Hz}$、$\tau_d=20\,\mathrm{ms}$，仅相对延迟便可产生约$0.063^\circ$的瞬时差异。这说明产品层必须做时间对齐。
+
+\chapter{温箱控制、热浸与采样质量状态机}
+\section{三种温度为什么不能混在一起？}
+\begin{equation}
+\boxed{T_{SP}\neq T_{PV}\neq T_{chip}\quad\text{（一般情况下）}}
+\end{equation}
+$T_{SP}$为PLC设定的目标；$T_{PV}$为温箱测温点的过程值；$T_{chip}$为IMU内置温度读数。热阻、空气流速、夹具热容量、传感器功耗与测量偏置使它们可能出现幅值和时间延迟差异。
+\begin{figure}[htbp]\centering\input{figures/thermal_trace}\caption{温度三轨迹示意：PV进入允许带并不代表芯片立刻稳定；本图为理论示例而非2026-11-10实测曲线。}\end{figure}
+
+\section{从SP命令到采样的完整状态机}
+\begin{figure}[htbp]\centering\input{figures/state_flow}\caption{R10自动温补主要状态与异常路径；质量暂停／故障中止不等于PLC控温目标改变。}\end{figure}
+【源码事实】核心顺序为：选择温度点、WK停车、发出PLC目标SP、确认回读与运行、初步PV稳定、有效热浸、最终PV与芯片准入、WK运动与单工况采样、运行温漂监控、温度组完成、下一点／下一趟、最终WK与PLC真实停止确认。
+
+\section{初步到温判据}
+设目标温度$S$、PV连续观察窗$\mathcal W$，需检查
+\begin{align}
+\max_{t\in\mathcal W}|T_{PV}(t)-S|&\le d_{in},\\
+\operatorname{span}_{\mathcal W}(T_{PV})=\max T_{PV}-\min T_{PV}&\le r_{in},\\
+|\hat k_{PV,\mathcal W}|&\le k_{in},\\
+|\mathcal W|&\ge t_{in}.
+\end{align}
+其中斜率$\hat k$用观察窗对温度随时间的线性拟合得到，单位$\degc/\mathrm{min}$；离开允许带后重置观察窗。
+
+\section{有效热浸不是简单的墙钟等待}
+设有效热浸状态指示函数
+\begin{equation}
+I(t)=\begin{cases}1,&|T_{PV}(t)-S|\le d_{soak}\ \land\ \text{PV反馈新鲜}\\0,&\text{否则},\end{cases}
+\end{equation}
+那么有效热浸时间
+\begin{equation}t_{eff}(t)=\int_{t_{start}}^t I(\tau)\,\dd\tau.
+\end{equation}
+程序在$t_{eff}\ge t_{soak}$后进入最终稳定，温箱PV越界时暂停有效累计，并不把热浸变成任意“连续静等900秒”。\textbf{热浸通过仅说明软件准入条件成立，不是材料内部完全等温的物理证明。}
+
+\section{最终温度、芯片极差和趋势}
+用最近60秒的有效芯片温度窗$\mathcal W_{60}$定义
+\begin{equation}
+R_{chip,60}=\max_{\mathcal W_{60}}T_{chip}-\min_{\mathcal W_{60}}T_{chip}.
+\end{equation}
+用更长（约5分钟）的芯片温度数据做直线拟合
+\begin{equation}
+\hat k_{chip}=\frac{\sum_i(t_i-\bar t)(T_i-\bar T)}{\sum_i(t_i-\bar t)^2}.
+\end{equation}
+最终准入还需检查PV在最终允许带内连续达到规定时间，以及芯片跨度、斜率、芯片—PV差等条件。若窗口不足，不能假定斜率为零。
+
+\section{本次R10日志的质量参数（真实运行设置）}
+\begin{longtable}{p{6.6cm}p{3.5cm}p{3.4cm}}
+\toprule
+质量参数 & 本次日志值 & 作用层级\\\midrule\endhead
+初步PV偏差／观察时间 & $\pm2.00\degc$／120s & 初步到温\\
+初步PV极差／斜率 & $2.00\degc$／$0.780\degc/\mathrm{min}$ & 初步稳定\\
+有效热浸时间／PV偏差 & 900s／$\pm2.50\degc$ & 温箱热浸\\
+最终PV偏差／连续时间 & $\pm2.00\degc$／120s & 采样准入\\
+芯片准入极差／斜率 & $2.0\degc$／$2.0\degc/\mathrm{min}$ & 芯片稳定\\
+运行PV偏差／持续时间 & $2.0\degc$／120s & 暂停当前工况\\
+重新热浸PV偏差／持续时间 & $3.0\degc$／120s & 大偏差重新热浸\\
+运行芯片极差／持续时间 & $2.2\degc$／90s & 运行暂停\\
+运行芯片斜率／持续时间 & $1.8\degc/\mathrm{min}$／120s & 运行暂停\\
+恢复PV偏差 & $1.95\degc$ & WK停车后恢复准入\\
+恢复芯片极差／斜率 & $2.0\degc$／$1.79\degc/\mathrm{min}$ & 恢复准入\\
+停车后连续合格观察 & 300s（该次日志） & 恢复观察窗口\\
+跨姿态芯片均温跨度停车门槛 & $2.0\degc$ & 整组质量防护\\
+单温度暂停次数／等待时间 & 5次／120min & 有界中止与保存\\
+\bottomrule
+\end{longtable}
+\begin{warningbox}
+以上门槛是\textbf{2026-11-10某次日志的生效设置}，并非厂家温箱规格、稳态测量能力或全体实验默认值。特别是“恢复1.95°C、暂停2°C”仅差0.05°C，若反馈有抖动，恢复判据可能很脆弱；不过本次日志中确实曾两次完成自动恢复。
+\end{warningbox}
+
+\section{为什么放宽PV允许范围不应使PLC提前停机？}
+PLC按目标$T_{SP}$控温。若$S=-20\degc$、最终PV允许±2°C，当PV为−19°C时，\emph{软件可能在其他条件满足后允许采样}；但PLC目标仍应保持−20°C。质量暂停是停止/延后WK采样，\textbf{不是向PLC发送新SP为−19°C，也不是正常情况下停止温箱制冷}。若真实PLC运行状态丢失，则需要按设备安全流程停车、保存与复核。
+
+\section{已确认的PLC事件与今后异常处理原则}
+对运行状态读回异常应优先保障人和设备：停止WK运动／采样，冻结进度，记录PLC报警、模式、SP/PV、running、fixed\_started、时间戳及通讯状态。没有硬报警时可以有\emph{限次、限时、全新反馈}的复核机制，但\textbf{不能在失去可靠反馈时继续驱动WK，不能把停止命令发出当成已停止}。R10的研发状态机尚须维修后实机回归验证。
+
+\chapter{逐工况芯片实温：采样、统计与热动态影响}
+\section{温度自变量究竟是哪一个？}
+【源码事实】对于第$i$个ACC姿态或GYRO稳速工况，保留筛选通过的$N_i$个有效帧，每帧芯片温度$T_{ij}$。参与当前主拟合的温度为
+\begin{equation}\boxed{\bar T_i=\frac1{N_i}\sum_{j=1}^{N_i}T_{ij}.}\end{equation}
+同工况的ACC/GYRO三轴原始均值也分别由有效帧求得。12个姿态虽然共属某一设定温度，但\textbf{每个姿态使用自己的$\bar T_i$，不会被强制改成相同SP或全组共用平均温度}。完整逐帧$T_{ij}$、惯性数据、时戳均被存档，便于离线复算。
+\src{thermal_joint_fit.py; production_cycle_analysis.py; form/form_thermal_compensation.py}
+
+\section{逐工况均温为什么比全部取SP合理？}
+真实输出依赖芯片温度：
+\begin{equation}
+\vct y_i=\mat F(\bar T_i)\vct x_i+\vct b(\bar T_i)+\vct\eta_i.
+\end{equation}
+若错误用$S$代替$\bar T_i$，在温差$\Delta T_i=\bar T_i-S$较小时，一阶展开得到预测误差
+\begin{equation}
+\Delta\vct y_i\approx\left[\mat F'(S)\vct x_i+\vct b'(S)\right]\Delta T_i.
+\end{equation}
+因此记录真实$\bar T_i$可以消除一大类“温度输入错误”造成的系统性偏差。\textbf{这只是改善自变量物理一致性，不保证温度变化越大拟合越准确。}
+
+\section{单工况均温近似的局限}
+如果采样窗口内$T_{ij}$在显著变化，真实$\vct y_{ij}$并不在一个温度点上。对标量函数$f(T)$用泰勒展开
+\begin{equation}
+\frac1N\sum_j f(T_j)\approx f(\bar T)+\frac12 f''(\bar T)\operatorname{Var}(T)+\cdots.
+\end{equation}
+这表明即使平均温度正确，\textbf{非线性温漂仍会产生与窗口温度方差相关的均温近似误差}。所以应保存并使用工况内跨度、斜率、温度方差作为质量标签；在原始数据时间对齐可靠后，可离线比较“逐帧$T_{ij}$加权拟合”和现行均温拟合，不能预先保证逐帧方法总是更优。
+
+\section{一阶热滞后模型的解释作用}
+对芯片热响应的粗略模型可写成
+\begin{equation}\tau\frac{\dd T_{chip}}{\dd t}+T_{chip}=T_{env,eq}(t),\end{equation}
+其中$\tau$是等效热时间常数，$T_{env,eq}$是对芯片而言的等效环境温度。即使两个时刻$T_{chip}$相等，PCB与夹具的内部温度梯度、加热/制冷方向等隐藏状态仍可能不同，这会产生\emph{热迟滞}。单一$T_{chip}$模型能处理主要稳态温漂，但不能保证消除所有热历史效应。
+
+\chapter{ACC、GYRO全矩阵温补模型的数学推导}
+\section{统一的前向模型与校正模型}
+以$\vct x_i\in\R^3$表示参考向量（ACC用g，GYRO用$\dps$）；$\vct y_i\in\R^3$为原始测量向量。两类传感器分别拟合
+\begin{equation}\label{eq:forward}\boxed{\vct y_i=\mat F(T_i)\vct x_i+\vct b(T_i)+\vct\eta_i.}\end{equation}
+$\mat F(T)\in\R^{3\times3}$综合比例因子、轴间交叉项及等效旋转；$\vct b(T)\in\R^3$为零偏。部署时采用
+\begin{equation}\label{eq:inverse}\boxed{\hat{\vct{x}}=\mat F(T)^{-1}\bigl(\vct y-\vct b(T)\bigr).}\end{equation}
+前提是$\mat F(T)$满秩且数值条件良好；\textbf{不应将病态矩阵在MCU上直接求逆后继续输出。} 可采用经验证的稳定线性求解、预计算逆矩阵或温度插值。
+
+\section{温度多项式与中心化}
+定义归一化温度 $u=(T-T_c)/s_T$，温度相关的前向矩阵与偏置展开为
+\begin{equation}
+\mat F(T)=\sum_{k=0}^p\mat F_k u^k,\qquad \vct b(T)=\sum_{k=0}^p\vct b_k u^k.
+\end{equation}
+R10多循环候选回归采用$T_c=22.5\degc$、$s_T=62.5\degc$；另有联拟合兼容模块先按$(T-25)/50$求解再转换为既有系数格式。两种归一化属于\emph{数值表示方式}，在正确系数转换后不应改变物理预测。\textbf{最终MCU必须按最终JSON记录的center/scale/模型结构使用，不能只看公式模板随意更换中心。}
+
+\section{28种候选模型究竟是什么？}
+\begin{figure}[htbp]\centering\input{figures/models}\caption{模型族示意：只有B族零偏随温度；C族增加三个对角尺度；D族允许完整3×3矩阵随温度。}\end{figure}
+28个标准候选由
+\begin{equation}\boxed{1+3\times3\times3=28}\end{equation}
+组成：一个常量基线A0；三种温度输入$T0/T1/T2$；三种结构族$B/C/D$；各自的一阶/二阶/三阶。
+\begin{longtable}{p{1.25cm}p{7.0cm}p{3.0cm}p{2.25cm}}
+\toprule
+族 & 参数定义 & $p$阶参数总量 & 3阶示例\\\midrule\endhead
+A0 & 全矩阵$\mat F$、零偏$\vct b$都为常量 & 12 & 12\\
+B$p$ & 常量完整$\mat F$；三轴零偏按$p$阶温度多项式 & $9+3(p+1)$ & 21\\
+C$p$ & $\mat F$的六个非对角元素常量，3个对角元素及3个零偏多项式 & $6+6(p+1)$ & 30\\
+D$p$ & $\mat F$全部9项及$\vct b$全部3项均为$p$阶多项式 & $12(p+1)$ & 48\\\bottomrule
+\end{longtable}
+
+温度输入：$T0=T_{chip}$；$T1$和$T2$是利用\emph{同次实验匹配的温箱PV数据}在训练集拟合的PV等效线性、二次映射$T_{eq}=h(T_{chip})$。\textbf{这不是芯片绝对结温计量校准，且若PV匹配不足不允许假造或用SP补充。} 上机时仍只输入芯片读数，通过已批准的映射求有效温度。
+\src{thermal_model_catalog.py; thermal_temperature_inputs.py; production_cycle_analysis.py:candidate_ids}
+
+\section{完整D族三阶最小二乘推导}
+取每个有效训练工况 $i$ 的温度$u_i$、转台参考 $\vct x_i=(x_i,y_i,z_i)^T$。第$r$个输出轴满足
+\begin{equation}
+Y_{ir}=\sum_{k=0}^3 u_i^k\left(F_{r1,k}x_i+F_{r2,k}y_i+F_{r3,k}z_i+b_{r,k}\right)+\eta_{ir}.
+\end{equation}
+写成回归行向量
+\begin{equation}
+\vct h_i=\left[\vct q_i^T,\ u_i\vct q_i^T,\ u_i^2\vct q_i^T,\ u_i^3\vct q_i^T\right],\quad\vct q_i=(x_i,y_i,z_i,1)^T.
+\end{equation}
+每个输出轴各有16个系数，构建设计矩阵 $\mat H=[\vct h_1;\ldots;\vct h_N]$，求
+\begin{equation}
+\hat{\vct{\beta}}_r=\arg\min_{\vct\beta}\|\mat H\vct\beta-\vct Y_r\|_2^2.
+\end{equation}
+在$\mat H$列满秩时，可通过QR/SVD稳定求解；理论法方程
+\begin{equation}\hat{\vct{\beta}}_r=(\mat H^T\mat H)^{-1}\mat H^T\vct Y_r\end{equation}
+仅用来说明数学形式，\textbf{数值实现不推荐显式形成逆矩阵}。总共有$3\times16=48$个待估计量（不计温度等效映射参数）。
+
+若$\operatorname{rank}(\mat H)<16$，则部分温度函数和参考轴系数不可分辨；若条件数过大，则参数会放大数据噪声。R10源码已设秩检验、条件数检验，以及在训练温度域内密集检查$\mat F(T)$是否病态或近奇异。
+
+\section{为什么同一温度完整12姿态很关键？}
+三轴静态ACC的参考是单位球面方向。多姿态使$\vct x_i$在不同方向变化，帮助分离三维比例、交叉耦合与偏置。若所有姿态相同，$\mat H$中多个列近乎相关；即使采样帧多，\emph{可辨识性也可能没有改善}。
+
+R10当前每个拟合温度要求ACC完整12个拟合姿态，\textbf{但这12个姿态各自使用自己的$T_i$}；不把12姿态平均为一个温度，也不拟合12套独立$\mat F$。
+\src{thermal_joint_fit.py:ensure_complete_fit_groups,fit_joint_polynomial}
+
+\section{模型选择要用不参与训练的数据}
+候选的拟合使用拟合温度的FIT工况；\textbf{同温度其他独立姿态/速率}用于比较候选并施加复杂度惩罚；\textbf{独立设定温度}用于最终泛化评价，不参与本次参数拟合或选型。
+\begin{figure}[htbp]\centering\input{figures/splits}\caption{R10数据分组与选模阶段；额外推荐增加跨循环外部验证，避免四趟训练带来的信息泄漏。}\end{figure}
+对模型$m$，一个可解释的评分形式为
+\begin{equation}J_m=\operatorname{RMSE}_{same-temp}(m)\left(1+\lambda c_m\right),\end{equation}
+其中$c_m$表示复杂度。R10当前生产合并代码使用具体的列数惩罚（见源码），此处为抽象表达。\textbf{独立温度RMSE应报告为性能评价，不应在同一次模型选择中反复调参到最好。}
+
+\section{R10多循环合并时额外的研究候选}
+除标准28模型，\texttt{production\_cycle\_analysis.py} 还枚举了T0条件下的连续分段二次/三次模型和方向相关的\texttt{T0-D3\_HY}研究候选，总候选命名数为$28+6=34$。默认\texttt{single}策略\emph{不允许选用}方向依赖的模型作为最终单温度曲线。\textbf{34个名字不等于34个一定能成功求解且被允许部署的模型。}
+
+\chapter{两次完整升降温循环：采集矩阵与最终拟合}
+\section{这次实验的温区和遍历方式}
+设置：最低$-20\degc$、最高$60\degc$、间距$5\degc$、循环次数2。每循环包含一次升温和一次降温，共四趟；每趟17个设定温度，合计最多68次温度点访问（端点可能连续重复，但文件按趟独立存档）。
+\begin{figure}[htbp]\centering\input{figures/cycles}\caption{两次完整循环的四趟温度扫描示意；横轴为归一化顺序而非真实时间。}\end{figure}
+
+\section{拟合温度与独立温度}
+\begin{align}
+\mathcal T_{fit}&=\{-20,-10,0,10,20,30,40,50,60\}\degc,\\
+\mathcal T_{test}&=\{-15,-5,5,15,25,35,45,55\}\degc.
+\end{align}
+每趟有9个拟合温度、8个独立温度。四趟完整时，\textbf{ACC拟合静态姿态观测最多为$9\times12\times4=432$个工况均值}，不是432个逐帧样本；各工况原始帧数量另行计算。完整结果必须通过全趟完成状态、实时停车确认与数据完整性验收。
+
+\section{最终到底是四套系数平均，还是全部联合求解？}
+【源码事实】\texttt{locate\_runs}找到本批次四趟\texttt{COMPLETED}记录，\texttt{\_merge\_repeated\_pairs}在升温/降温两个虚拟集合中\emph{保留每一趟的$\_cycle\_index,\_pass\_index,\_source\_folder$}；\texttt{analyze}把两方向的所有工况放入$\texttt{data}$，然后统一估计几何参数、拟合候选模型。
+
+因此\textbf{不是每一趟先拟合一套参数再求四套系数的平均}，而是每个工况作为独立回归行进入同一套温度模型。同时原始目录各自独立，不覆盖第1次循环中的同名工况。
+\src{production_cycle_analysis.py:_merge_repeated_pairs,locate_runs,analyze}
+
+\section{当前正式合并与额外建议的跨循环验证}
+当前流程\emph{拟合/同温姿态选择/独立温度评价}有分组，但四趟的拟合温度数据都进入统一训练。为了证明模型对第二次冷热循环的可重复性，建议额外做：
+\begin{enumerate}
+\item 第1次升温与第1次降温的FIT温度拟合，使用对应同温独立姿态选模；
+\item \textbf{锁定几何模型、模型结构和系数}，完全不看第2次循环的参数调优结果；
+\item 用第2次升降温的全部独立工况和拟合温度工况做跨循环评价，报告每个温度与方向的RMSE、偏差和最坏值；
+\item 验收通过后，再将四趟完整训练工况联合拟合最终部署候选，另保留真正不参与选型的最终确认数据。
+\end{enumerate}
+这一步属于\textbf{推荐新增的独立研究工作}，不能写成R10目前已经自动实施了严格的“循环1训练、循环2验证”。
+
+\section{升降温迟滞评估}
+对相同设定温度、相同姿态、同一循环内的升温/降温观测，记$\bar T_\uparrow,\bar T_\downarrow$，两者未必相等。原始差
+\begin{equation}\Delta\vct y=\vct y_\uparrow-\vct y_\downarrow\end{equation}
+同时包含$\bar T$差异及热历史，因此\textbf{不可直接当作纯迟滞}。更有价值的是对两组数据分别按各自$\bar T$校正，再比较
+\begin{equation}\Delta\hat{\vct{x}}=\hat{\vct{x}}_\uparrow(\bar T_\uparrow)-\hat{\vct{x}}_\downarrow(\bar T_\downarrow).
+\end{equation}
+如果重复两次循环仍有显著方向差异，再考虑方向依赖/动态热状态模型，而不是先行部署有隐藏状态需求的复杂参数。
+
+\chapter{六轴共同坐标：从数学一致到物理验收}
+\section{“ACC修正转台，GYRO没修正”这一担忧的准确答案}
+R10模型中ACC与GYRO都输出同一个假定$\mathcal P$参考：ACC用$\delta,\varepsilon$的重力参考，GYRO用同一个$\varepsilon$和实时角速率参考，\textbf{并不是一个采用几何修正、另一个完全不采用}。但是物理六轴对齐需要实机确认。
+
+\section{原始符号约定和代数不可辨识}
+如果原始ACC/GYRO通道存在轴符号或轴交换差异，完整矩阵可能吸收某些变换。取任意可逆符号矩阵$\mat S$（例如单轴取负），并令
+\begin{equation}
+\vct y'=\mat S\vct y,\ \mat F'=\mat S\mat F,\ \vct b'=\mat S\vct b,
+\end{equation}
+则
+\begin{equation}
+(\mat F')^{-1}(\vct y'-\vct b')=\mat F^{-1}(\vct y-\vct b).
+\end{equation}
+因此\textbf{通过拟合结果无法唯一判断PCB哪条原始轴实际被接反}。极分解中得到的相对旋转角也只是研究诊断，不可直接当成两个器件的真实物理夹角。
+
+\section{固件部署必须保证同一产品坐标}
+离线校正向量为
+\begin{equation}
+\vct a_P=\mat F_A(T)^{-1}(\vct y_A-\vct b_A(T)),\quad\vct\omega_P=\mat F_G(T)^{-1}(\vct y_G-\vct b_G(T)).
+\end{equation}
+若产品以外壳参考系$\mathcal B$输出，需确定固定的 $\mat R_{BP}\in SO(3)$，并对二者\emph{同时}变换：
+\begin{equation}
+\boxed{\vct a_B=\mat R_{BP}\vct a_P,\quad\vct\omega_B=\mat R_{BP}\vct\omega_P.}
+\end{equation}
+如果ACC使用了$\mat R_{BP}$而GYRO没有，或固件只补了GYRO零偏/比例因子而丢掉矩阵交叉项，动态融合便可能出现轴向不一致。\textbf{固件需做离线—MCU相同数据回放的系数与输出逐点一致性验证。}
+
+\section{动态运动学一致性与其局限}
+对刚体上单位重力方向$\hat{\vct{g}}_B(t)$，在忽略平动加速度并统一坐标及时间基准后有
+\begin{equation}\label{eq:kinematic}\boxed{\frac{\dd\hat{\vct{g}}_B}{\dd t}+\vct\omega_B\times\hat{\vct{g}}_B\approx\vct0.}
+\end{equation}
+可定义质量指标
+\begin{equation}
+E_6=\sqrt{\frac1N\sum_i\left\|\frac{\hat{\vct{g}}(t_{i+h})-\hat{\vct{g}}(t_{i-h})}{t_{i+h}-t_{i-h}}+\vct\omega(t_i)\times\hat{\vct{g}}(t_i)\right\|_2^2}.
+\end{equation}
+R10有利用独立动态GYRO工况原始六轴帧的这一类诊断。但它\textbf{不等同于绝对轴系认证}：必须至少两类足够丰富的非平行运动；绕重力方向转动时重力几乎不变，无法仅凭此观测验证全部轴；平动加速度、滤波延迟与安装形变都会干扰残差。
+\src{production_six_axis.py:analyze_six_axis_records; production_cycle_analysis.py:axis_channel_diagnostic}
+
+\section{建议增加的最小六轴实机验收}
+\begin{enumerate}
+\item 确认每个原始通道单位、正方向、右手性与MCU寄存器映射；
+\item 在静态6面和多姿态下核验ACC重力方向；
+\item 用两条不同、非平行轴的正反转，核验GYRO方向、动态重力变化和正交串扰；
+\item 通过温度前后、第一与第二次循环重复检查上述关系；
+\item 把同一份实测RAW帧输入电脑和MCU，逐时刻核对校正向量；
+\item 在产品壳体坐标下测量最终roll/pitch幅度、相位、延迟、交叉轴串扰。
+\end{enumerate}
+
+\chapter{面向塔筒的GYRO标定速度与动态倾角融合}
+\section{塔筒小摆动的角速度包络}
+对于简化的结构小角摆动$\theta(t)=A\sin(2\pi ft)$，有
+\begin{equation}\omega(t)=2\pi f A\cos(2\pi ft),\qquad \omega_{max}=2\pi f A.\end{equation}
+\begin{figure}[htbp]\centering\input{figures/speed_envelope}\caption{不同小角度振幅、频率下的角速度上界（理论正弦运动，不代表真实风机实测频率）。}\end{figure}
+例如$A=0.1^\circ,f=0.3\,\mathrm{Hz}$时$\omega_{max}\approx0.188\dps$；$A=0.5^\circ,f=0.5$Hz时约$1.571\dps$；$A=1^\circ,f=1$Hz时约$6.283\dps$。这意味着\textbf{塔筒产品主要应重视零速附近的稳定性、低速与低频动态响应，而不是把高速率校正当作第一优先级。}
+
+\section{现有速率方案及改进依据}
+【源码事实】当前训练速率$\{1,2,5,10,20,30\}\dps$，验证速率$\{1.5,3.5,7.5,15,25\}\dps$，以三轴几何工况和正反向组合测试。\textbf{这适合研究基础零偏、比例因子和交叉轴，但并不能独立证明零速附近噪声、全$\pm250\dps$线性或塔筒动态倾角性能。}
+
+建议：
+\begin{itemize}
+\item 稳速质量好的$5\sim30\dps$样本用于比例因子和交叉轴识别；
+\item 长时间静止数据用于零偏、Allan方差、漂移与温度变化率分析；
+\item $0.1\sim2\dps$作为\textbf{低速独立验证}重点，前提是WK的实测速率参考足够准确；如不满足则不能把低速样本当作高精度“真值”去强行拟合；
+\item 对较高速度仅在真实应用角速度包络及厂家额定能力允许时扩展验证，防止机械与线缆安全风险。
+\end{itemize}
+
+\section{结构平动加速度与倾角不可直接分离}
+惯性测量的简化关系为
+\begin{equation}\vct f_B=\mat R_{BW}(\vct a_W-\vct g_W)+\vct\eta_a,
+\end{equation}
+其中$\vct a_W$包括结构平动加速度，$\vct g_W$为重力。把加速度完全看作重力会产生\emph{表观倾角误差}。小角度下，当水平额外加速度$ a_h\ll g$，
+\begin{equation}\Delta\theta_{app}\approx\frac{a_h}{g}\ \mathrm{rad}.
+\end{equation}
+若$a_h=0.01\,\mathrm{m/s^2}$，则$\Delta\theta_{app}\approx0.0584^\circ$，与对标产品25°C静态±0.05°同量级。
+\begin{figure}[htbp]\centering\input{figures/tower}\caption{塔筒顶端的结构旋转与水平平动：单颗六轴IMU测得的ACC并非总等于纯重力。}\end{figure}
+
+\section{建议的融合模型与可观测性界限}
+【理论建议】采用陀螺积分作为短时动态预测、ACC方向作为慢速重力约束。例如四元数姿态$\vct q$满足
+\begin{equation}\dot{\vct q}=\frac12\vct q\otimes[0,\vct\omega_B-\vct b_g],
+\end{equation}
+其中$\otimes$为四元数乘法。校正增益可根据加速度模长残差、角速度与振动状态自适应调整。动态融合必须明确输出带宽、群延迟和静态漂移。\textbf{单个六轴IMU无法在所有运动条件下唯一分辨平动与倾斜}，需要运动假设、结构模型或外部基准协助评价；不能靠简单卡尔曼滤波器保证“完全消除向心加速度”。
+
+\chapter{验证指标、误差预算与产品放行}
+\section{为什么校准RMSE不等于动态倾角精度？}
+ACC向量误差的单位为mg，GYRO向量误差为$\dps$，产品输出倾角误差单位为度，三者不能直接互相替代。近水平静态的角度一阶近似
+\begin{equation}\delta\theta\approx\delta a_h/g.
+\end{equation}
+若$\delta a_h=1\,\mathrm{mg}$，则角度约$0.0573^\circ$；$0.05^\circ$对应约$0.873\,\mathrm{mg}$的横向重力分量。注意这里是简化量级，不考虑融合和参考误差。
+
+\section{研究门槛与产品级门槛}
+【源码事实】R10合并分析存在ACC向量2mg、模长1mg、方向0.10°、GYRO向量$0.03\dps$、GYRO静态零速$0.02\dps$等研发门槛；这些是\emph{程序设计阈值}，\textbf{不等于对标HDA436T的整机检验指标}，甚至某些门槛本身可能明显宽于静态±0.05°的量级要求。
+
+\begin{longtable}{p{3.0cm}p{5.5cm}p{4.9cm}}
+\toprule
+验收层 & 指标/试验 & 目的\\\midrule\endhead
+采集完整性 & 四趟COMPLETED、原始帧无丢失、PLC/WK停车回读 & 确认数据与安全过程可信\\
+传感器层 & ACC方向/模长/向量RMSE、GYRO零偏/动态比例/交叉轴，按温度、方向、循环分组 & 保证温补模型真实泛化\\
+六轴参考层 & 统一右手坐标、姿态与角速度叉乘、时间同步与群延迟 & 验证融合输入相容\\
+动态倾角层 & 25°C小角正弦摆动的幅度、相位、动态RMS、交叉轴串扰 & 对标25°C动态0.1° RMS的同类条件\\
+环境/结构层 & $-20\sim60\degc$、长期零点、振动和平动加速度抑制 & 验证真实场景稳健性\\
+生产层 & MCU量程、ODR、模型JSON、配置和二进制一致性、批次追溯 & 防止研究参数误烧录\\\bottomrule
+\end{longtable}
+
+\section{建议的误差预算结构}
+若把参考、标定、时延、温度、平动干扰等不确定分量近似视为独立零均值误差，可做初步均方根预算
+\begin{equation}
+\sigma_{\theta,total}\approx\sqrt{\sigma_{\theta,ref}^2+\sigma_{\theta,acc}^2+\sigma_{\theta,gyro}^2+\sigma_{\theta,delay}^2+\sigma_{\theta,thermal}^2+\sigma_{\theta,motion}^2}.
+\end{equation}
+该公式\textbf{仅在统计独立、定义一致的前提下成立}；系统偏差、相关漂移或最坏情况不能直接做平方和。建议报告每个分项的估计依据和置信区间，而不是凭空分配几个毫角度的数字。
+
+\section{建议的完整测试矩阵}
+\begin{itemize}
+\item \textbf{静态：}0°、正负小角（0.1°、0.5°、1°等在参考可辨条件下）、较大角和正反返回路径；每点重复；
+\item \textbf{动态：}0.1/0.2/0.5/1/2Hz（建议频点而非结构通用标准）、X/Y独立及复合摆动；不同幅值与开始相位；
+\item \textbf{环境：}25°C和若干低温/高温验证点；温度变化方向；不同开机稳定时间；
+\item \textbf{长期：}24h、7d、再上电重复；装夹拆装和多设备批次；
+\item \textbf{干扰：}保持真实倾角不变时施加水平振动/平动；WK双轴转台主要提供转动，不能替代线性振动平台；
+\item \textbf{结果：}每项同时给角度RMS、最大绝对误差、相位延迟、输出噪声及质量报警比例。
+\end{itemize}
+
+\chapter{2026-11-10低温试验复盘与失效模式}
+\section{已发生的事件（摘要）}
+\begin{longtable}{p{2.0cm}p{9.8cm}}
+\toprule 时间 & 事件\\\midrule\endhead
+18:12:35 & PLC确认$SP=-20\degc$、定值启动=True、运行=True。\\
+19:10—19:13 & 首次进入到温带后重置一次；随后初步稳定通过。\\
+19:28:32 & 900秒有效热浸累计完成。\\
+19:30:28 & 最终PV、芯片准入通过，开始ACC姿态标定。\\
+19:47:29 & PV偏差超过2°C持续120秒，引发温度质量暂停，WK停车。\\
+19:54:31 & 停车后的新鲜PV/芯片恢复观察通过，重采受影响工况。\\
+20:12左右 & 后续再次出现温度质量暂停及恢复（详见原始日志）。\\
+约20:19:59 & PLC未确认处于运行状态，触发故障中止；未完成整趟/两次循环。\\\bottomrule
+\end{longtable}
+
+\section{本次故障可证明与不能证明的事情}
+\begin{keypoint}
+本次实验能够说明：PLC直接SP确认路径曾正常工作；初步到温、有效热浸、ACC多姿态和大量GYRO速率工况执行过；PV质量暂停后能够发生WK停车与恢复。\textbf{它不能证明}四趟全部完成、全温参数可靠、对标动态精度达标，也不能仅凭“运行状态丢失”日志区分温箱真实停机、PLC通信故障或软件状态误判。
+\end{keypoint}
+
+\section{温箱修复后的分级回归}
+\begin{enumerate}
+\item 在WK静止和无人处于运动危险区的条件下，验证PLC SP写入、SP新鲜回读、模式/启动/运行反馈、报警与停机反馈，执行操作员在场的短流程；
+\item 检查到温和热浸阶段PLC仍以目标SP持续控温；专门测试PV偏差区间内PLC不会被软件无故改SP；
+\item 核对运行质量暂停时WK停车、当前工况不提交、恢复后使用新鲜PV和芯片数据；
+\item 人为模拟PLC反馈丢失与真实硬报警：冻结WK，记录错误并受控中止，不允许以旧值代替运行确认；
+\item 首先完成室温/近室温短循环，确认保存、验收状态与最终报告，然后再跑全温两次循环。
+\end{enumerate}
+
+\chapter{升级路线与研发任务优先级}
+\begin{longtable}{p{1.15cm}p{4.3cm}p{5.45cm}p{2.3cm}}
+\toprule 优先级 & 改进项 & 交付物和验收方式 & 设备是否需更换\\\midrule\endhead
+P0 & 温箱PLC现场安全回归 & SP/PV、报警/运行/停止状态全时序日志及实机停车记录 & 否\\
+P0 & GYRO MCU配置核验 & ±250 dps、ODR、单位、滤波与固件版本签名 & 否\\
+P0 & ACC/GYRO产品坐标实体验收 & 独立多轴运动、轴符号、输出矩阵一致性及产品坐标说明 & 否\\
+P1 & 低速速率参考精度与不确定度 & 编码器稳速段、时间同步、低速相对误差报表 & 不一定\\
+P1 & 第1次循环训练第2次检验 & 跨循环温度/方向独立RMSE报告 & 否\\
+P1 & 单工况温度质量权重 & 含温度跨度、斜率、有效帧方差的研究性权重对比 & 否\\
+P1 & 25°C低频动态倾角对标 & 振幅、相位、RMS、最坏值、响应延迟 & 参考需验证\\
+P2 & 热迟滞／逐帧温度模型 & 仅在独立验证明显改善后升级系数模型 & 否\\
+P2 & 振动与平动加速度干扰抑制 & 独立振动或结构模型测试及融合报告 & 可能需外部试验台\\
+P2 & 产品批次与环境长期漂移 & 多颗样品、7天漂移、上电重复性 & 否\\\bottomrule
+\end{longtable}
+
+\section{技术决策建议}
+以目前设备条件，\textbf{不建议立即删掉全部高阶模型，也不建议因温箱允许±2°C就否定所有温补数据}。应保持“真实芯片温度 + 充分几何/速率参考 + 多方向/多循环独立验证”的技术主线。温箱修复后优先取得\emph{完整、可追溯}的四趟数据；在同一数据上比较简单模型与复杂模型；只批准经过产品坐标、动态倾角和固件一致性验证的参数。
+
+\chapter{操作检查清单与研究输出规范}
+\section{开始实验前}
+\begin{enumerate}
+\item 转台机械紧固、夹具/线缆、运动边界、急停、两轴编码器与伺服状态正常；
+\item 温箱维修验收完成，PLC/SP/PV、制冷运行、报警和停机反馈可靠；
+\item MCU实际GYRO/ACC满量程、ODR、单位和滤波配置已被回读确认；
+\item 明确装夹方向，拍照并记录产品/夹具坐标映射；
+\item 选择$-20\sim60\degc$、2次完整升降温，核对4趟、17温度点、拟合/验证分组；
+\item 核对初步到温、热浸、最终稳定、运行暂停/恢复、组温差及等待上限，按温箱真实能力设定；
+\item 确认所有原始帧、温箱PV、编码器状态、配置JSON与软件版本均会存档。
+\end{enumerate}
+
+\section{结束实验后}
+\begin{enumerate}
+\item 所有趟次确认为\texttt{COMPLETED}，WK真实停车、PLC真实停机反馈在对应命令之后取得；
+\item 检查 \texttt{experiment\_config.json}、\texttt{temperature\_measurements.json}、\texttt{imu\_full\_frames.jsonl}、温箱PV与WK反馈记录；
+\item 单趟研究报告、跨四趟统一模型、独立温度、同温姿态、升降温和跨循环结果分开保存；
+\item 标注未验证项（机械计量、真实六轴物理轴向、温度斜坡、MCU量程等）；
+\item 所有候选系数标记\texttt{RESEARCH\_ONLY}，经独立验收后另行产生\texttt{APPROVED}发布件，附审签记录。
+\end{enumerate}
+
+\section{软件输出中的三种不同含义}
+\begin{center}
+\begin{tabularx}{\linewidth}{lX}\toprule
+采集\texttt{COMPLETED} & 只证明本趟计划与实际停止确认的完整性，不代表标定精度合格。\\
+模型\texttt{EVALUATED} & 证明候选在给定数据与数值检查下可评价，不代表硬件计量认证。\\
+产品\texttt{APPROVED} & 需要独立动态、坐标、温度、量产固件一致性和审批；当前R10不自动签发。\\\bottomrule
+\end{tabularx}
+\end{center}
+
+\appendix
+\chapter{源码审计索引与复现实验材料}
+\section{基准文件}
+本技术文档对应上传的 R10 完整ZIP：
+\begin{quote}\small\ttfamily\detokenize{WK_IMU温补上位机_R10_最终完整工程_可调阈值_启动及PLC停机修复.zip}\end{quote}
+其SHA-256为：
+\begin{quote}\small\ttfamily\detokenize{1ef071643e8cca6dde0085c89e8fd19121308c87f9dc4b54540fbc1957e9e504}\end{quote}
+完整日志证据随本LaTeX工程位于 \texttt{evidence/2026-11-10\_实验原始运行日志.md}。本文的实施细节以这个R10版本为准，未来更新应修订版本记录，不应在不改文档的情况下悄悄更改拟合含义。
+
+\section{主要代码导航}
+\begin{longtable}{p{8.3cm}p{6.95cm}}\toprule
+工程路径（相对于TiltSensorCalibration） & 本文对应内容\\\midrule\endhead
+\texttt{turntable/turntable\_2FDT600WK\_comm.py} & WK两轴命令、反馈与状态接口\\
+\texttt{turntable/turntable\_data\_get.py} & 编码器角度、差分速度、新鲜度及轮询\\
+\texttt{temperature\_chamber/plc\_comm.py} & PLC接口与状态回读\\
+\texttt{form/form\_thermal\_compensation.py} & SP确认、温箱状态机、热浸、暂停、停止确认、采样\\
+\texttt{production\_cycle\_protocol.py} & 5°C温度点、双向/重复循环、速率表\\
+\texttt{wk\_r2\_engine/wk\_joint\_offline\_R2.py} & 转台M0～M3等效几何与ACC/GYRO统一参考\\
+\texttt{thermal\_joint\_fit.py} & 每个工况实测芯片均温的完整组联合回归\\
+\texttt{thermal\_model\_catalog.py} & A0、T0/T1/T2、B/C/D共28个结构\\
+\texttt{thermal\_temperature\_inputs.py} & PV匹配与PV等效温度输入映射\\
+\texttt{production\_cycle\_analysis.py} & 四趟合并、模型优选、独立验证、热迟滞报告\\
+\texttt{production\_six\_axis.py} & 独立动态六轴重力运动学一致性测试\\\bottomrule
+\end{longtable}
+
+\chapter{符号与量纲速查}
+\begin{longtable}{p{3.2cm}p{7.8cm}p{2.0cm}}\toprule
+符号 & 含义 & 单位\\\midrule\endhead
+$T_{SP}$ & PLC温箱目标设定温度 & °C\\
+$T_{PV}$ & 温箱传感器当前过程值 & °C\\
+$T_{chip},\bar T_i$ & IMU温度传感器值／第$i$工况有效帧均温 & °C\\
+$\theta,\phi$ & WK外轴、内轴编码器角 & rad或°\\
+$\delta,\varepsilon$ & 外轴零位与轴倾等效几何参数 & rad或°\\
+$\dot\theta,\dot\phi$ & 外轴、内轴实测速率 & $\dps$\\
+$\mathcal W,\mathcal P,\mathcal B$ & 世界、模型台面、产品壳体坐标系 & —\\
+$\mat F_A,\mat F_G$ & ACC、GYRO前向3×3矩阵 & 随量纲定义\\
+$\vct b_A,\vct b_G$ & ACC、GYRO温度零偏 & g／$\dps$\\
+$u$ & 中心化、归一化温度自变量 & 无量纲\\
+$E_6$ & 六轴重力运动学残差RMS & 1/s\\
+$\sigma_{\theta}$ & 角度不确定度／RMS分量 & °\\
+\bottomrule
+\end{longtable}
+
+\chapter{外部文献与工程资料}
+\begin{thebibliography}{99}
+\bibitem{ST} STMicroelectronics, \emph{ASM330LHHX 产品页面及最新可获得数据手册}, 官方器件概览与数字量程。\url{https://www.st.com/en/mems-and-sensors/asm330lhhx.html}（访问：2026-11）。
+\bibitem{RION} 深圳市瑞芬科技，\emph{HDA436T/HDA437T 高强度冲击动态倾角仪}，官方公开性能页。\url{https://www.rionsystem.com/list_94/177.html}（访问：2026-11）。
+\bibitem{RION2} RION，\emph{HDA436T/HDA437T 公开技术指标}，可查零偏及Allan指标的产品资料。\url{https://rion-star.com/products/359.html}（访问：2026-11）。
+\bibitem{TOWER} \emph{Dynamic displacement measurement of a wind turbine tower using accelerometers: tilt error compensation and validation}, Wind Energy Science, 2025。\url{https://wes.copernicus.org/articles/10/193/2025/}（访问：2026-11）。
+\bibitem{ADI} Analog Devices, \emph{Choosing the Best Vibration Sensor for Wind Turbine Condition Monitoring}。\url{https://www.analog.com/en/resources/analog-dialogue/articles/choosing-the-best-vibration-sensor-for-wind-turbine-condition-monitoring.html}（访问：2026-11）。
+\bibitem{WK} 九江如洋精密科技有限公司，\emph{双轴温控转台产品目录}。\url{https://www.ruya-t.com/products/page/2.html}。仅用于说明厂家存在多种2FDT设备，\textbf{本文不把其他型号参数冒充本机2FDT600WK计量结果}。
+\bibitem{CODE} 用户提供的WK IMU温补上位机 R10 完整工程（SHA-256见附录）；内部源码与随附2026-11-10原始运行日志，研究数据来源，非公开出版物。
+\end{thebibliography}
+
+\backmatter
+\chapter*{文档维护与变更控制}
+任何软件变化导致以下内容发生改变时，必须同步修订：坐标系或矩阵定义、PLC停车行为、温度自变量、候选目录/选模规则、采集与验证分组、重复循环合并方式、发布系数的字段语义及固件变换顺序。建议每次变更写明源码版本SHA、验证日志和审签人；实验测得值与理论示意图在排版上始终分开。
+
+\begin{center}\vspace{10mm}\color{muted}\rule{0.7\linewidth}{0.5pt}\\[3mm]
+{\large\bfseries 技术设计基线结束}\\[1mm]
+当前版本适用于研发交流、测试设计及代码审查；产品正式计量与安全验收另行执行。
+\end{center}
+\end{document}

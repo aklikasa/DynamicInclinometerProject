@@ -1,0 +1,13 @@
+\begin{tikzpicture}[>=Latex,font=\small,node distance=10mm,unit/.style={draw,rounded corners=2mm,minimum width=3.5cm,minimum height=11mm,align=center},g/.style={unit,fill=lightTeal,draw=teal!60},b/.style={unit,fill=light,draw=blue!60}]
+\node[g] (rawa) at (-3.7,1.45) {ACC 原始三轴 $\mathcal A$};
+\node[g] (rawg) at (3.7,1.45) {GYRO 原始三轴 $\mathcal G$};
+\node[b] (correcta) at (-3.7,-.15) {$\mat F_A^{-1}(T)\bigl(\vct y_A-\vct b_A(T)\bigr)$};
+\node[b] (correctg) at (3.7,-.15) {$\mat F_G^{-1}(T)\bigl(\vct y_G-\vct b_G(T)\bigr)$};
+\node[unit,draw=teal,fill=lightTeal,minimum width=8.1cm] (frame) at (0,-1.75) {共同的模型台面参考系 $\mathcal P$（统一参考假设）};
+\node[unit,draw=orange,fill=lightOrange,minimum width=8.1cm] (product) at (0,-3.3) {需独立确定的产品外壳坐标 $\mathcal B$};
+\draw[->,thick](rawa)--(correcta);\draw[->,thick](rawg)--(correctg);
+\draw[->,thick,blue](correcta)--($(frame.north)+(-2.2,0)$);
+\draw[->,thick,blue](correctg)--($(frame.north)+(2.2,0)$);
+\draw[->,thick,teal](frame)--node[right]{共同的$\mat R_{BP}$}(product);
+\node[font=\scriptsize,text=red,align=center] at (0,1.52) {原始轴向和符号\emph{不可}想当然视为相同};
+\end{tikzpicture}

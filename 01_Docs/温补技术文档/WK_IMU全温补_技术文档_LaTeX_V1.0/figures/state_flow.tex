@@ -1,0 +1,21 @@
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[>=Latex,node distance=7mm and 8mm,font=\small,process/.style={draw=blue!60,fill=light,rounded corners=2mm,align=center,minimum width=3.3cm,minimum height=1.08cm},decision/.style={draw=orange!80,fill=lightOrange,diamond,aspect=2.1,align=center,text width=2.65cm,inner sep=2mm},safe/.style={draw=red!70,fill=red!6,rounded corners=2mm,align=center,minimum width=3.6cm,minimum height=1.12cm}]
+\node[process](sp){直接写目标SP\\WK保持停车};
+\node[decision,right=of sp](ack){SP／定值模式／运行状态\;新鲜回读?};
+\node[process,right=of ack](first){初步到温\\PV窗口、极差、斜率};
+\node[process,right=of first](soak){热浸\\有效PV时间累计};
+\node[process,below=1.65cm of soak](final){最终PV＋芯片\\60秒跨度／5分钟斜率};
+\node[process,left=of final](measure){WK定位→停车确认\\ACC／GYRO工况采样};
+\node[decision,left=of measure](monitor){运行期PV／芯片质量正常?};
+\node[process,left=of monitor](next){完成当前温度\\进入下个温度或下趟};
+\node[process,below=1.55cm of monitor](pause){质量暂停\\WK安全停车＋新鲜恢复观察};
+\node[safe,below=1.55cm of ack](fault){超时／真实报警／反馈失效\\安全中止、存档INCOMPLETE};
+\node[process,below=1.55cm of next](end){全部完成后\\WK＋PLC真实停止确认};
+\draw[->,thick] (sp)--(ack);\draw[->,thick] (ack)--node[above]{是}(first);\draw[->,thick](first)--(soak);\draw[->,thick](soak)--(final);\draw[->,thick](final)--(measure);\draw[->,thick](measure)--(monitor);\draw[->,thick](monitor)--node[above]{是}(next);
+\draw[->,thick] (monitor)--node[right]{质量暂停}(pause);\draw[->,teal,thick] (pause.east)-|($(measure.south)+(0,-.25)$)--(measure.south);
+\draw[->,red,thick] (ack.south)--node[left]{失败或超时}(fault.north);
+\draw[->,thick] (next)--(end);
+\draw[->,thick,blue] (next.north) |-($(sp.north)+(0,1.05)$)--(sp.north);
+\draw[->,red,thick] (pause.west) -| ($(fault.south)+(-1.1,-.7)$) -| (fault.south);
+\node[font=\scriptsize,red] at ($(pause.south)+(-1.8,-.33)$){恢复失败／达到上限};
+\end{tikzpicture}}

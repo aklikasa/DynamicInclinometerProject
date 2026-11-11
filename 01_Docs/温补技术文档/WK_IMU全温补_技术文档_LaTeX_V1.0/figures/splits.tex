@@ -1,0 +1,19 @@
+\begin{tikzpicture}[font=\small,>=Latex,cell/.style={minimum width=0.85cm,minimum height=.64cm,draw=white,rounded corners=.5mm}]
+\node[anchor=west,font=\bfseries] at (-.3,1.55){设定温度（°C）};
+\foreach \t [count=\i from 0] in {-20,-15,-10,-5,0,5,10,15,20,25,30,35,40,45,50,55,60}{
+  \pgfmathtruncatemacro{\odd}{mod(\i,2)}
+  \ifnum\odd=0
+    \node[cell,fill=blue!25] at ({.4+.73*\i},.65){};
+    \node[font=\tiny,blue!90!black] at ({.4+.73*\i},.65){拟合};
+  \else
+    \node[cell,fill=teal!25] at ({.4+.73*\i},.65){};
+    \node[font=\tiny,teal!90!black] at ({.4+.73*\i},.65){验证};
+  \fi
+  \node[font=\scriptsize,rotate=50,anchor=west] at ({.4+.73*\i},1.1){\t};
+}
+\node[draw=blue!70,fill=light,rounded corners=2mm,text width=4.0cm,align=center] (train) at (1.7,-1) {拟合温度 · FIT工况\\估计几何＋求系数};
+\node[draw=orange!80,fill=lightOrange,rounded corners=2mm,text width=4.0cm,align=center] (choice) at (6.25,-1) {拟合温度 · 独立姿态\\模型选择／复杂度惩罚};
+\node[draw=teal!70,fill=lightTeal,rounded corners=2mm,text width=4.0cm,align=center] (test) at (10.8,-1) {独立验证温度 · VAL工况\\最终RMSE与方向比较};
+\draw[->,thick,blue] (train)--(choice);\draw[->,thick,teal] (choice)--(test);
+\node[text width=12.7cm,align=center,font=\scriptsize,text=muted] at (6.2,-2.05) {建议另增跨循环检验：循环1拟合并锁定模型，循环2整趟数据不得参与调参，仅用于检验。};
+\end{tikzpicture}

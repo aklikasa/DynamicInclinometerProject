@@ -1,0 +1,20 @@
+\begin{tikzpicture}[>=Latex,scale=.92,font=\small]
+\fill[gray!20] (-5,-.25)rectangle(5,0);
+\draw[thick](-5,0)--(5,0);
+\fill[blue!8](-.5,0)--(-.65,5.1)--(.65,5.1)--(.5,0)--cycle;
+\draw[very thick,blue](-.5,0)--(-.65,5.1)--(.65,5.1)--(.5,0);
+\draw[dashed,gray,thick](0,0)--(0,6.2);
+\begin{scope}[rotate around={9:(0,0)}]
+\fill[teal!10](-.45,0)--(-.5,5.1)--(.5,5.1)--(.45,0)--cycle;
+\draw[thick,teal](-.45,0)--(-.5,5.1)--(.5,5.1)--(.45,0);
+\draw[fill=orange!25,thick](-.72,5.1)rectangle(.72,5.45);
+\fill[red] (0,4.4) circle[radius=.11];
+\end{scope}
+\draw[->,thick,orange] (0,2.4) arc[start angle=90,end angle=81,radius=2.4];
+\node[orange] at (.38,2.78) {$\theta(t)$};
+\draw[->,red,line width=1.5pt] (.75,4.2)--(3.0,4.2)node[right]{$\vct a_h$水平平动};
+\draw[->,blue,line width=1.5pt] (.75,4.2)--(.75,2.45)node[right]{$\vct g$};
+\draw[->,teal,line width=1.5pt] (.75,4.2)--(1.7,2.55)node[right]{$\vct f$方向示意};
+\node[draw=orange!60,fill=lightOrange,rounded corners=2mm,align=left,text width=5.5cm,inner sep=8pt] at (3.6,6.1) {塔筒转动：GYRO检测角速度；\\塔筒平动：ACC额外测得水平加速度；\\二者可在倾角算法中相互混淆。};
+\node[align=center,muted] at (0,-.72) {下部基础／静态参考};
+\end{tikzpicture}

@@ -1,0 +1,21 @@
+\begin{tikzpicture}[>=Latex,font=\small,scale=.95]
+\begin{scope}[shift={(-4.1,0)}]
+\draw[->,gray,thick](-.4,0)--(3.2,0) node[right] {$x$};
+\draw[->,gray,thick](0,-.4)--(0,3)node[above]{$z$};
+\draw[->,blue,line width=2pt](0,0)--(2.7,0)node[above right]{$\vct e_x$理想外轴};
+\draw[->,orange,line width=2pt](0,0)--(2.63,.53)node[above]{$\vct a$等效外轴};
+\draw[orange] (1.35,0) arc[start angle=0,end angle=11.4,radius=1.35];
+\node[orange] at (1.8,.28) {$\varepsilon$};
+\node[align=center,blue,font=\small] at (1.45,-1.05) {轴线倾斜M2};
+\end{scope}
+\begin{scope}[shift={(1.15,0)}]
+\draw[gray,dashed,thick](-.3,0)circle[radius=1.55];
+\draw[->,gray,thick] (0,0)--(2,0)node[right]{$\theta=0$};
+\draw[->,blue,line width=2pt] (0,0)--(1.3,1.2)node[above]{$\theta$};
+\draw[->,orange,line width=2pt] (0,0)--(.95,1.47)node[left]{$\theta+\delta$};
+\draw[orange] (1.04,.96) arc[start angle=42.7,end angle=57.1,radius=1.42];
+\node[orange] at (1.5,1.5) {$\delta$};
+\node[align=center,blue,font=\small] at (.7,-2.05) {角度参考偏移M1};
+\end{scope}
+\node[draw=teal!50,fill=lightTeal,rounded corners=2mm,text width=9.9cm,align=center,inner sep=6pt] at (0,-2.8) {M0：理想；M1：$\delta$；M2：$\varepsilon$；M3：$\delta+\varepsilon$。\quad\textbf{均为等效模型，不能单独证明机械真实误差。}};
+\end{tikzpicture}

@@ -1,0 +1,9 @@
+\begin{tikzpicture}[font=\small,scale=.95,mat/.style={draw=blue!55,fill=light,minimum width=2.8cm,minimum height=1.9cm,rounded corners=2mm},bias/.style={draw=teal!50,fill=lightTeal,minimum width=1.2cm,minimum height=1.9cm,rounded corners=2mm}]
+\foreach \x/\fam/\descr in {-4.2/B/零偏温漂,0/C/零偏＋对角尺度,4.2/D/完整矩阵＋零偏}{
+\node[font=\bfseries\color{blue}] at (\x,2.45){\fam 族};
+\node[mat,align=center] at (\x-.58,.8) {$\begin{bmatrix}F_{11}&F_{12}&F_{13}\\F_{21}&F_{22}&F_{23}\\F_{31}&F_{32}&F_{33}\end{bmatrix}$};
+\node[bias,align=center] at (\x+1.65,.8) {$\begin{bmatrix}b_x\\b_y\\b_z\end{bmatrix}$};
+\node[font=\small,align=center] at (\x+.45,-.7) {\descr};
+}
+\node[draw=orange,fill=lightOrange,rounded corners=2mm,text width=12.5cm,align=center,inner sep=6pt] at (0,-1.8) {B族：仅 $b(T)$；\qquad C族：$\mathrm{diag}(F)(T)$和$b(T)$；\qquad D族：$F(T)$的9项和$b(T)$的3项。\\一～三阶多项式 × T0/T1/T2，另加常量A0；\textbf{图中未区分具体$F$元素的颜色，以文字定义为准。}};
+\end{tikzpicture}

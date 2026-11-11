@@ -1,0 +1,10 @@
+\begin{tikzpicture}
+\begin{axis}[width=.94\linewidth,height=6.35cm,xlabel={示意时间（分钟）},ylabel={温度（°C）},xmin=0,xmax=65,ymin=-23,ymax=7,xtick={0,10,20,30,40,50,60},ytick={-20,-15,-10,-5,0,5},grid=major,grid style={gray!15},legend pos=north east,legend style={font=\small,fill=white,draw=gray!25},axis line style={gray!50}]
+\addplot[blue,thick,dashed,domain=0:65,samples=2] {-20};\addlegendentry{SP目标（固定）}
+\addplot[orange,thick,domain=0:65,samples=220] {-20+26*exp(-x/12)+0.65*sin(deg(x*.9))*(1-exp(-x/8))};\addlegendentry{PV（示意）}
+\addplot[teal,very thick,domain=0:65,samples=220] {-20+27*exp(-x/19)+.15*sin(deg(x*.55))};\addlegendentry{芯片温度（示意）}
+\addplot[blue!25,thin,domain=0:65,samples=2] {-18};
+\addplot[blue!25,thin,domain=0:65,samples=2] {-22};
+\node[anchor=south west,font=\scriptsize,blue] at (axis cs:7,-17.8) {SP±2°C允许带};
+\end{axis}
+\end{tikzpicture}
