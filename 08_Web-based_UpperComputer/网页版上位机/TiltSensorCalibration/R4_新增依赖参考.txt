@@ -1,0 +1,4 @@
+原上位机原有依赖：PySide6、numpy、pandas、openpyxl、pyserial、python-snap7 等，请使用厂家DLL原Windows运行环境。
+R4双向HTML/几何优化需 numpy 和 scipy；当前环境没有PySide6，图形入口未做本机GUI运行测试。
+示例：py -3 -m pip install numpy scipy
+注意生产现场如使用冻结Python环境，需由工程人员审核版本兼容性后安装；勿自动升级所有硬件通信依赖。

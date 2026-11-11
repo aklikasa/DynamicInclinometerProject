@@ -1,0 +1,4 @@
+# R7 independent Web backend. No PySide6, Flask, Node.js or React.
+pyserial>=3.5,<4
+numpy>=1.26,<3
+openpyxl>=3.1,<4

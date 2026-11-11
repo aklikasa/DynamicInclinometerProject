@@ -1,0 +1,13 @@
+R10 完整工程复核摘要（2026-11-10）
+
+来源：用户上传 WK_IMUE7_.zip（R9.1工程）；所有增量修改只限温补界面、温控质量策略、状态机以及文档/回归测试。
+- Python源码全量compileall：通过。
+- tools/test_*.py：227项，其中224项通过、1项按条件跳过、2项旧版静态检查错误。
+- 专项 tools.test_r10_start_stop_contract：8项通过。
+- 旧 R9.1 设温SP确认测试（5项）和R8多循环/工况均温测试（6项）通过。
+- 两项旧版错误分别是：test_2fdt_zero_status（旧页面要求包含回零中文字分支）；test_stable_base_regression（原工程form_turntable_ctrl.py不匹配预录入的旧哈希）。这两项在本次上传工程中已有原始不兼容，不通过修改测试来掩盖。
+- tests_r6旧协议测试：8项中有1项仍期望先发中间SP=20℃，但自R7起实施直接目标SP=-40℃，故属于旧协议与现流程不匹配。
+- 用户上传的原有热温补核心（thermal_joint_fit.py、thermal_model_selection.py、thermal_model_catalog.py、thermal_compensation.py、production_cycle_analysis.py、production_calibration.py、production_six_axis.py、wk_r2_engine/wk_joint_offline_R2.py）与DLL和main.py均逐字节保持一致。
+- 当前环境无Windows/PySide6界面与真实PLC/WK/IMU联动测试条件。安全设备首次运行务必现场值守检查设备停止回读、急停与权限。
+
+注意：不提供“整机测试100%通过/计量认证通过/可以无人值守”的虚假保证。

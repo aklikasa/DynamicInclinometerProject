@@ -1,0 +1,51 @@
+E.......E.......s...................................................................................................................................................................................
+======================================================================
+ERROR: test_2fdt_zero_status (unittest.loader._FailedTest.test_2fdt_zero_status)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_2fdt_zero_status
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/mnt/data/thermal_final_audit_1107/动态倾角仪工作台_恢复转台控制_10度每秒限速_温箱退出修复版/TiltSensorCalibration/tools/test_2fdt_zero_status.py", line 83, in <module>
+    assert 'elif text == "回零中":' in ui_source
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+
+======================================================================
+ERROR: test_stable_base_regression (unittest.loader._FailedTest.test_stable_base_regression)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_stable_base_regression
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/mnt/data/thermal_final_audit_1107/动态倾角仪工作台_恢复转台控制_10度每秒限速_温箱退出修复版/TiltSensorCalibration/tools/test_stable_base_regression.py", line 19, in <module>
+    assert actual==expected, f'稳定旧版核心文件被改动：{rel}'
+           ^^^^^^^^^^^^^^^^
+AssertionError: 稳定旧版核心文件被改动：form/form_turntable_ctrl.py
+
+
+----------------------------------------------------------------------
+Ran 196 tests in 10.277s
+
+FAILED (errors=2, skipped=1)
+PASS: 360°/0° periodic comparison, tolerance, invalid feedback and static circular mean
+[PASS] PCB编号自动填充、旧固件手动兜底、断开清空、防止任务中途改写、标定保存接线
+[PASS] Modbus UID 正常返回、异常、超时、CRC、DTS哈希、UI接线均通过
+PASS: 未连接无驱动调用安全退出、转台连接禁止强制断电、温箱等待限时
+PASS: flexible valid FS, frozen conversion, release hold, unsafe rate blocked
+PASS: Qt source methods ACC/GYRO/6-axis end-to-end synthetic validation and PCB isolation
+PASS: 转台首屏控制、目标速度和摇摆限幅、温箱断开同步及运行中拦截
+PASS: 自动PLC温补页面默认模式/回读门槛/PV稳定/读数新鲜度静态检查
+PASS: PLC自动设温→SP确认→PV稳定→结束回25℃；SP被外部篡改触发中止
+PASS: Qt dialogs, single/dual homing, failure exception/lock release, auto phase status
+PASS: original motion UI retained, no diagnostic pane, passive COM8/COM9 mapping, ambiguous detection rejected
+PASS: 页面注册、停止/异常/采样功能、56工况/26工况与2FDT编码器测速静态检查
+PASS: staged PV gate, 30-minute effective soak, final ±band, chip gate and WK 8#→1# parking guard are wired
+PASS: 温补 Excel 生成、工作表与逐工况数据核对

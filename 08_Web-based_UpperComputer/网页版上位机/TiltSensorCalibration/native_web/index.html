@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f7fc"><meta name="description" content="WK IMU R7 原生网页版研发工作台">
+<title>WK IMU R7 · 研发控制工作台</title>
+<link rel="stylesheet" href="/app.css"><script defer src="/app.js"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brandmark"><span>W</span></div><div class="brandcopy"><strong>WK IMU <small>R7</small></strong><span>Research Workstation</span></div></div>
+    <div class="navigation">
+      <div class="navgroup">工作空间</div>
+      <button class="nav active" data-page="overview"><span class="navico">▦</span><span>工作台总览</span></button>
+      <button class="nav" data-page="imu"><span class="navico">⌁</span><span>PCB / IMU 采集</span></button>
+      <button class="nav" data-page="plc"><span class="navico">◈</span><span>PLC 温箱</span></button>
+      <button class="nav" data-page="wk"><span class="navico">◎</span><span>WK 双轴转台</span></button>
+      <button class="nav" data-page="td"><span class="navico">◉</span><span>2TD600 常温标定转台</span><span class="navmeta">独立</span></button>
+      <div class="navgroup second">研发与实验</div>
+      <button class="nav" data-page="thermal"><span class="navico">◷</span><span>R7 温补方案</span><span class="navmeta">方案</span></button>
+      <button class="nav" data-page="poses"><span class="navico">⊞</span><span>12 姿态 / 工况</span><span class="navmeta">预览</span></button>
+      <button class="nav" data-page="models"><span class="navico">⏣</span><span>模型复算 / 报告</span></button>
+      <button class="nav" data-page="records"><span class="navico">▤</span><span>采集文件</span></button>
+      <div class="navgroup second">管理</div>
+      <button class="nav" data-page="system"><span class="navico">⚙</span><span>功能与系统</span></button>
+    </div>
+    <div class="sidebar-bottom"><div class="hardware-card"><span class="pulsemark"></span><div><strong>真实硬件模式</strong><small>无随机数据 · 原 R7 驱动</small></div></div><div class="sidebar-version">WORKSTATION R7 · WEB EDITION <br>仅本机控制 · Windows 11</div></div>
+  </aside>
+  <div class="mainarea">
+    <header class="topbar"><div class="top-left"><button class="mobile-menu" id="menuToggle" aria-label="打开菜单">☰</button><div class="crumb">设备研发 <span>/</span> <strong id="breadcrumb">工作台总览</strong></div></div><div class="top-right"><span class="top-live"><span id="backendDot" class="tiny-dot"></span><span id="backendText">连接服务中</span></span><span class="time" id="clock">--:--</span><span class="operator" id="workMode">检查权限中</span><div class="avatar">WK</div></div></header>
+    <main>
+      <section id="page-overview" class="page active">
+        <div class="hero"><div><div class="eyebrow">IMU RESEARCH / WORKSPACE</div><h1>早上好，欢迎回到研发工作台 <span class="sparkle">✦</span></h1><p>WK IMU R7 · 真实数据采集与温补研究管理</p><div class="hero-tags"><span>原生 Web 后端</span><span>本地硬件独占</span><span>R7 联合拟合算法</span></div></div><div class="hero-art"><div class="orbit one"></div><div class="orbit two"></div><div class="core">R7</div></div></div>
+        <div class="section-title"><div><h2>设备连接状态</h2><p>显示来自当前硬件的实时反馈，数据过期即隐藏</p></div><span class="subtle-label" id="overallLabel">等待设备</span></div>
+        <div class="device-cards">
+          <article class="device-card"><div class="device-top"><span class="device-icon blue">⌁</span><span id="ovImuStatus" class="pill muted">未连接</span></div><h3>PCB / IMU</h3><div class="device-value" id="ovImuVal">—</div><p id="ovImuSub">等待真实数据帧</p><button class="goto" data-go="imu">查看数据采集 <span>↗</span></button></article>
+          <article class="device-card"><div class="device-top"><span class="device-icon teal">♨</span><span id="ovPlcStatus" class="pill muted">未连接</span></div><h3>PLC 温箱 · PV</h3><div class="device-value" id="ovPlcVal">—</div><p id="ovPlcSub">等待 PLC 状态</p><button class="goto" data-go="plc">查看温箱监控 <span>↗</span></button></article>
+          <article class="device-card"><div class="device-top"><span class="device-icon violet">◎</span><span id="ovWkStatus" class="pill muted">未连接</span></div><h3>WK 转台 · 内轴</h3><div class="device-value" id="ovWkVal">—</div><p id="ovWkSub">等待双轴反馈</p><button class="goto" data-go="wk">查看转台状态 <span>↗</span></button></article>
+          <article class="device-card"><div class="device-top"><span class="device-icon teal">◉</span><span id="ovTdStatus" class="pill muted">未连接</span></div><h3>2TD600 · 常温标定</h3><div class="device-value" id="ovTdVal">—</div><p id="ovTdSub">独立单 COM · 状态读取</p><button class="goto" data-go="td">查看常温转台 <span>↗</span></button></article>
+        </div>
+        <div class="dashboard-grid"><article class="panel graph-panel"><div class="panel-heading"><div><h2>芯片温度实时曲线</h2><p>只有收到真实 PCB 有效帧才会绘制，断连后不新增数据</p></div><span class="plot-key"><i></i> 芯片温度</span></div><div class="plot-box"><canvas id="overviewChart"></canvas></div><div class="plot-footer"><span>显示本次浏览器会话最近 120 个点</span><span id="chartTime">尚无数据</span></div></article><article class="panel event-panel"><div class="panel-heading"><div><h2>操作与设备事件</h2><p>最近的设备连接和系统日志</p></div><span class="pill soft">实时更新</span></div><div id="overviewEvents" class="events"><div class="empty-state">暂无事件</div></div></article></div>
+        <div class="notice info"><span class="notice-symbol">ⓘ</span><div><b>关于当前 R7 Web 版本</b><p>PCB 采集、原始 CSV、PLC/WK 状态读取已接入。实验方案校验与已有 R7 数据的模型复算已接入；自动驱动温箱、转台的温补控制流程尚未从 Qt 状态机完成迁移，网页不能据此自动执行实验。</p></div></div>
+      </section>
+
+      <section id="page-imu" class="page"><div class="page-header"><div class="eyebrow">ACQUISITION / LIVE SENSOR</div><h1>PCB / IMU 实时采集</h1><p>使用 R7 原版 Modbus 轮询驱动 · 单进程独占 COM · 真实 16 点/帧</p></div>
+        <article class="panel"><div class="panel-heading"><div><h2>通讯连接</h2><p>先选择 Windows 串口参数；连接失败时会展示驱动返回的异常原因</p></div><span id="imuStatus" class="pill muted">未连接</span></div>
+          <div class="field-grid four"><label>PCB 串口 <div class="inline-field"><select id="cfgPort" aria-label="从 Windows 检测到的串口" aria-describedby="portScanStatus"><option value="">正在扫描本机 COM 口…</option></select><button id="reloadPorts" class="btn flat tiny" type="button">重新扫描</button></div><small id="portScanStatus" class="port-scan-status" role="status" aria-live="polite">尚未扫描 Windows 串口</small></label><label>波特率<input id="cfgBaud" type="number" min="9600" max="3000000"></label><label>Modbus 从机地址<input id="cfgSlave" type="number" min="1" max="247"></label><label>轮询间隔 (ms)<input id="cfgPoll" type="number" min="0" max="1000"></label></div>
+          <div id="portScanDetails" class="port-scan-details" aria-live="polite">串口扫描结果会显示在这里；扫描不会打开或占用设备。</div>
+          <div class="button-row"><button class="btn secondary" id="saveConfigImu">保存参数</button><button class="btn primary" data-act="imu/connect">连接 PCB</button><button class="btn secondary" data-act="imu/disconnect">断开连接</button><span class="muted-text" id="imuConnectText">尚未连接</span></div>
+          <div class="diagnostic" id="imuDiagnostics">等待串口连接。请确保原 R7 桌面版和其他串口助手已退出。</div>
+        </article>
+        <div class="section-title tight"><div><h2>六轴实时数据</h2><p>ACC 单位 g，GYRO 单位 °/s，显示每帧 16 样本均值</p></div><span class="pill soft">Live telemetry</span></div>
+        <div class="metric-grid"><div class="metric"><span>ACC <b>X</b></span><strong id="ax">—</strong><small>g</small></div><div class="metric"><span>ACC <b>Y</b></span><strong id="ay">—</strong><small>g</small></div><div class="metric"><span>ACC <b>Z</b></span><strong id="az">—</strong><small>g</small></div><div class="metric"><span>GYRO <b>X</b></span><strong id="gx">—</strong><small>°/s</small></div><div class="metric"><span>GYRO <b>Y</b></span><strong id="gy">—</strong><small>°/s</small></div><div class="metric"><span>GYRO <b>Z</b></span><strong id="gz">—</strong><small>°/s</small></div></div>
+        <div class="trace-grid">
+          <article class="panel trace-card"><div class="panel-heading"><div><h2>ACC 加速度实时曲线</h2><p>来自真实 Modbus 有效帧 · 每帧 16 样本均值 · 单位 g</p></div><span class="pill soft">X / Y / Z</span></div><div class="trace-legend"><span><i class="axis-x"></i>X</span><span><i class="axis-y"></i>Y</span><span><i class="axis-z"></i>Z</span><small id="accTraceLast">等待真实 PCB 数据</small></div><div class="trace-canvas"><canvas id="accTrace" aria-label="真实 ACC XYZ 实时趋势"></canvas></div></article>
+          <article class="panel trace-card"><div class="panel-heading"><div><h2>GYRO 角速度实时曲线</h2><p>来自真实 Modbus 有效帧 · 每帧 16 样本均值 · 单位 °/s</p></div><span class="pill soft">X / Y / Z</span></div><div class="trace-legend"><span><i class="axis-x"></i>X</span><span><i class="axis-y"></i>Y</span><span><i class="axis-z"></i>Z</span><small id="gyroTraceLast">等待真实 PCB 数据</small></div><div class="trace-canvas"><canvas id="gyroTrace" aria-label="真实 GYRO XYZ 实时趋势"></canvas></div></article>
+        </div>
+        <div class="twocol"><article class="panel"><div class="panel-heading"><div><h2>芯片与数据状态</h2><p>断连或采集过期则隐藏旧值</p></div></div><div class="keyvals"><div><span>内部芯片温度</span><b id="imuTemp">—</b></div><div><span>PCB 编号 (DTS 映射)</span><b id="imuSN">—</b></div><div><span>MCU 原始 UID (12 字节)</span><b id="imuUID" class="uid-hex">—</b></div><div><span>累计帧数</span><b id="imuFrames">—</b></div><div><span>有效通讯帧率</span><b id="imuRate">—</b></div><div><span>ACC / GYRO 量程</span><b id="imuRange">—</b></div><div><span>输出数据速率 ODR</span><b id="imuOdr">—</b></div><div><span>最后有效帧</span><b id="imuLast">—</b></div></div><div class="uid-actions"><button type="button" class="btn secondary small" data-act="imu/uid/retry">重新读取 UID</button><span id="imuUIDHint">UID 从原 R7 Modbus 保持寄存器 3000 开始读取；旧固件可能不支持</span></div></article><article class="panel"><div class="panel-heading"><div><h2>原始数据录制</h2><p>原 R7 CSV 写盘队列，不降采样</p></div><span id="recordState" class="pill muted">未记录</span></div><div class="record-symbol">▤</div><div class="button-row"><button class="btn primary" data-act="imu/record/start">开始记录</button><button class="btn secondary" data-act="imu/record/stop">停止并保存</button></div><div class="keyvals slim"><div><span>CSV 行数</span><b id="recRows">0</b></div><div><span>丢弃/写入失败</span><b id="recDrops">0</b></div><div><span>记录文件</span><b id="recFile">—</b></div></div></article></div>
+      </section>
+
+      <section id="page-plc" class="page"><div class="page-header"><div class="eyebrow">CHAMBER / SIEMENS S7</div><h1>PLC 温箱</h1><p>复用 R7 的 Snap7 通信与 PLC 寄存器映射，实时显示 PV、SP、报警和运行状态</p></div><div class="notice warning"><span class="notice-symbol">!</span><div><b>当前仅开放真实状态读取</b><p>R7 的直接目标 SP、PLC 回读确认和温度保护必须随自动状态机一起迁移与现场验证。这里不会向温箱写入 SP，也不会更改运行状态。</p></div></div>
+        <article class="panel"><div class="panel-heading"><div><h2>PLC 通讯参数</h2><p>以工控机所在局域网 IP 为准</p></div><span id="plcStatus" class="pill muted">未连接</span></div><div class="field-grid two"><label>PLC IPv4 地址<input id="cfgPlc" placeholder="192.168.1.10"></label><label>当前运行状态<div class="readonly" id="plcRun">未连接</div></label></div><div class="button-row"><button class="btn secondary" id="saveConfigPlc">保存 IP</button><button class="btn primary" data-act="plc/connect">连接 PLC</button><button class="btn secondary" data-act="plc/disconnect">断开 PLC</button></div></article>
+        <div class="metric-grid three"><div class="metric"><span>PV 实测温度</span><strong id="plcPV">—</strong><small>°C</small></div><div class="metric"><span>SP 设定温度（只读）</span><strong id="plcSP">—</strong><small>°C</small></div><div class="metric"><span>设备报警码</span><strong id="plcAlarm">—</strong><small>PLC alarm</small></div></div><article class="panel"><div class="panel-heading"><h2>温箱状态诊断</h2><span id="plcError" class="muted-text">等待连接</span></div><div class="keyvals"><div><span>运行 / 停止</span><b id="plcRunning">—</b></div><div><span>故障标志</span><b id="plcFault">—</b></div><div><span>写入权限</span><b class="tone-amber">未开放 · 需要现场联调</b></div></div></article>
+      </section>
+
+      <section id="page-wk" class="page"><div class="page-header"><div class="eyebrow">MOTION / 2FDT600WK</div><h1>WK 双轴转台</h1><p>使用原厂家 2FDT600WK.dll 读取内外轴角度及控制器状态</p></div><div class="notice warning"><span class="notice-symbol">!</span><div><b>运动控制未开启</b><p>网页不是硬件急停。定位、速率、使能、回零及自动温补运动指令都未迁移；设备运行时拒绝断开通讯，以避免丢失状态。</p></div></div>
+        <article class="panel"><div class="panel-heading"><div><h2>双轴串口配置</h2><p>连接时不会自动使能或移动轴</p></div><span id="wkStatus" class="pill muted">未连接</span></div><div class="field-grid two"><label>内轴 COM<input id="cfgWkInner" placeholder="COM8"></label><label>外轴 COM<input id="cfgWkOuter" placeholder="COM9"></label></div><div class="button-row"><button class="btn secondary" id="saveConfigWk">保存端口</button><button class="btn primary" data-act="wk/connect">连接双轴状态</button><button class="btn secondary" data-act="wk/disconnect">检查并断开</button></div></article>
+        <div class="twocol"><article class="panel anglecard"><div class="panel-heading"><div><h2>内轴 / Inner axis</h2><p>真实绝对角度反馈</p></div><span class="pill soft" id="wkInnerRun">未知</span></div><div class="angle" id="wkInnerAngle">—</div><span class="angleunit">° DEG</span><div class="keyvals slim"><div><span>状态码</span><b id="wkInnerState">—</b></div><div><span>报警码</span><b id="wkInnerAlarm">—</b></div></div></article><article class="panel anglecard"><div class="panel-heading"><div><h2>外轴 / Outer axis</h2><p>真实绝对角度反馈</p></div><span class="pill soft" id="wkOuterRun">未知</span></div><div class="angle" id="wkOuterAngle">—</div><span class="angleunit">° DEG</span><div class="keyvals slim"><div><span>状态码</span><b id="wkOuterState">—</b></div><div><span>报警码</span><b id="wkOuterAlarm">—</b></div></div></article></div><div class="notice info"><span class="notice-symbol">ⓘ</span><div><b>厂家 DLL 状态</b><p id="wkError">等待 WK 通信。</p></div></div>
+      </section>
+
+
+      <section id="page-td" class="page">
+        <div class="page-header"><div class="eyebrow">AMBIENT CALIBRATION · 2TD600</div><h1>2TD600 常温标定转台</h1><p>独立 2TD600 · 单 COM 口 · 原 R7 厂家 DLL 通讯。此页与 WK 温补转台相互独立。</p></div>
+        <article class="panel"><div class="panel-heading"><div><h2>转台连接</h2><p>不在打开网页时自动连接；点击下方按钮才扫描并尝试连接。</p></div><span id="tdStatus" class="pill muted">未连接</span></div>
+          <div class="td-connection-layout">
+            <div class="td-connection-controls">
+              <label class="td-port-label">2TD600 COM 口<select id="cfgTdPort"><option value="">选择或扫描 COM 口</option></select></label>
+              <div class="button-row td-connection-buttons"><button id="tdScanConnect" class="btn primary" type="button">自动扫描并连接</button><button id="reloadTdPorts" class="btn secondary" type="button">刷新串口</button><button id="saveConfigTd" class="btn secondary" type="button">保存 COM</button><button data-act="td/connect" class="btn secondary" type="button">连接选中端口</button></div>
+              <div class="td-connection-disconnect"><button id="tdDisconnect" class="btn secondary td-disconnect-btn" type="button">断开转台通讯</button><span>仅断开串口，不等于停车、伺服失能或控制柜断电</span></div>
+              <div class="diagnostic" id="tdDiag" role="status">尚未连接。点击“自动扫描并连接”，或选择已确认的转台端口。</div>
+            </div>
+            <aside class="td-connection-telemetry" aria-label="转台通信状态概览">
+              <div class="td-telemetry-heading"><span class="td-telemetry-dot" id="tdTelemDot"></span><strong>实时连接概览</strong><small id="tdTelemLink">未连接</small></div>
+              <div class="td-telemetry-metrics">
+                <div><span>当前 COM</span><strong id="tdTelemPort">—</strong></div>
+                <div><span>反馈延迟</span><strong id="tdTelemAge">—</strong></div>
+                <div><span>轴使能</span><strong id="tdTelemEnable">—</strong></div>
+                <div><span>运行状态</span><strong id="tdTelemMotion">—</strong></div>
+              </div>
+              <p id="tdTelemMessage" class="td-telemetry-message">等待真实设备数据</p>
+            </aside>
+          </div>
+        </article>
+        <div class="twocol"><article class="panel anglecard"><div class="panel-heading"><div><h2>内轴</h2><p>实际位置及速度反馈</p></div></div><div class="angle" id="tdInnerAngle">—</div><span class="angleunit">° DEG</span><div class="keyvals slim"><div><span>角速度</span><b id="tdInnerSpeed">—</b></div><div><span>工作模式</span><b id="tdInnerMode">—</b></div><div><span>机械找零</span><b id="tdInnerZero">—</b></div><div><span>健康状态</span><b id="tdInnerNormal">—</b></div><div><span>轴使能</span><b id="tdInnerEnabled">—</b></div></div></article>
+        <article class="panel anglecard"><div class="panel-heading"><div><h2>外轴</h2><p>实际位置及速度反馈</p></div></div><div class="angle" id="tdOuterAngle">—</div><span class="angleunit">° DEG</span><div class="keyvals slim"><div><span>角速度</span><b id="tdOuterSpeed">—</b></div><div><span>工作模式</span><b id="tdOuterMode">—</b></div><div><span>机械找零</span><b id="tdOuterZero">—</b></div><div><span>健康状态</span><b id="tdOuterNormal">—</b></div><div><span>轴使能</span><b id="tdOuterEnabled">—</b></div></div></article></div>
+        <article class="panel td-manual">
+          <div class="panel-heading"><div><h2>双轴独立位置控制</h2><p>内轴、外轴分别输入相对角度与运动速度，不再采用固定档位或轴选择下拉框。</p></div><span id="tdMotionState" class="pill muted">待命</span></div>
+          <div class="notice warning" style="margin-top:0"><span class="notice-symbol">!</span><div><b>2TD-600 说明书标称内/外轴均为 0.01～60°/s</b><p>60°/s 是设备指标，不是已验证的网页标定限速。网页版已取消额外设置的 5° 单步、2°/s 试运行限制；<strong>仍沿用原 R7 的 10°/s 软件限速</strong>；相对角度直接使用厂家增量位置指令 D6，不再强加 ±360° 范围，并以实际累计转角验证多圈运动。连续旋转须符合轴间互锁、工装与线缆安全要求。</p></div></div>
+          <div class="td-axis-row" data-axis="inner">
+            <div class="td-axis-heading"><div><span class="td-axis-bullet">I</span><strong>内轴 · 方位轴</strong><span class="td-axis-hint">单独设定、单独动作</span></div><span id="tdInnerJogHint" class="td-axis-status">—</span></div>
+            <div class="td-axis-fields"><label>相对转角（°）<input id="tdInnerStep" type="number" min="0" step="any" inputmode="decimal" value="1" autocomplete="off" aria-label="内轴相对转角"></label>
+              <label>运动速度（°/s）<input id="tdInnerJogSpeed" type="number" min="0.01" max="10" step="any" inputmode="decimal" value="1" autocomplete="off" aria-label="内轴速度"></label>
+              <button class="btn secondary" type="button" id="tdInnerMinus">− 反方向</button><button class="btn primary" type="button" id="tdInnerPlus">＋ 正方向</button>
+            </div>
+          </div>
+          <div class="td-axis-row" data-axis="outer">
+            <div class="td-axis-heading"><div><span class="td-axis-bullet outer">O</span><strong>外轴 · 俯仰轴</strong><span class="td-axis-hint">独立输入；运动前检查另一轴</span></div><span id="tdOuterJogHint" class="td-axis-status">—</span></div>
+            <div class="td-axis-fields"><label>相对转角（°）<input id="tdOuterStep" type="number" min="0" step="any" inputmode="decimal" value="1" autocomplete="off" aria-label="外轴相对转角"></label>
+              <label>运动速度（°/s）<input id="tdOuterJogSpeed" type="number" min="0.01" max="10" step="any" inputmode="decimal" value="1" autocomplete="off" aria-label="外轴速度"></label>
+              <button class="btn secondary" type="button" id="tdOuterMinus">− 反方向</button><button class="btn primary" type="button" id="tdOuterPlus">＋ 正方向</button>
+            </div>
+          </div>
+          <label class="td-ack"><input id="tdSafetyAck" type="checkbox"><span>我已在现场确认转台安装、两轴锁紧机构处于正确状态、机械找零、线缆余量、旋转区域无人，且<strong>独立硬件急停</strong>可用。</span></label>
+          <div class="td-motion-footer"><button class="btn secondary" type="button" id="tdEnableAxes">确认后使能双轴</button><button class="btn secondary" type="button" id="tdReturnZero">双轴回到 0°</button><button class="btn danger" type="button" id="tdStopAll">双轴软件停车</button><span class="td-stop-note">软件停车不等于硬件急停；停止后必须核对真实角速度</span></div>
+          <div id="tdMotionDetail" class="diagnostic">“双轴回到 0°”是绝对位置定位，依次外轴、内轴；不是机械找零。手动正反转采用厂家 D6 相对位置命令，可输入 360° 以上的累计转角；多圈运动依据真实连续反馈累计，不将圈数取模。双轴运动均检查使能、机械参考、报警、限位与实际反馈。</div>
+        </article>
+        <article class="panel" id="tdAmbientPlanPanel"><div class="panel-heading"><div><h2>原 R7 常温标定工况</h2><p>直接加载原 R7 的工艺配置，显示 ACC / GYRO 真实工况计划，供现场核对；预览不会驱动转台。</p></div><span class="pill soft">只读校核</span></div>
+          <div class="button-row"><button class="btn secondary" type="button" id="tdAccPlan">查看 ACC 12+12 姿态</button><button class="btn secondary" type="button" id="tdGyroPlan">查看 GYRO 正反转工况</button></div>
+          <div id="tdPlanOverview" class="td-plan-overview">请选择上方工况，可核对厂家说明书与原 R7 标定计划。完整自动执行仍需状态机联调。</div><div id="tdPlanTable" class="td-plan-table"></div>
+        </article>
+        <article class="panel ambient-auto-panel" id="ambientAutoPanel">
+          <div class="panel-heading"><div><h2>常温 IMU · 自动标定任务</h2><p>R7 原工艺：2TD600 逐轴定位、ACC 12+12、GYRO 正反向多速率、质量重测、A/B/C 独立验证与报告。</p></div><span class="pill wait" id="autoAccessPill">等待现场验收</span></div>
+          <div class="auto-stage-grid">
+            <div class="auto-stage"><span>01 · 连接检查</span><strong>PCB + 2TD600</strong><small>真实数据、两轴已找零、使能和锁紧状态</small></div>
+            <div class="auto-stage"><span>02 · 机械工况</span><strong>顺序定位 / 匀速</strong><small>外轴零位互锁、角度/速度到位确认</small></div>
+            <div class="auto-stage"><span>03 · 原始采样</span><strong>质量门槛与重测</strong><small>独立编码器速度、温漂、MAD、有效帧</small></div>
+            <div class="auto-stage"><span>04 · 模型结果</span><strong>A/B/C 拟合及报告</strong><small>保留 Excel/CSV/JSON，不写回 MCU</small></div>
+          </div>
+          <div class="ambient-actions">
+            <button id="autoStartBoth" class="btn primary" type="button" disabled>一键完成 ACC + GYRO</button>
+            <button id="autoStartAcc" class="btn secondary" type="button" disabled>一键运行 ACC 24 姿态</button>
+            <button id="autoStartGyro" class="btn secondary" type="button" disabled>一键运行 GYRO 32 工况</button>
+            <button id="autoAbort" class="btn danger" type="button" disabled>停止自动标定并停车</button>
+          </div>
+          <div id="autoStatus" class="ambient-readout">自动任务未运行；首次实机自动运动需现场完成位置运动、制动与实体急停验收。</div>
+          <div id="autoReportFiles" class="ambient-files"></div>
+          <div class="auto-safety-note">自动运动必须由现场人员监护，且先完成项目文档中的《现场启用与验收.md》。如果尚未通过实机验收，运行按钮保持禁用；不要通过修改网页绕过此保护。实体急停优先于任何软件指令。</div>
+        </article>
+        <article class="panel ambient-panel" id="ambientGuidedPanel">
+          <div class="panel-heading"><div><h2>常温 IMU · 逐工况真实采集与 A/B/C 校验</h2><p>使用原 R7 ACC/GYRO 工况与质量算法。按当前工况人工定位转台、确认稳定后采样；<strong>本阶段不自动发送连续转台运动</strong>。</p></div><span class="pill wait">现场引导采集</span></div>
+          <div class="ambient-top">
+            <label>PCB 唯一编号<input id="ambientSn" type="text" maxlength="64" placeholder="例如 DTS123456" autocomplete="off"></label>
+            <label>重力参考符号<select id="ambientGravity"><option value="1">+1（基座 +Z）</option><option value="-1">−1（基座 −Z）</option></select></label>
+            <div class="ambient-actions"><button id="ambientStartAcc" class="btn primary" type="button">创建 ACC 24 姿态任务</button><button id="ambientStartGyro" class="btn secondary" type="button">创建 GYRO 32 工况任务</button></div>
+          </div>
+          <div id="ambientState" class="ambient-readout">尚未创建采样任务。请先连接真实 PCB 与 2TD600，再确认现场安全。</div>
+          <div class="ambient-actions">
+            <button id="ambientBegin" class="btn primary" type="button">开始当前工况采样</button>
+            <button id="ambientFinish" class="btn secondary" type="button">完成采样并质量判定</button>
+            <button id="ambientCancel" class="btn danger" type="button">取消任务（不发运动指令）</button>
+            <button id="ambientReload" class="btn secondary" type="button">刷新状态</button>
+          </div>
+          <div class="td-plan-overview">人工引导模式继续保留，用于单独验证某一姿态的真实 PCB 采样与质量门槛。上面的自动任务属于另一种工作模式，两个任务不能同时运行。</div>
+          <div id="ambientFiles" class="ambient-files"></div>
+        </article>
+      </section>
+
+      <section id="page-thermal" class="page"><div class="page-header"><div class="eyebrow">R7 / EXPERIMENT PLANNING</div><h1>温度补偿实验方案</h1><p>沿用 R7 参数命名、温度范围和速率检查函数 · 支持校验与本地保存</p></div><div class="notice warning"><span class="notice-symbol">!</span><div><b>这是实验草稿编辑器，不是自动温补启动器</b><p>保存和“校验方案”不会向 PLC 写 SP，也不会让 WK 运动。R7 的“不跳温”、稳温门槛、断点恢复和停车保护仍在原 Qt 状态机中，尚未独立迁移。</p></div></div>
+        <div class="thermal-layout"><div class="thermal-form-area">
+          <article class="panel"><div class="panel-heading"><div><h2>01 · 实验识别与温度点</h2><p>独立验证温度不参与拟合，R7 严格检查拟合区间</p></div><span class="step-bubble">01</span></div><div class="field-grid two"><label>PCB 唯一编号<input id="th-sn" data-th="sn" placeholder="DTS######"></label><label>批次 ID<input id="th-batch_id" data-th="batch_id" placeholder="如 P20261110_A"></label><label class="wide">拟合温度列表 (°C)<input id="th-fit_temperatures" data-th="fit_temperatures" placeholder="20, 25, 30, 35, 40"></label><label class="wide">独立验证温度列表 (°C)<input id="th-validation_temperatures" data-th="validation_temperatures" placeholder="22.5, 27.5, 32.5, 37.5"></label></div></article>
+          <article class="panel"><div class="panel-heading"><div><h2>02 · R7 生产与温补策略</h2><p>保留直接目标 SP 与跨姿态温差仅审计的 R7 规则</p></div><span class="step-bubble">02</span></div><div class="field-grid two"><label>扫描方式<select id="th-production_mode" data-th="production_mode"><option value="legacy">研发自定义温度</option><option value="combined">生产双向 −40 → 85 → −40</option><option value="warming">生产单向升温</option><option value="cooling">生产单向降温</option></select></label><label>最终模型曲线<select id="th-curve_policy" data-th="curve_policy"><option value="single">统一曲线 / 双向独立验收</option><option value="research_directional">方向差研发研究</option></select></label><label>温度质量模式<select id="th-quality_mode" data-th="quality_mode"><option value="production_adaptive">生产自适应 / 12 姿态联合</option><option value="continuous">研发连续温补 V3</option><option value="strict">严格恒温 R6 门槛</option></select></label><label>温箱方式<select id="th-chamber_mode" data-th="chamber_mode"><option value="plc">PLC 自动设温（方案占位）</option><option value="manual">人工逐温度确认（方案占位）</option></select></label><label>预期 GYRO 量程<select id="th-expected_gyro_fs" data-th="expected_gyro_fs" data-num="int"><option value="125">±125 °/s</option><option value="250">±250 °/s</option><option value="500">±500 °/s</option><option value="1000">±1000 °/s</option><option value="2000">±2000 °/s</option><option value="4000">±4000 °/s</option></select></label><label>共同热平衡时长 (s)<input type="number" id="th-dwell_seconds" data-th="dwell_seconds" data-num="int" min="300" max="7200"></label></div></article>
+          <article class="panel"><div class="panel-heading"><div><h2>03 · GYRO 多速率与安全门槛</h2><p>基于 R7 的上限/重叠检查，不自动改变厂家设备速度</p></div><span class="step-bubble">03</span></div><div class="field-grid two"><label class="wide">GYRO 拟合速度 (°/s)<input data-th="gyro_fit_rates" placeholder="1, 2, 3, 5, 10, 20, 30"></label><label class="wide">GYRO 验证速度 (°/s)<input data-th="gyro_verify_rates" placeholder="1.5, 2.5, 4, 7.5, 15, 25"></label><label>质量等待最多次数<input type="number" data-th="max_quality_holds" data-num="int" min="1" max="100"></label><label>到温稳定超时 (min)<input type="number" data-th="max_stabilization_wait_minutes" data-num="int"></label><label>温漂恢复窗口 (min)<input type="number" data-th="recovery_wait_minutes" data-num="int"></label><label>到温 PV 容差 (°C)<input type="number" step="0.05" data-th="pv_initial_band_c" data-num="float"></label><label>热浸 PV 容差 (°C)<input type="number" step="0.05" data-th="pv_soak_band_c" data-num="float"></label><label>WK 低速波动上限 (°/s)<input type="number" step="0.01" data-th="wk_std_low" data-num="float"></label><label>WK ≥25°/s 波动上限<input type="number" step="0.01" data-th="wk_std_high" data-num="float"></label></div></article>
+          <div class="button-row pinned"><button class="btn secondary" id="previewThermal">校验实验方案</button><button class="btn primary" id="saveThermal">保存 R7 方案草稿</button><span class="muted-text">不会启动硬件动作</span></div>
+        </div><div class="thermal-side"><article class="panel plan-card"><div class="panel-heading"><div><h2>实验方案预览</h2><p>来自 R7 原版校验函数</p></div></div><div id="planNotice" class="plan-placeholder">填写后点击“校验实验方案”，此处显示实际温度计划和规则。</div><div class="plan-summary" id="planSummary"></div><div id="planTags" class="temp-tags"></div><div class="rulelist"><div><span class="checkmark">✓</span>目标温度 PLC SP 直达 <span>R7 规则</span></div><div><span class="checkmark">✓</span>跨姿态芯片温差仅审计 <span>R7 规则</span></div><div><span class="checkmark">✓</span>完整 12 姿态联合拟合 <span>自适应</span></div><div><span class="checkmark">✓</span>逐工况芯片均温 <span>模型输入</span></div></div></article><div class="tip-card"><strong>操作建议</strong><p>先验证 PCB 有效帧和温箱、WK 状态，再考虑联调自动流程。暂时不要把配置保存视为已经启动实验。</p></div></div></div>
+      </section>
+
+      <section id="page-poses" class="page"><div class="page-header"><div class="eyebrow">R7 / CALIBRATION MATRIX</div><h1>12 姿态联合拟合工况</h1><p>展示来自原 R7 <code>production_calibration.py</code> 的标定姿态定义</p></div><div class="notice info"><span class="notice-symbol">ⓘ</span><div><b>这是原版工况清单，不是模拟采样</b><p>每个拟合温度的 12 姿态必须完整采集后联合求解。当前没有自动定位或逐姿态执行按钮，点击任何表格行都不会驱动 WK 转台。</p></div></div><div class="stats-row"><div><strong>12</strong><span>ACC 拟合姿态</span></div><div><strong>12</strong><span>ACC 独立验证姿态</span></div><div><strong>28</strong><span>温补模型候选 / 传感器</span></div></div><div class="twocol"><article class="panel"><div class="panel-heading"><div><h2>12 姿态 · 拟合集</h2><p>真实 R7 工况定义 · 内轴 β / 外轴 α</p></div><span class="pill soft">FIT</span></div><div class="pose-list" id="posesFit"><div class="empty-state">正在读取 R7 工况表</div></div></article><article class="panel"><div class="panel-heading"><div><h2>12 姿态 · 独立验证</h2><p>不参与模型拟合</p></div><span class="pill soft">HOLDOUT</span></div><div class="pose-list" id="posesVerify"><div class="empty-state">正在读取 R7 工况表</div></div></article></div></section>
+
+      <section id="page-models" class="page"><div class="page-header"><div class="eyebrow">ANALYSIS / MODEL SELECTION</div><h1>R7 模型优选与报告</h1><p>对已完成的真实 R7 实验存档执行离线质量检查、28 候选选型与 Excel 研究报告</p></div><div class="notice info"><span class="notice-symbol">ⓘ</span><div><b>如何导入原版 R7 实验</b><p>先在电脑上把原 R7 的完整实验目录（包含 <code>experiment_config.json</code> 与 <code>temperature_measurements.json</code>）复制到工程的 <code>TiltSensorCalibration/native_web_data/imported_R7_experiments</code> 文件夹，再刷新列表。只接受完成/部分完成且工况完整的传感器进行模型拟合，永不写回 MCU。</p></div></div><div class="twocol models-layout"><article class="panel"><div class="panel-heading"><div><h2>实验存档</h2><p>扫描本地导入目录</p></div><button id="refreshRuns" class="btn secondary small">刷新</button></div><div id="runsList" class="run-list"><div class="empty-state">加载实验目录中…</div></div></article><article class="panel"><div class="panel-heading"><div><h2>实验详情 / 复算</h2><p>先选择左侧已导入实验</p></div></div><div id="runDetail" class="empty-state">尚未选择实验目录</div><div id="runFiles" class="run-files"></div><div class="button-row"><button class="btn primary" id="reanalyzeBtn" disabled>复算 28 套模型与 Excel 报告</button></div><div class="analysis-job" id="analysisJob">当前无离线分析任务</div></article></div></section>
+
+      <section id="page-records" class="page"><div class="page-header"><div class="eyebrow">FILES / ACQUISITION LOG</div><h1>采集记录</h1><p>管理真实 PCB 采集生成的 CSV 原始数据文件，文件不自动跨 PCB 或批次合并</p></div><article class="panel"><div class="panel-heading"><div><h2>采集数据列表</h2><p>native_web_data / records</p></div><button class="btn secondary small" id="refreshRecords">刷新文件</button></div><div class="table-scroll"><table><thead><tr><th>文件名称</th><th>修改时间</th><th>文件大小</th><th>操作</th></tr></thead><tbody id="recordsBody"><tr><td colspan="4" class="empty-state">尚无记录</td></tr></tbody></table></div></article></section>
+
+      <section id="page-system" class="page"><div class="page-header"><div class="eyebrow">SYSTEM / DELIVERY STATUS</div><h1>系统配置与迁移进度</h1><p>清晰列出网页版已经完成的真实功能以及仍需从 R7 桌面状态机迁移的部分</p></div><div class="twocol"><article class="panel"><div class="panel-heading"><h2>本机服务信息</h2></div><div class="keyvals"><div><span>前端</span><b>HTML / CSS / JavaScript</b></div><div><span>后端</span><b>Python 标准库 HTTP</b></div><div><span>原版源码</span><b>R7 完整保留</b></div><div><span>PySide6 桌面窗口</span><b class="tone-green">网页版启动不需要</b></div><div><span>硬件数据</span><b class="tone-green">真实驱动 · 无模拟</b></div><div><span>外部控制</span><b>仅本机授权；局域网默认关闭</b></div></div></article><article class="panel"><div class="panel-heading"><h2>安全操作守则</h2></div><ol class="safety-list"><li>先关闭旧 R7 桌面版及串口助手，避免抢占同一个 COM 口。</li><li>网页不能充当紧急停车装置，必须保留现场硬件急停。</li><li>PLC 写入和 WK 运动未迁移验证前始终拒绝网页控制。</li><li>实验草稿不等于已经创建可恢复的真实实验检查点。</li><li>R6 旧检查点不要直接用于 R7 自动续做。</li></ol></article></div><article class="panel"><div class="panel-heading"><div><h2>当前可用功能</h2><p>仅列出已提供的功能</p></div></div><div class="feature-matrix"><div><b>PCB 串口连接与错误诊断</b><span class="pill good">真实驱动</span></div><div><b>六轴实时读数 / UID / 温度</b><span class="pill good">真实驱动</span></div><div><b>原始 16 样本 CSV 记录</b><span class="pill good">真实记录</span></div><div><b>PLC PV/SP/报警读取</b><span class="pill good">状态只读</span></div><div><b>WK 内外轴实际状态读取</b><span class="pill good">状态只读</span></div><div><b>2TD600 手动单步定位、双轴停车（需现场验证）</b><span class="pill pending">待现场确认</span></div><div><b>R7 温度方案与速率原版校验</b><span class="pill good">已可用</span></div><div><b>12 姿态拟合/验证工况预览</b><span class="pill good">已可用</span></div><div><b>ACC/GYRO 真实逐工况引导采集及 A/B/C 候选报告</b><span class="pill pending">现场实测待验证</span></div><div><b>完成存档的 28 模型离线分析</b><span class="pill good">接入原 R7</span></div></div></article></section>
+      <footer>WK IMU R7 RESEARCH PLATFORM <span>原版工程随包保留 · 自动控制未通过实机验收 · 无模拟硬件数据</span></footer>
+    </main>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+</body></html>

@@ -1,0 +1,4 @@
+# PLC is optional. The original R7 plc_comm.py uses the older snap7.type API.
+# If PLC access fails, prefer the exact compatible Snap7 version already verified
+# on the original working R7 PC. Do not upgrade a working control environment.
+python-snap7>=1.3,<2
