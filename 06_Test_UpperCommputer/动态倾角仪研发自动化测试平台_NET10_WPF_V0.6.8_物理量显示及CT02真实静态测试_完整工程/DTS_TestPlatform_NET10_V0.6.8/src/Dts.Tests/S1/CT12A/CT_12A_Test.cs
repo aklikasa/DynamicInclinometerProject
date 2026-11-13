@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Dts.Core;
@@ -75,6 +75,15 @@ public sealed class CT_12A_Test : TestModuleBase
                Math.Abs(feedback.Inner.SpeedDps)>0.05||Math.Abs(feedback.Outer.SpeedDps)>0.05)
                 throw new InvalidOperationException("转台未静止，拒绝Allan稳定性采集；本测试不发送运动指令");
         }
+        // Fail early on simulation, missing live FIFO, invalid scale, or UID before a 120-minute run.
+        if(context.Hardware is IAllanPreflightHardware preflight)
+        {
+            var probe=await preflight.ProbeAllanAsync(run,ct);
+            context.Progress?.Report($"CT-12A采集前预检：连续真实批次{probe.UniqueBatches}，"+
+                $"SENSOR_OK未确认{probe.SensorUnverifiedBatches}批，ODR={probe.OdrHz}Hz。"+
+                (probe.SensorUnverifiedBatches>0?"仅生成来源未核实的研发诊断；不发布噪声系数。":""));
+        }
+        else throw new NotSupportedException("当前硬件层不支持CT-12A采集前FIFO预检；拒绝开始长时采集");
         context.Progress?.Report($"CT-12A 开始真实连续采集 {s.DurationMinutes:F1}分钟，测试不会发送任何转台移动命令");
         // Existing platform capture is streamed to disk (not full FIFO in RAM) and freezes UID JSON snapshots.
         CaptureArtifacts capture=await context.Hardware.CaptureStaticImuAsync(TestId,
@@ -108,6 +117,9 @@ public sealed class CT_12A_Test : TestModuleBase
                 manifest.GetProperty("skipped_duplicates").GetInt32(),
                 manifest.GetProperty("sensor_unverified_batches").GetInt32());
             state=analysis.CoefficientsReleased?"ENGINEERING_ALLAN_UNCERTIFIED":
+                analysis.TimeQuality.ContinuousSequenceQualified && analysis.Curves.Count>=4 &&
+                    analysis.TimeQuality.SensorUnverifiedBatches>0?
+                    "ENGINEERING_ALLAN_SENSOR_UNVERIFIED":
                 analysis.TimeQuality.ContinuousSequenceQualified?
                     "TAU_COVERAGE_INSUFFICIENT":"TIMEBASE_UNQUALIFIED";
             error=analysis.TimeQuality.Warnings.Count>0?
@@ -139,6 +151,8 @@ public sealed class CT_12A_Test : TestModuleBase
         string message=analysis is null?"真实采集完成，Allan数据质量核验失败，请查看报告原因":
             analysis.CoefficientsReleased?
             $"真实采集{capture.Samples}帧，完成工程级批次Allan曲线{analysis.Curves.Count}点；没有逐帧同步证明，待验收":
+            analysis.Curves.Count>0 && analysis.TimeQuality.SensorUnverifiedBatches>0?
+            $"真实采集{capture.Samples}帧，生成{analysis.Curves.Count}个未核实来源的研发Allan曲线点；噪声系数未发布":
             $"真实采集{capture.Samples}帧，时标连续性/τ覆盖未达发布条件，已保存质量报告并拒绝发布噪声系数";
         context.Progress?.Report("CT-12A："+message);
         return new TestExecutionResult(TestId,TestOutcome.DiagnosticOnly,message,capture,files);

@@ -1,4 +1,4 @@
-using Dts.Core;
+﻿using Dts.Core;
 
 namespace Dts.Tests.S1.CT12A;
 
@@ -20,7 +20,8 @@ public sealed record Ct12aSettingsSnapshot(
 
 public sealed record Ct12aBatch(double HostUtcSeconds, uint McuTickMs,
     int OdrHz, int Frames, double GxDps, double GyDps, double GzDps,
-    double TemperatureC, double AxG, double AyG, double AzG);
+    double TemperatureC, double AxG, double AyG, double AzG,
+    bool SensorOk = true);
 
 public sealed record Ct12aTimeQuality(
     string Classification, string Description, int Batches, long Frames,
@@ -28,7 +29,7 @@ public sealed record Ct12aTimeQuality(
     double MedianMcuPeriodSeconds, double HostCadenceJitterP95Percent,
     double McuCadenceJitterP95Percent, double FifoSpanErrorP95Percent,
     double DurationSeconds, int OdrHz, bool ContinuousSequenceQualified,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings, int SensorUnverifiedBatches = 0);
 
 public sealed record Ct12aCurvePoint(double TauSeconds, int ClusterBatches,
     int OverlappingDifferences, double GxAllanDeviationDps,

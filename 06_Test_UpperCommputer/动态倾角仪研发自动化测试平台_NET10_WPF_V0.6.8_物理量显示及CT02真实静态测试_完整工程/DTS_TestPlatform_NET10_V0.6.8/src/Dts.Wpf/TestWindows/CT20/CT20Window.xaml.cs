@@ -1,0 +1,68 @@
+﻿
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Text.Json;
+using System.Windows;
+using Dts.Core;
+using Dts.TestEngine;
+using Dts.Tests.S1.CT20;
+namespace Dts.Wpf.TestWindows.CT20;
+[Dts.Wpf.TestWindows.TestWindowFor("CT-20")]
+public partial class CT20Window:Window,Dts.Wpf.TestWindows.ICalibrationRunAware
+{
+ private readonly TestDefinition _definition;private readonly ITestModule _module;private readonly IStaticAngleHardware _hardware;private readonly TestRunner _runner;private readonly string _root;
+ private CalibrationRun _calibration=CalibrationRun.Raw;private CancellationTokenSource? _cts;private string? _html;
+ public CT20Window(TestDefinition definition,ITestModule module,IStaticAngleHardware hardware,TestRunner runner,string outputRoot)
+ {InitializeComponent();_definition=definition;_module=module;_hardware=hardware;_runner=runner;_root=outputRoot;RootText.Text="报告根目录："+outputRoot;IdentityText.Text=hardware.CurrentIdentity is { } id?$"设备：{id.DtsId} / 完整UID：{id.UidHex}":"请先连接真实IMU并读取UID";}
+ public void SetCalibrationRun(CalibrationRun run)
+ { _calibration=run;try{var id=_hardware.CurrentIdentity??throw new InvalidOperationException("IMU未连接");if(run.Mode!=CalibrationMode.Ambient)throw new InvalidOperationException("CT-20只使用常温标定");run.Validate(id);var a=run.Files?.Acc??throw new InvalidDataException("ACC常温JSON缺失");var g=run.Files?.Gyro??throw new InvalidDataException("Gyro常温JSON缺失");CalibrationText.Text=$"常温标定已匹配：ACC {Path.GetFileName(a.FilePath)}；Gyro {Path.GetFileName(g.FilePath)}";}catch(Exception ex){CalibrationText.Text="标定未就绪："+ex.Message;}}
+ private static double N(string s,string name){if(!double.TryParse(s,NumberStyles.Float,CultureInfo.InvariantCulture,out var v)||!double.IsFinite(v))throw new InvalidDataException(name+"必须为有效数字（英文小数点）");return v;}
+ private static int I(string s,string name){if(!int.TryParse(s,NumberStyles.Integer,CultureInfo.InvariantCulture,out var v))throw new InvalidDataException(name+"必须为整数");return v;}
+ private DateTimeOffset ParsePowerOnUtc()
+ {
+  const string format="yyyy-MM-dd HH:mm:ss";
+  if(!DateTimeOffset.TryParseExact(PowerOnBox.Text.Trim(),format,CultureInfo.InvariantCulture,DateTimeStyles.AssumeLocal,out var value))
+   throw new InvalidDataException("请按 yyyy-MM-dd HH:mm:ss 填写人工记录的真实上电时间（本机时间）");
+  return value.ToUniversalTime();
+ }
+ private Ct20Settings Settings()=>new(_calibration,_root,ParsePowerOnUtc(),N(DurationBox.Text,"采集时长"),N(WindowBox.Text,"统计窗口"),N(StableBox.Text,"稳定持续时间"),N(BiasBox.Text,"零偏阈值"),N(DriftBox.Text,"漂移率阈值"),I(BatchesBox.Text,"最低批次数"),StaticCheck.IsChecked==true,ColdCheck.IsChecked==true,TempCheck.IsChecked==true);
+ private void OnParameterChanged(object sender,System.Windows.Controls.TextChangedEventArgs e){}
+ private async void StartClick(object sender,RoutedEventArgs e)
+ {
+  if(_cts is not null)return;
+  try
+  {
+   if(!_module.IsExecutable||_module.TestId!="CT-20")throw new InvalidOperationException("CT-20模块未正确加载");
+   if(_runner.IsRunning)throw new InvalidOperationException("已有其他测试正在运行");
+   var id=_hardware.CurrentIdentity??throw new InvalidOperationException("请先连接IMU并读取完整UID");
+   var s=Settings();Ct20Algorithm.Validate(s);
+   if(s.Calibration.Mode!=CalibrationMode.Ambient)throw new InvalidOperationException("请在主界面选择常温标定");
+   s.Calibration.Validate(id);
+   if(!Directory.Exists(_root))throw new DirectoryNotFoundException("报告根目录不存在");
+   if(MessageBox.Show(this,$"设备：{id.DtsId} / UID：{id.UidHex}\n单次采集：{s.DurationMinutes:F1}分钟\n统计窗口：{s.WindowSeconds:F0}s\n稳定持续：{s.StableWindowSeconds:F0}s\n零偏阈值：±{s.BiasToleranceDps:G4}°/s\n漂移率阈值：±{s.DriftToleranceDpsPerMin:G4}°/min\n\n请确认：已人工完成冷启动；上电时刻可追溯；转台静止；PCB全程不动。\nCT-20不会控制USB/电源，不发送转台运动命令。","CT-20真实冷启动测试",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+   StartButton.IsEnabled=false;StopButton.IsEnabled=true;ReportButton.IsEnabled=false;WindowGrid.ItemsSource=null;ProgressBar.IsIndeterminate=true;SummaryText.Text="真实FIFO采集中；完成后进行帧来源和时间序列检查。";
+   _cts=new CancellationTokenSource();var progress=new Progress<string>(m=>StatusText.Text=m);
+   var ctx=new TestExecutionContext(_definition,TimeSpan.FromMinutes(s.DurationMinutes),_hardware,progress,s);
+   var result=await _runner.RunAsync(_module,ctx,_cts.Token);StatusText.Text=result.Summary;
+   var json=result.Files.FirstOrDefault(f=>f.EndsWith("CT-20_result.json",StringComparison.OrdinalIgnoreCase));
+   if(json is not null&&File.Exists(json))ShowReport(json);
+  }
+  catch(OperationCanceledException){StatusText.Text="采集已取消；请检查原始CSV和manifest，不能将未完成记录作为稳定性结论。";}
+  catch(Exception ex){StatusText.Text="CT-20未完成："+ex.Message;MessageBox.Show(this,ex.Message,"CT-20",MessageBoxButton.OK,MessageBoxImage.Warning);}
+  finally{ProgressBar.IsIndeterminate=false;_cts?.Dispose();_cts=null;StartButton.IsEnabled=true;StopButton.IsEnabled=false;}
+ }
+ private void ShowReport(string json)
+ {
+  var d=JsonSerializer.Deserialize<Ct20ReportData>(File.ReadAllText(json))??throw new InvalidDataException("CT-20报告JSON损坏");
+  _html=Path.Combine(Path.GetDirectoryName(json)!,"CT-20_report.html");ReportButton.IsEnabled=File.Exists(_html);OutputText.Text="报告："+_html+"\n原始数据："+d.AcquisitionFolder;
+  if(d.Analysis is not { } a){SummaryText.Text="分析未通过："+d.FailureReason;return;}
+  WindowGrid.ItemsSource=a.Windows.Select(x=>new{开始分钟=x.StartMinute,结束分钟=x.EndMinute,批次=x.Batches,Gx均值=x.GxMean,Gy均值=x.GyMean,Gz均值=x.GzMean,Gx标准差=x.GxStd,Gy标准差=x.GyStd,Gz标准差=x.GzStd,Gx漂移率=x.GxDriftDpsPerMin,Gy漂移率=x.GyDriftDpsPerMin,Gz漂移率=x.GzDriftDpsPerMin,温度=x.TemperatureMean,稳定=x.Stable?"是":"否"}).ToArray();
+  SummaryText.Text=$"状态：{d.State}\n人工上电时间：{d.Settings.PowerOnUtc.ToLocalTime():yyyy-MM-dd HH:mm:ss}\n上电至首个有效批次：{a.CaptureStartDelaySeconds:F1}s\n实际采集：{a.DurationMinutes:F2} min；完整FIFO批次：{a.TotalBatches}\n总体Gyro均值 X/Y/Z：{string.Join(" / ",a.OverallMeanDps.Select(v=>v.ToString("F6")))} °/s\n总体STD：{string.Join(" / ",a.OverallStdDps.Select(v=>v.ToString("F6")))} °/s\n温度范围：{a.TemperatureMinC:F2}～{a.TemperatureMaxC:F2}℃\n稳定开始：{(a.StableStartMinute is null?"未达到":a.StableStartMinute.Value.ToString("F2")+" min")}\n"+a.StabilityRule+"\n"+a.Qualification+"\n"+string.Join("\n",a.Warnings);
+ }
+ private void StopClick(object sender,RoutedEventArgs e){_cts?.Cancel();StatusText.Text="正在停止采集并保留已写入的原始记录；不发送转台命令。";}
+ private void ReportClick(object sender,RoutedEventArgs e){if(_html is not null&&File.Exists(_html))Process.Start(new ProcessStartInfo(_html){UseShellExecute=true});}
+ private void CloseClick(object sender,RoutedEventArgs e)=>Close();
+ private void OnClosing(object? sender,CancelEventArgs e){if(_cts is null)return;e.Cancel=true;_cts.Cancel();MessageBox.Show(this,"正在停止采集，请等待写盘完成后再关闭窗口。");}
+}

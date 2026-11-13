@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Globalization;
 
 namespace Dts.Tests.S1.CT12A;
@@ -91,6 +91,7 @@ public static class Ct12aAlgorithm
         long count=0;int batchFrames=0,odr=0;uint currentTick=0;
         double sumX=0,sumY=0,sumZ=0,sumT=0,host=0;
         double sumAx=0,sumAy=0,sumAz=0;
+        bool batchSensorOk=true;
         void Flush()
         {
             if(batchFrames==0)return;
@@ -98,7 +99,7 @@ public static class Ct12aAlgorithm
                 throw new InvalidDataException($"FIFO批次不完整：{batchFrames}帧，要求完整16帧；禁止拼接缺帧数据");
             batches.Add(new Ct12aBatch(host,currentTick,odr,batchFrames,
                 sumX/batchFrames,sumY/batchFrames,sumZ/batchFrames,sumT/batchFrames,
-                sumAx/batchFrames,sumAy/batchFrames,sumAz/batchFrames));
+                sumAx/batchFrames,sumAy/batchFrames,sumAz/batchFrames,batchSensorOk));
             batchFrames=0;sumX=sumY=sumZ=sumT=sumAx=sumAy=sumAz=0;
         }
         while(true)
@@ -122,24 +123,30 @@ public static class Ct12aAlgorithm
             int index=ParseInt(sv[sindex],"sample_index");
             int rawOdr=ParseInt(rv[rodr],"odr_hz");
             int flags=ParseInt(rv[rflags],"fifo_flags");
-            if((flags&0x0003)!=0x0001)
-                throw new InvalidDataException("SENSOR_OK未确认或FIFO模拟标志置位，拒绝Allan");
+            // Simulator means counterfeit physical provenance: always reject.
+            // SENSOR_OK=0 is an UNVERIFIED hardware state, not evidence of simulation.
+            // It may still support explicitly marked, non-certifiable diagnostic curves.
+            if((flags&0x0002)!=0)
+                throw new InvalidDataException("FIFO的SIM_MODE模拟标志已置位，拒绝Allan");
+            bool sensorOk=(flags&0x0001)!=0;
             if(rawOdr<1||rawOdr>10000)
                 throw new InvalidDataException("MCU未提供合法ODR，禁止宣称有可靠采样间隔");
             if(batchFrames==0)
             {
-                currentTick=tick;odr=rawOdr;
+                currentTick=tick;odr=rawOdr;batchSensorOk=sensorOk;
                 if(!DateTimeOffset.TryParse(sv[shost],Ci,DateTimeStyles.None,out var stamp))
                     throw new InvalidDataException("主机批次UTC无效");
                 host=stamp.ToUnixTimeMilliseconds()/1000.0;
             }
             else if(tick!=currentTick)
             {
-                Flush();currentTick=tick;odr=rawOdr;
+                Flush();currentTick=tick;odr=rawOdr;batchSensorOk=sensorOk;
                 if(!DateTimeOffset.TryParse(sv[shost],Ci,DateTimeStyles.None,out var stamp))
                     throw new InvalidDataException("主机批次UTC无效");
                 host=stamp.ToUnixTimeMilliseconds()/1000.0;
             }
+            if(batchFrames>0 && sensorOk!=batchSensorOk)
+                throw new InvalidDataException("同一个FIFO批次内SENSOR_OK标志发生变化，拒绝拼接");
             if(index!=batchFrames||rawOdr!=odr||tick!=currentTick)
                 throw new InvalidDataException("FIFO批次frame_index不连续或ODR跨帧改变");
             batchFrames++;count++;
@@ -178,7 +185,13 @@ public static class Ct12aAlgorithm
         if(batches.Any(b=>b.OdrHz!=batches[0].OdrHz))warnings.Add("MCU报告的ODR在测试期间改变");
         if(batches.Any(b=>b.Frames!=16))warnings.Add("部分批次帧数不是16");
         if(manifestSamples!=n*16)warnings.Add("采集manifest帧数与原始CSV不符");
-        if(sensorUnverified!=0)warnings.Add("采集期间存在未确认的SENSOR_OK批次");
+        int actualUnverified=batches.Count(b=>!b.SensorOk);
+        if(sensorUnverified!=actualUnverified)
+            warnings.Add($"清单SENSOR_OK未确认批次={sensorUnverified}，而CSV={actualUnverified}，两者不一致");
+        // Record provenance separately; it must never be promoted to certified measurements.
+        var provenanceWarnings=new List<string>();
+        if(actualUnverified>0)
+            provenanceWarnings.Add($"{actualUnverified}个FIFO批次未确认SENSOR_OK；仅允许未核实来源的研发诊断图，不发布正式噪声指标");
         var hostPeriods=new double[n-1];var mcuPeriods=new double[n-1];
         double expectedSpan=16.0/batches[0].OdrHz;
         int gaps=0;
@@ -210,13 +223,21 @@ public static class Ct12aAlgorithm
         // it is metadata, not grounds to reject an otherwise continuous sample record.
         // Timing is batch-reception based. This cannot become hardware-grade traceable Allan by parameter choice.
         double effectivePeriod=mcu;
+        // Only timebase/continuity/manifest consistency failures block mathematical curves.
+        // Unconfirmed SENSOR_OK is a provenance qualifier, not a FIFO gap.
         bool contiguous=warnings.Count==0 && n>=settings.MinimumBatches;
+        bool sourceVerified=actualUnverified==0;
+        var allWarnings=new List<string>(warnings);
+        allWarnings.AddRange(provenanceWarnings);
         double duration=batches[^1].HostUtcSeconds-batches[0].HostUtcSeconds;
         var quality=new Ct12aTimeQuality(
-            contiguous?"ENGINEERING_HOST_BATCH_UNVERIFIED_FRAME_TIME":"TIMEBASE_OR_CONTINUITY_UNQUALIFIED",
-            contiguous?"真实16帧批次通过连续性门槛，仍缺逐帧硬件时间戳；仅用于工程诊断":"未满足FIFO连续性/时间质量条件；不发布可信Allan系数",
+            !contiguous?"TIMEBASE_OR_CONTINUITY_UNQUALIFIED":
+                sourceVerified?"ENGINEERING_HOST_BATCH_UNVERIFIED_FRAME_TIME":"ENGINEERING_SENSOR_STATUS_UNVERIFIED",
+            !contiguous?"未满足FIFO连续性/时间质量条件；不发布可信Allan系数":
+                sourceVerified?"真实16帧批次满足时标门槛，但仍无逐帧硬件时间戳":
+                    "时间连续性满足工程门槛，但SENSOR_OK状态未核实；只生成诊断曲线，不发布噪声系数",
             n,(long)n*16,skippedDuplicates,gaps,host,mcu,hostP95,mcuP95,spanP95,
-            duration,batches[0].OdrHz,contiguous,warnings);
+            duration,batches[0].OdrHz,contiguous,allWarnings,actualUnverified);
 
         var curves=new List<Ct12aCurvePoint>();
         // For non-contiguous captures, DO NOT concatenate broken windows into Allan curve.
@@ -245,14 +266,14 @@ public static class Ct12aAlgorithm
                     Allan(gx,m),Allan(gy,m),Allan(gz,m),
                     Allan(ax,m),Allan(ay,m),Allan(az,m)));
             }
-            if(curves.Count<4)warnings.Add("合格τ点不足4个，无法提取噪声参数");
+            if(curves.Count<4)allWarnings.Add("合格τ点不足4个，无法提取噪声参数");
         }
         var axisList=new List<Ct12aAxisSummary>();
         double[][] values=[batches.Select(b=>b.GxDps).ToArray(),
             batches.Select(b=>b.GyDps).ToArray(),batches.Select(b=>b.GzDps).ToArray(),
             batches.Select(b=>b.AxG).ToArray(),batches.Select(b=>b.AyG).ToArray(),
             batches.Select(b=>b.AzG).ToArray()];
-        bool released=contiguous && curves.Count>=4;
+        bool released=contiguous && sourceVerified && curves.Count>=4;
         for(int axis=0;axis<6;axis++)
         {
             bool acceleration=axis>=3;
@@ -296,7 +317,8 @@ public static class Ct12aAlgorithm
                 points.Length>0?min.sigma:null,points.Length>0?min.tau:null,
                 released?white:null,acceleration?"(m/s)/√h":"°/√h",
                 released?bias:null,acceleration?"mg":"°/h",
-                released?"真实16帧批次均值工程代理；缺少逐帧硬件时标，拟合仅在对应斜率成立时给出":
+                released?"真实16帧批次均值工程代理；缺少逐帧硬件时标":
+                    !sourceVerified?"SENSOR_OK未确认：保留诊断曲线，不发布噪声系数":
                     "时标/连续性或热稳态不合格，噪声系数不发布"));
         }
         return new Ct12aAnalysis(quality,curves,axisList,
