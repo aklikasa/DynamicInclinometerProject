@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""验证已批准的界面位置控制恢复、双轴串口自动检测、速度反馈保护与温箱退出修复版本。
+"""验证已批准的界面位置控制恢复、双轴串口自动检测、速度反馈有效性监测与温箱退出修复版本。
 运行：python tools/test_stable_base_regression.py
 """
 from pathlib import Path
@@ -13,7 +13,8 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from production_calibration import load_profile, verify_sensor_config, sensor_config_consistent, frame_average_sanitized
 
-EXPECTED_HASHES = {'main.py': '92828f46578f439872d250b53f554d6a478eed23fade695fc4f51c868d414417', 'ui/mainWindow.ui': '244213d959745f95d5c1eb3f9a042206b9c1efddc2803011508d4de907fc0a65', 'form/form_tilt_sensor_cal.py': 'f498d173e7ca0172a8c822c4cef330b6919268627f63f3f0b0a947299b257757', 'form/form_turntable_ctrl.py': 'b436a1a6d84e5fe8b756e0b01ce1e29876b8715cfa6e08beeffb1a7e0c9e2e2d', 'form/form_tc.py': 'f9f179f25d5ae85fc3f3a6b9699ed0fd426c5f60c00cca28616675f662de4faa', 'tilt_sensor/tilt_sensor_asm330_data_get.py': 'e90fe26295789c2c0cbb4b62bac43692f2a2ff391ea1059f8a22bcc7ce2c439e', 'tilt_sensor/tilt_sensor_asm330_comm.py': '8445476bf34b6581400192d9d648966fa89c65900c05739c0ffa83d82edbab2c', 'turntable/turntable_2TD600_comm.py': 'ae51b945ca665682296b46fa588c2b3dbb4da8b90bfcf104c0b64f3f107ae3a4', 'turntable/turntable_2FDT600WK_comm.py': 'bf69bad4e3b0c94b44deda7029573dc6fce8a05bb34df213288437db26620764', 'temperature_chamber/temperature_chamber_data_get.py': '1e73111d4a1ffd9a1ef1fdceb77bafd1d53e7722c5837ff112c0c3e972f4afff', 'tilt_sensor/tilt_sensor_asm330_def.py': '24feb250dd2da5840c1463b2d4b1ccb59bb7c7e1e355f6f3d2d0413e47e5aaa9', 'tilt_sensor/tilt_sensor_asm330_csv.py': '6b35140188ba2ebbbd3c50ef331e0fcefdcf764ba22553103656f25a69f82842'}
+EXPECTED_HASHES = {'main.py': '92828f46578f439872d250b53f554d6a478eed23fade695fc4f51c868d414417', 'ui/mainWindow.ui': '244213d959745f95d5c1eb3f9a042206b9c1efddc2803011508d4de907fc0a65', 'form/form_tilt_sensor_cal.py': 'f498d173e7ca0172a8c822c4cef330b6919268627f63f3f0b0a947299b257757', 'form/form_tc.py': 'f9f179f25d5ae85fc3f3a6b9699ed0fd426c5f60c00cca28616675f662de4faa', 'tilt_sensor/tilt_sensor_asm330_data_get.py': 'e90fe26295789c2c0cbb4b62bac43692f2a2ff391ea1059f8a22bcc7ce2c439e', 'tilt_sensor/tilt_sensor_asm330_comm.py': '8445476bf34b6581400192d9d648966fa89c65900c05739c0ffa83d82edbab2c', 'turntable/turntable_2TD600_comm.py': 'ae51b945ca665682296b46fa588c2b3dbb4da8b90bfcf104c0b64f3f107ae3a4', 'turntable/turntable_2FDT600WK_comm.py': 'bf69bad4e3b0c94b44deda7029573dc6fce8a05bb34df213288437db26620764', 'temperature_chamber/temperature_chamber_data_get.py': '1e73111d4a1ffd9a1ef1fdceb77bafd1d53e7722c5837ff112c0c3e972f4afff', 'tilt_sensor/tilt_sensor_asm330_def.py': '24feb250dd2da5840c1463b2d4b1ccb59bb7c7e1e355f6f3d2d0413e47e5aaa9', 'tilt_sensor/tilt_sensor_asm330_csv.py': '6b35140188ba2ebbbd3c50ef331e0fcefdcf764ba22553103656f25a69f82842'}
+# form/form_turntable_ctrl.py 在 V1.3 中按本次需求更新了反馈监测：不再限制反馈速度幅值，只拦截 NaN/Inf。
 for rel,expected in EXPECTED_HASHES.items():
     actual=hashlib.sha256((ROOT/rel).read_bytes()).hexdigest()
     assert actual==expected, f'稳定旧版核心文件被改动：{rel}'

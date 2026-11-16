@@ -31,7 +31,7 @@ import turntable_2FDT600WK_comm as wk_comm  # 手动定位专用；不改自动�
 from turntable_data_get import *
 from temperature_chamber_data_get import *
 from auto_run_state import *
-from motion_speed_guard import target_speed_allowed, sway_peak_speed, feedback_overspeed
+from motion_speed_guard import target_speed_allowed, sway_peak_speed, feedback_invalid
 
 
 class FormTurntableCtrl:
@@ -194,8 +194,8 @@ class FormTurntableCtrl:
         self._2fdt_enable_button.clicked.connect(self._enable_2fdt_axes)
         self._2fdt_enable_button.hide()
         self._2fdt_scan_log = ''
-        self._speed_limit_tripped = False
-        self._speed_limit_last_count = -1
+        self._feedback_fault_tripped = False
+        self._feedback_last_count = -1
         # 仅跟踪在“转台”页手动发起的 WK 位置指令；不参与自动标定流程。
         self._wk_manual_position_pending = {}
         self._wk_manual_position_timer = QTimer()
@@ -264,8 +264,8 @@ class FormTurntableCtrl:
 
         # 创建转台故障监测定时器
         self.timer_TurntableFaultMonitor = self.create_timer(3000, self.timer_TurntableFaultMonitor_Tick)
-        # 速度反馈有效性/自动GYRO任务临时阈值监测（硬件限位与急停独立生效）。
-        self.timer_SpeedLimitMonitor = self.create_timer(100, self._monitor_speed_limit)
+        # 仅监测速度反馈是否为有限数值；不按实际速度幅值触发软件超速停车。
+        self.timer_FeedbackValidityMonitor = self.create_timer(100, self._monitor_feedback_validity)
 
         #
         # 其他全局变量
@@ -465,15 +465,15 @@ class FormTurntableCtrl:
                 turntableState.outer_axis_alarm_code = info['alarm']
         turntableComm.terminate_thread_requst = False
         thread_of_turntable_data_get_create_and_start('2FDT600WK')
-        self._speed_limit_tripped = False
-        self._speed_limit_last_count = -1
+        self._feedback_fault_tripped = False
+        self._feedback_last_count = -1
         self.start_all_timers()
         # 两轴尚未完成使能前，不能使用“未使能”作为故障触发自动断电。
         self.timer_TurntableFaultMonitor.stop()
         self.record_user_habits()
 
     def _enable_2fdt_axes(self):
-        if self.turntable_model != '2FDT600WK' or self.button_TurntableCommPortOpen.text() != '关闭转台' or self._speed_limit_tripped:
+        if self.turntable_model != '2FDT600WK' or self.button_TurntableCommPortOpen.text() != '关闭转台' or self._feedback_fault_tripped:
             return
         states = self._2fdt_read_states_retry(timeout=1.5)
         if not all(x['ok'] and x['alarm'] == 0 and x['state'] in (0, 1) for x in states.values()):
@@ -612,7 +612,7 @@ class FormTurntableCtrl:
         self.comboBox_TurntableCommPortSelect.setEnabled(True)
         self.pushButton_TurntableCommPortRefresh.setEnabled(True)
         self._2fdt_enable_button.setEnabled(False)
-        self._speed_limit_tripped = False
+        self._feedback_fault_tripped = False
         self.record_user_habits()
 
     def _2td_pick_port_without_dialog(self):
@@ -779,9 +779,9 @@ class FormTurntableCtrl:
                     return
             turntableComm.thread_lock.release()
 
-            # 每次真正重新建立连接才允许解除上次速度反馈保护锁定。
-            self._speed_limit_tripped = False
-            self._speed_limit_last_count = -1
+            # 每次真正重新建立连接才允许解除上次速度反馈数据异常锁定。
+            self._feedback_fault_tripped = False
+            self._feedback_last_count = -1
             # 按钮全部设置为可点击
             self.all_pushbutton_setEnabled(True)
             # 启动所有定时器
@@ -901,7 +901,7 @@ class FormTurntableCtrl:
 
             # 信号灯与数据框恢复默认设置
             self.all_signal_button_restore_default_state()
-            self._speed_limit_tripped = False
+            self._feedback_fault_tripped = False
             self.button_TurntableCommPortOpen.setText("打开转台")
             self.comboBox_TurntableModelSelect.setEnabled(True)
             self.comboBox_TurntableCommPortSelect.setEnabled(True)
@@ -1060,8 +1060,8 @@ class FormTurntableCtrl:
         if self.turntable_model == '2TD600':
             if not target_speed_allowed(speed):
                 return False, '目标速率必须为非零有限数值。'
-            if self._speed_limit_tripped:
-                return False, '速度反馈保护已触发，请检查设备，确认安全后断开并重新连接。'
+            if self._feedback_fault_tripped:
+                return False, '速度反馈数据异常，请检查设备，确认安全后断开并重新连接。'
             if absolute:
                 ret = twoTD600_SetAxisPosition(axis, angle, speed)
             else:
@@ -1445,8 +1445,8 @@ class FormTurntableCtrl:
             if not target_speed_allowed(speed):
                 messagebox.showwarning("转台参数无效", f"{axis_label}目标速率必须为非零有限数值。")
                 return
-            if self._speed_limit_tripped:
-                messagebox.showwarning("速度反馈保护", "速度反馈保护已触发，请检查设备并重新连接。")
+            if self._feedback_fault_tripped:
+                messagebox.showwarning("速度反馈数据异常", "速度反馈数据异常，请检查设备并重新连接。")
                 return
         turntableComm.thread_lock.acquire()
         try:
@@ -1545,8 +1545,8 @@ class FormTurntableCtrl:
             amp = float(inner_sway_ampl_text)
             freq = float(inner_sway_freq_text)
             peak = sway_peak_speed(amp, freq)
-            if self.turntable_model == "2TD600" and self._speed_limit_tripped:
-                raise ValueError("速度反馈保护已触发，请检查设备并重新连接")
+            if self.turntable_model == "2TD600" and self._feedback_fault_tripped:
+                raise ValueError("速度反馈数据异常，请检查设备并重新连接")
         except (TypeError, ValueError) as exc:
             messagebox.showwarning("转台摇摆参数或反馈保护", str(exc))
             return
@@ -1555,8 +1555,8 @@ class FormTurntableCtrl:
             amp = float(outer_sway_ampl_text)
             freq = float(outer_sway_freq_text)
             peak = sway_peak_speed(amp, freq)
-            if self.turntable_model == "2TD600" and self._speed_limit_tripped:
-                raise ValueError("速度反馈保护已触发，请检查设备并重新连接")
+            if self.turntable_model == "2TD600" and self._feedback_fault_tripped:
+                raise ValueError("速度反馈数据异常，请检查设备并重新连接")
         except (TypeError, ValueError) as exc:
             messagebox.showwarning("转台摇摆参数或反馈保护", str(exc))
             return
@@ -1645,31 +1645,30 @@ class FormTurntableCtrl:
                 messagebox.showerror("", "外轴停车失败！" + "错误码 = " + str(comm_error_code[0]))
         turntableComm.thread_lock.release()
 
-    def _monitor_speed_limit(self):
-        """监控反馈有效性及自动GYRO任务的临时速度阈值。
+    def _monitor_feedback_validity(self):
+        """仅监测速度反馈是否有效，不对反馈速度幅值设置软件上限。
 
-        手动运行不再有统一 ±10°/s 软件限速。自动GYRO高速任务期间，
-        仅按该任务设置的临时反馈阈值监控。此机制不是硬件安全联锁。
+        转台硬件超速、驱动器故障、限位和急停状态仍由厂家状态接口/故障监测处理。
+        本监测只在速度反馈为 NaN/Inf 等无效值时锁定后续运动。
         """
-        # WK 使用其原有状态/报警机制；此任务级反馈监控仅针对 2TD600。
         if self.turntable_model == '2FDT600WK':
             return
-        if self._speed_limit_tripped or self.button_TurntableCommPortOpen.text() != '关闭转台':
+        if self._feedback_fault_tripped or self.button_TurntableCommPortOpen.text() != '关闭转台':
             return
         if not turntableData.is_turntable_data_available:
             return
         count = int(getattr(turntableData, 'update_count', 0) or 0)
-        if count == self._speed_limit_last_count:
+        if count == self._feedback_last_count:
             return
-        self._speed_limit_last_count = count
+        self._feedback_last_count = count
         last_ns = int(getattr(turntableData, 'last_update_monotonic_ns', 0) or 0)
         if last_ns <= 0 or (time.perf_counter_ns() - last_ns) > 750_000_000:
             return
         inn = float(turntableData.inner_axis_speed)
         out = float(turntableData.outer_axis_speed)
-        if not feedback_overspeed(inn, out):
+        if not feedback_invalid(inn, out):
             return
-        self._speed_limit_tripped = True
+        self._feedback_fault_tripped = True
         self.all_pushbutton_setEnabled(False)
         self.pushButton_InnerStop.setEnabled(True)
         self.pushButton_OuterStop.setEnabled(True)
@@ -1681,10 +1680,7 @@ class FormTurntableCtrl:
             try:
                 for axis in (INNER_ROTATION_AXIS, OUTER_ROTATION_AXIS):
                     try:
-                        if self.turntable_model == '2FDT600WK':
-                            ok = bool(twoFDT600WK_SetAxisStop(axis, [0]))
-                        else:
-                            ok = bool(twoTD600_SetAxisStop(axis))
+                        ok = bool(twoTD600_SetAxisStop(axis))
                         results.append(ok)
                     except Exception:
                         results.append(False)
@@ -1692,17 +1688,15 @@ class FormTurntableCtrl:
                 turntableComm.thread_lock.release()
         else:
             results = [False, False]
-        msg = (f'检测到速度反馈异常或超过当前自动GYRO任务的临时反馈阈值：'
-               f'内轴 {inn:.3f}°/s，外轴 {out:.3f}°/s。\n'
+        msg = (f'检测到转台速度反馈无效（NaN/Inf）：内轴 {inn!r}°/s，外轴 {out!r}°/s。\n'
                f'已尝试发送两轴停车命令（返回：{results}）。后续运动已锁定。\n'
-               '请立即检查实际转速、急停及机械安全条件；软件指令不保证瞬时停车。')
-        # 不使用阻塞式警告框；保持“停车”和硬件状态操作可用。
-        self._speed_alarm_dialog = QMessageBox(self.pushButton_closeWindows)
-        self._speed_alarm_dialog.setIcon(QMessageBox.Critical)
-        self._speed_alarm_dialog.setWindowTitle('转台速度反馈保护触发')
-        self._speed_alarm_dialog.setText(msg)
-        self._speed_alarm_dialog.setModal(False)
-        self._speed_alarm_dialog.show()
+               '请检查反馈链路、实际转速及硬件急停；软件指令不保证瞬时停车。')
+        self._feedback_alarm_dialog = QMessageBox(self.pushButton_closeWindows)
+        self._feedback_alarm_dialog.setIcon(QMessageBox.Critical)
+        self._feedback_alarm_dialog.setWindowTitle('转台速度反馈数据异常')
+        self._feedback_alarm_dialog.setText(msg)
+        self._feedback_alarm_dialog.setModal(False)
+        self._feedback_alarm_dialog.show()
 
     def timer_InnerAxisPositionAndSpeedDisplay_Tick(self):
         """
@@ -2053,7 +2047,7 @@ class FormTurntableCtrl:
         # 转台故障监测定时器
         self.turntable_fault_conut = 0
         self.timer_TurntableFaultMonitor.start()
-        self.timer_SpeedLimitMonitor.start()
+        self.timer_FeedbackValidityMonitor.start()
 
     def stop_all_timers(self):
         """
@@ -2069,7 +2063,7 @@ class FormTurntableCtrl:
         self.timer_OuterAxisStateDisplay.stop()
         # 转台故障监测定时器
         self.timer_TurntableFaultMonitor.stop()
-        self.timer_SpeedLimitMonitor.stop()
+        self.timer_FeedbackValidityMonitor.stop()
 
     def all_signal_button_restore_default_state(self):
         """

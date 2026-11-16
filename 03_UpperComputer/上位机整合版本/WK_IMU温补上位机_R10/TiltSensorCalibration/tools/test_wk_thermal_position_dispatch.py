@@ -75,7 +75,7 @@ class Fixture:
         self.data = types.SimpleNamespace(inner_axis_speed=0.0, outer_axis_speed=0.0)
         self.Runner = load_methods(self)
         self.obj = self.Runner()
-        self.obj.turntable_form = types.SimpleNamespace(_speed_limit_tripped=False)
+        self.obj.turntable_form = types.SimpleNamespace(_feedback_fault_tripped=False)
         self.obj.move_speed = types.SimpleNamespace(value=lambda: 2.0)
         self.obj.task = {}
         self.obj.logs = []

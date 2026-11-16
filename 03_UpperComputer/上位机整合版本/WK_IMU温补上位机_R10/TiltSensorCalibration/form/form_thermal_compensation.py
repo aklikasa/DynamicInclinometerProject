@@ -1129,8 +1129,8 @@ class FormThermalCompensation:
 
     def _move(self, inner, outer):
         """WK温补专用有向姿态定位；按已验证的ACC流程分轴发送并确认启动。"""
-        if bool(getattr(self.turntable_form, '_speed_limit_tripped', False)):
-            raise ValueError('转台速度反馈保护已触发，禁止温补运动。')
+        if bool(getattr(self.turntable_form, '_feedback_fault_tripped', False)):
+            raise ValueError('转台速度反馈数据异常，禁止温补运动。')
         if not self._stopped():
             raise ValueError('两轴未停车，不允许发送定位命令')
         if not all(math.isfinite(float(v)) and 0 <= float(v) <= 360 for v in (inner, outer)):
@@ -1246,8 +1246,8 @@ class FormThermalCompensation:
                                    '已提前判定指令未启动，不再空等240秒')
 
     def _rate_command(self,axis,rate):
-        if bool(getattr(self.turntable_form, '_speed_limit_tripped', False)):
-            raise ValueError('转台速度反馈保护已触发，禁止温补运动。')
+        if bool(getattr(self.turntable_form, '_feedback_fault_tripped', False)):
+            raise ValueError('转台速度反馈数据异常，禁止温补运动。')
         if self.task is None or self.task.get('phase') not in ('settle',):
             raise ValueError('非温补动态工况阶段，禁止发送速率指令')
         direction, acceleration, speed = wk_signed_velocity(float(rate), int(self.gyro_accel.value()), axis)

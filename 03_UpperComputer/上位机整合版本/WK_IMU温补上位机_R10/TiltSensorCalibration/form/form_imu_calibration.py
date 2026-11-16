@@ -57,14 +57,13 @@ from model_comparison_report import save_model_comparison, save_selected_model
 from production_calibration import (
     load_profile, acc_fit_steps, acc_verify_steps, gyro_fit_steps, gyro_verify_steps,
     GYRO_FULL60_FIT_DPS, GYRO_FULL60_VERIFY_DPS, GYRO_HIGH_SPEED_AUTO_CEILING_DPS,
-    profile_with_gyro_rates,
+    profile_with_gyro_rates, parse_gyro_rate_text,
     robust_segment, frame_average_sanitized, residual_statistics, evaluate, sensor_axis_invariants,
     verify_sensor_config, sensor_config_consistent, restrict_unverified_release,
 )
 from calibration_artifact_paths import (
     ambient_root, ambient_filename, existing_ambient_path, safe_device_sn,
 )
-from motion_speed_guard import set_auto_gyro_high_speed_limit
 
 
 
@@ -210,7 +209,7 @@ def _rotation_angle_deg(rotation):
 
 
 
-APP_REVISION = "imu-calibration-workbench-R10.2-gyro-full60-no-global-10dps-cap"
+APP_REVISION = "imu-calibration-workbench-R10.3-gyro-editable-rates-no-feedback-speed-ceiling"
 # 仅作为常温 GYRO 自动任务的高速专项确认门槛，不是转台全局速度上限。
 GYRO_HIGH_SPEED_ACK_THRESHOLD_DPS = 10.0
 
@@ -406,23 +405,25 @@ class FormImuCalibration:
         )
         task_grid.addWidget(self.combo_calibration_model, 4, 1, 1, 3)
 
-        # 常温 GYRO 固定 1–60°/s 多点方案；温补页面仍使用自己的温度/速率配置。
-        rate_panel = QGroupBox("陀螺仪常温固定多点标定（至 60°/s；X/Y/Z 每档正反转）")
+        # 常温 GYRO 默认 1–60°/s 多点方案；拟合/验证速率均可在界面按需编辑。
+        rate_panel = QGroupBox("陀螺仪常温多点标定（速率可编辑，最高 60°/s）")
         rate_grid = QGridLayout(rate_panel)
         rate_grid.addWidget(QLabel("标定方案"), 0, 0)
-        rate_grid.addWidget(QLabel("固定 1–60°/s 多点拟合 + 独立验证，不提供低速/自定义切换"), 0, 1, 1, 3)
+        rate_grid.addWidget(QLabel("自定义拟合速率 + 独立验证速率；X/Y/Z 每档自动正反转"), 0, 1, 1, 3)
         rate_grid.addWidget(QLabel("拟合速率 ±(°/s)"), 1, 0)
         self.edit_gyro_fit_rates = QLineEdit()
         self.edit_gyro_fit_rates.setObjectName("edit_gyro_fit_rates")
-        self.edit_gyro_fit_rates.setReadOnly(True)
-        self.edit_gyro_fit_rates.setToolTip("固定拟合速率，仅供查看；包含零点附近灵敏度所需低速点。")
+        self.edit_gyro_fit_rates.setReadOnly(False)
+        self.edit_gyro_fit_rates.setPlaceholderText("例如：1, 2, 5, 10, 15, 20, 30, 45, 60")
+        self.edit_gyro_fit_rates.setToolTip("可编辑拟合速率幅值，逗号/分号分隔；范围 0.1–60°/s，最多20个点。程序自动生成三轴正反转。")
         self.edit_gyro_fit_rates.setText(", ".join(f"{v:g}" for v in GYRO_FULL60_FIT_DPS))
         rate_grid.addWidget(self.edit_gyro_fit_rates, 1, 1, 1, 3)
         rate_grid.addWidget(QLabel("独立验证速率 ±(°/s)"), 2, 0)
         self.edit_gyro_verify_rates = QLineEdit()
         self.edit_gyro_verify_rates.setObjectName("edit_gyro_verify_rates")
-        self.edit_gyro_verify_rates.setReadOnly(True)
-        self.edit_gyro_verify_rates.setToolTip("固定独立验证速率，与拟合速率完全不重合。")
+        self.edit_gyro_verify_rates.setReadOnly(False)
+        self.edit_gyro_verify_rates.setPlaceholderText("例如：3, 7.5, 12, 25, 35, 50, 55")
+        self.edit_gyro_verify_rates.setToolTip("可编辑独立验证速率幅值，逗号/分号分隔；范围 0.1–60°/s，最多20个点；不能与拟合速率重合。")
         self.edit_gyro_verify_rates.setText(", ".join(f"{v:g}" for v in GYRO_FULL60_VERIFY_DPS))
         rate_grid.addWidget(self.edit_gyro_verify_rates, 2, 1, 1, 3)
         self.label_gyro_rate_summary = QLabel()
@@ -437,7 +438,7 @@ class FormImuCalibration:
         self.spin_gyro_rate_accel.setToolTip("仅常温 GYRO 高速自动任务使用；10°/s²是待实机核实的起始设置，不是厂家认证值。")
         rate_grid.addWidget(self.spin_gyro_rate_accel, 4, 1)
         self.check_gyro_high_speed = QCheckBox(
-            "高速专项确认：已核实转台持续 60°/s 能力、加减速、累计行程、线缆/滑环、限位、急停和反馈精度"
+            "当拟合/验证速率超过 10°/s 时确认：已核实转台额定转速、加减速、累计行程、线缆/滑环、限位及急停"
         )
         rate_grid.addWidget(self.check_gyro_high_speed, 5, 0, 1, 4)
         self.label_gyro_high_risk = QLabel(
@@ -455,6 +456,9 @@ class FormImuCalibration:
             "若出现超限工况，结果只保存到本次运行目录，不覆盖该设备已有常温标定文件。"
         )
         rate_grid.addWidget(self.check_gyro_std_trial, 7, 0, 1, 4)
+        self.edit_gyro_fit_rates.editingFinished.connect(self._refresh_gyro_rate_summary)
+        self.edit_gyro_verify_rates.editingFinished.connect(self._refresh_gyro_rate_summary)
+        self.check_gyro_high_speed.stateChanged.connect(self._refresh_gyro_rate_summary)
         self._refresh_gyro_rate_summary()
         task_grid.addWidget(rate_panel, 5, 0, 1, 4)
 
@@ -462,7 +466,7 @@ class FormImuCalibration:
         self.button_accel_plan.setObjectName("button_Plan")
         self.button_accel_plan.clicked.connect(self._start_accel_auto)
         self.button_gyro_plan = QPushButton("开始陀螺仪自动标定")
-        self.button_gyro_plan.setToolTip("一次完成 1–60°/s 固定多点拟合和独立验证；高速必须逐次人工确认转台安全条件。")
+        self.button_gyro_plan.setToolTip("按界面自定义速率完成常温多点拟合和独立验证；超过10°/s须确认转台安全条件，最高60°/s。")
         self.button_gyro_plan.clicked.connect(self._start_gyro_auto)
         self.button_alignment_check = QPushButton("开始六轴标定结果独立验证")
         self.button_alignment_check.clicked.connect(self._start_alignment_auto)
@@ -475,7 +479,7 @@ class FormImuCalibration:
         self.button_compare_acc.setToolTip("自动完成12拟合+12独立验证；输出三方案参数及误差比较，不改变既有正式标定参数。")
         self.button_compare_acc.clicked.connect(self._start_acc_compare)
         self.button_compare_gyro = QPushButton("自动采集 + GYRO 三方案对比测试")
-        self.button_compare_gyro.setToolTip("按本页固定 1–60°/s 速率自动采集，并用相同拟合集、独立验证集比较三种模型。")
+        self.button_compare_gyro.setToolTip("按本页当前自定义速率自动采集，并用相同拟合集、独立验证集比较三种模型。")
         self.button_compare_gyro.clicked.connect(self._start_gyro_compare)
         task_grid.addWidget(self.button_compare_acc, 7, 0, 1, 2)
         task_grid.addWidget(self.button_compare_gyro, 7, 2, 1, 2)
@@ -500,9 +504,9 @@ class FormImuCalibration:
         warning = QLabel(
             "自动任务会实际驱动 2TD600。启动前必须在“转台”页面连接并使能转台，在左侧设备连接区打开 IMU 串口。"
             "当前为 ASM330LHHX 试运行：MCU 未确认量程/ODR 时允许研发标定，但不得正式出厂放行。"
-            "常温 GYRO 固定采用 1–60°/s 多点方案；每次高速执行前必须核实连续旋转、累计行程、加减速、线缆和急停条件。"
+            "常温 GYRO 默认采用 1–60°/s 多点方案，拟合和独立验证速率可编辑；每次高速执行前必须核实连续旋转、累计行程、加减速、线缆和急停条件。"
             "转台人工控制不再设置统一 ±10°/s 软件限速；自动 GYRO 工况超过 10°/s 时仍须完成高速专项安全确认，"
-            "本次固定多点标定最高为 60°/s。"
+            "本页面可编辑速率最高为 60°/s。"
         )
         warning.setWordWrap(True)
         warning.setStyleSheet("color: #836e50; background: #f8f4e9; border: 1px solid #e9e0cf; border-radius: 8px; padding: 7px;")
@@ -886,8 +890,6 @@ class FormImuCalibration:
         self.spin_gyro_rate_accel.setEnabled(False)
         self.check_gyro_high_speed.setEnabled(False)
         self.check_gyro_std_trial.setEnabled(False)
-        # 清除上一任务的临时反馈阈值；进入已确认的高速速率工况后再按目标速率设置。
-        set_auto_gyro_high_speed_limit(None)
         self.button_record_start.setEnabled(False)
         self.button_abort_auto.setEnabled(True)
         self._set_turntable_manual_controls_locked(True)
@@ -895,28 +897,38 @@ class FormImuCalibration:
         self.label_auto_task.setText(f"自动标定启动：{experiment_type}，共 {count} 步")
         self.auto_timer.start()
 
-    def _refresh_gyro_rate_summary(self):
-        """展示固定多点工况数量；展示文本不参与工况生成。"""
-        fit = list(GYRO_FULL60_FIT_DPS)
-        verify = list(GYRO_FULL60_VERIFY_DPS)
-        self.label_gyro_rate_summary.setText(
-            f"拟合：{len(fit)}档 × 3轴 × 正反转 + 零偏 = {1 + 6 * len(fit)}步；"
-            f"独立验证：{len(verify)}档 × 3轴 × 正反转 + 零偏 = {1 + 6 * len(verify)}步。"
-            "固定方案；每次实际执行均需单独确认高速设备条件。"
-        )
+    def _refresh_gyro_rate_summary(self, *_):
+        """根据界面当前输入显示可编辑速率表的工况数量和校验状态。"""
+        try:
+            fit = parse_gyro_rate_text(self.edit_gyro_fit_rates.text(), '拟合速率')
+            verify = parse_gyro_rate_text(self.edit_gyro_verify_rates.text(), '独立验证速率')
+            overlap = sorted(set(fit) & set(verify))
+            if overlap:
+                raise ValueError('拟合与独立验证速率不能重合：' + ', '.join(f'{x:g}' for x in overlap))
+            peak = max(fit + verify)
+            high_note = ('；超过10°/s，启动前须勾选高速专项确认'
+                         if peak > GYRO_HIGH_SPEED_ACK_THRESHOLD_DPS else '；当前速率不超过10°/s')
+            self.label_gyro_rate_summary.setStyleSheet('color: #166534;')
+            self.label_gyro_rate_summary.setText(
+                f"拟合：{len(fit)}档 × 3轴 × 正反转 + 零偏 = {1 + 6 * len(fit)}步；"
+                f"独立验证：{len(verify)}档 × 3轴 × 正反转 + 零偏 = {1 + 6 * len(verify)}步；"
+                f"最高速率 {peak:g}°/s{high_note}。"
+            )
+        except ValueError as exc:
+            self.label_gyro_rate_summary.setStyleSheet('color: #b45309;')
+            self.label_gyro_rate_summary.setText(f'速率配置待修正：{exc}')
 
     def _load_ui_gyro_profile(self, *, allow_std_warning=False):
-        """只为常温 GYRO 任务构造冻结的 1–60°/s 配置；不改写磁盘配置和温补流程。"""
+        """按界面自定义速率冻结常温 GYRO 任务配置；不改写磁盘配置和温补流程。"""
         try:
             base = load_profile(_PROJECT_DIR)
-            if not self.check_gyro_high_speed.isChecked():
-                raise ValueError(
-                    "1–60°/s 多点标定包含 60°/s 高速工况；请先核实转台连续旋转、累计行程、加减速、"
-                    "线缆/滑环、限位、急停和反馈精度，再勾选高速专项确认。"
-                )
+            fit_rates = parse_gyro_rate_text(self.edit_gyro_fit_rates.text(), '拟合速率')
+            verify_rates = parse_gyro_rate_text(self.edit_gyro_verify_rates.text(), '独立验证速率')
+            if set(fit_rates) & set(verify_rates):
+                raise ValueError('拟合速率与独立验证速率不能重合。')
             profile = profile_with_gyro_rates(
-                base, list(GYRO_FULL60_FIT_DPS), list(GYRO_FULL60_VERIFY_DPS),
-                high_speed_acknowledged=True,
+                base, fit_rates, verify_rates,
+                high_speed_acknowledged=self.check_gyro_high_speed.isChecked(),
                 acceleration_dps2=self.spin_gyro_rate_accel.value()
             )
             if allow_std_warning and self.check_gyro_std_trial.isChecked():
@@ -988,8 +1000,8 @@ class FormImuCalibration:
             return False
 
     def _task_both_axes_safe(self):
-        if bool(getattr(self.turntable_form, '_speed_limit_tripped', False)):
-            return False, "转台软件超速保护已触发，必须中止自动标定。"
+        if bool(getattr(self.turntable_form, '_feedback_fault_tripped', False)):
+            return False, "转台速度反馈数据无效，必须中止自动标定。"
         task = self._auto_task
         if task is not None:
             try:
@@ -1022,8 +1034,8 @@ class FormImuCalibration:
         speed = float(self.spin_position_speed.value())
         if not math.isfinite(speed) or speed <= 0:
             return False, "自动标定位置速度必须为正的有限数值。"
-        if bool(getattr(self.turntable_form, '_speed_limit_tripped', False)):
-            return False, "转台速度反馈保护已触发。"
+        if bool(getattr(self.turntable_form, '_feedback_fault_tripped', False)):
+            return False, "转台速度反馈数据异常。"
         with turntableComm.thread_lock:
             inner_ok = bool(twoTD600_SetAxisPosition(INNER_ROTATION_AXIS, float(inner_deg), speed))
             if not inner_ok:
@@ -1044,7 +1056,7 @@ class FormImuCalibration:
         limit = min(float(rates.get('maximum_command_rate_dps', GYRO_HIGH_SPEED_ACK_THRESHOLD_DPS)), ceiling)
         if not math.isfinite(float(speed)) or abs(float(speed)) > limit:
             return False
-        if bool(getattr(self.turntable_form, '_speed_limit_tripped', False)):
+        if bool(getattr(self.turntable_form, '_feedback_fault_tripped', False)):
             return False
         accel = float(rates.get('velocity_accel_dps2', 1.0))
         if not math.isfinite(accel) or not 1.0 <= accel <= 30.0:
@@ -1283,11 +1295,8 @@ class FormImuCalibration:
                 if not math.isfinite(speed) or abs(speed) > task_cap:
                     self._request_auto_abort("目标速率超过本次任务的软件限幅。")
                     return
-                # 只在单个高速速率工况的加速、匀速采样和减速阶段授权；
-                # 反馈阈值按目标速率留10%余量，且绝不超过60°/s。
-                monitor_limit = min(task_cap, max(abs(speed) * 1.10, abs(speed) + 0.5))
-                set_auto_gyro_high_speed_limit(
-                    monitor_limit if abs(speed) > GYRO_HIGH_SPEED_ACK_THRESHOLD_DPS else None)
+                # 仅校验本次任务下发的目标速率不超过已确认工艺范围；
+                # 不再对实际速度反馈设置新增的软件超速阈值。硬件超速状态仍由转台状态接口检查。
                 accel = float(rates.get('velocity_accel_dps2', 1.0))
                 result = self._send_axis_velocity(axis, speed)
                 self._log_event("INFO" if result else "ERROR", "AUTO_RATE_COMMAND",
@@ -1357,8 +1366,6 @@ class FormImuCalibration:
                     if task["stable_since"] is None:
                         task["stable_since"] = now
                     elif now - task["stable_since"] >= 0.5:
-                        # 实际双轴均确认静止后立即撤销本速率工况的高速反馈许可。
-                        set_auto_gyro_high_speed_limit(None)
                         retrying = (phase == "wait_stop_retry")
                         task["phase"] = "position_command"
                         if not retrying:
@@ -1608,10 +1615,8 @@ class FormImuCalibration:
     def _request_auto_abort(self, reason):
         task = self._auto_task
         if task is None:
-            set_auto_gyro_high_speed_limit(None)
             return
-        # 一旦中止，立即撤销自动GYRO任务的临时反馈阈值，避免残留高速授权。
-        set_auto_gyro_high_speed_limit(None)
+        # 中止时发送停车命令；不设置或撤销应用侧速度反馈幅值阈值。
         if task["phase"] == "aborting":
             return
         task["abort_reason"] = str(reason)
@@ -2005,7 +2010,6 @@ class FormImuCalibration:
     def _finalize_auto_task(self, success, reason, show_dialog=False):
         task = self._auto_task
         if task is None:
-            set_auto_gyro_high_speed_limit(None)
             return
         task_type = task.get("type", "unknown")
         self.auto_timer.stop()
@@ -2023,8 +2027,7 @@ class FormImuCalibration:
         self.check_gyro_high_speed.setChecked(False)
         self.check_gyro_std_trial.setEnabled(True)
         self.check_gyro_std_trial.setChecked(False)
-        # 任务结束即撤销临时高速反馈监控许可；人工转台不设置统一±10°/s软件限速。
-        set_auto_gyro_high_speed_limit(None)
+        # 不设置新增的实际速度反馈阈值；转台硬件超速/驱动/限位状态仍独立检查。
         self.button_record_start.setEnabled(True)
         self.button_abort_auto.setEnabled(False)
         self._set_turntable_manual_controls_locked(False)
@@ -2110,12 +2113,12 @@ class FormImuCalibration:
         self._write_plan_file('accel_production_24_pose_plan.json', payload)
 
     def _generate_gyro_plan(self):
-        """导出与常温 GYRO 自动任务完全一致的固定 1–60°/s 计划；不驱动硬件。"""
+        """导出与当前界面自定义速率完全一致的常温 GYRO 计划；不驱动硬件。"""
         profile = self._load_ui_gyro_profile()
         if profile is None:
             return
         steps = gyro_fit_steps(profile) + gyro_verify_steps(profile)
-        payload = {'schema_version':3, 'plan_type':'gyroscope_ambient_full60_fit_validate',
+        payload = {'schema_version':3, 'plan_type':'gyroscope_ambient_custom_rate_fit_validate',
                    'created_at':_now_iso(), 'device_serial':self.line_device_sn.text().strip(),
                    'axis_model':self._current_axis_model(),
                    'active_fit_rates_dps':profile['rates']['fit_dps'],
@@ -2270,8 +2273,8 @@ class FormImuCalibration:
                 self._last_poll_error = f"事件日志写入失败：{exc}"
 
     def _motion_precheck(self, axis):
-        if bool(getattr(self.turntable_form, '_speed_limit_tripped', False)):
-            return False, "转台速度反馈保护已触发，必须确认安全后重新连接。"
+        if bool(getattr(self.turntable_form, '_feedback_fault_tripped', False)):
+            return False, "转台速度反馈数据异常，必须确认安全后重新连接。"
         if not self._is_turntable_connected() or not turntableData.is_turntable_data_available:
             return False, "2TD600 未连接或尚未取得有效反馈。"
         if not self.check_safety.isChecked():
@@ -2853,7 +2856,6 @@ class FormImuCalibration:
 
     def shutdown(self):
         """应用退出时请求两轴停车并关闭记录；不代替硬件急停。"""
-        set_auto_gyro_high_speed_limit(None)
         try:
             if self._auto_task is not None:
                 try:
@@ -2862,7 +2864,6 @@ class FormImuCalibration:
                     pass
                 self._auto_task = None
                 self.auto_timer.stop()
-                set_auto_gyro_high_speed_limit(None)
                 self._set_turntable_manual_controls_locked(False)
             if self.recording:
                 self._stop_recording()

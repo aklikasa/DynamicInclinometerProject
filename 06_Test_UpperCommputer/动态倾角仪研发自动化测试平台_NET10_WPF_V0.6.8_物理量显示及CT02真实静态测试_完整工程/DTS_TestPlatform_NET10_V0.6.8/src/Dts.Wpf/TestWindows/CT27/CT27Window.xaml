@@ -1,0 +1,116 @@
+<Window x:Class="Dts.Wpf.TestWindows.CT27.CT27Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-27 · Gyro运动后零偏恢复专项" Width="1240" Height="860"
+ MinWidth="1060" MinHeight="720" WindowStartupLocation="CenterOwner"
+ Closing="OnClosing" Background="#F3F7FC">
+ <Window.Resources>
+  <Style x:Key="Card" TargetType="Border">
+   <Setter Property="Background" Value="White"/><Setter Property="CornerRadius" Value="9"/>
+   <Setter Property="BorderBrush" Value="#DCE6EF"/><Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="Padding" Value="13"/>
+  </Style>
+  <Style TargetType="TextBox">
+   <Setter Property="MinHeight" Value="29"/><Setter Property="Padding" Value="7,4"/>
+   <Setter Property="Margin" Value="0,3,0,6"/><Setter Property="BorderBrush" Value="#CBD9E6"/>
+  </Style>
+  <Style TargetType="CheckBox"><Setter Property="Margin" Value="0,5,0,5"/></Style>
+  <Style TargetType="Button"><Setter Property="MinHeight" Value="34"/><Setter Property="Padding" Value="15,6"/><Setter Property="Margin" Value="5,0,0,0"/></Style>
+  <Style TargetType="DataGrid"><Setter Property="IsReadOnly" Value="True"/><Setter Property="CanUserAddRows" Value="False"/>
+   <Setter Property="AutoGenerateColumns" Value="True"/><Setter Property="GridLinesVisibility" Value="Horizontal"/>
+   <Setter Property="RowHeight" Value="30"/><Setter Property="HeadersVisibility" Value="Column"/>
+  </Style>
+ </Window.Resources>
+ <Grid Margin="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,12">
+   <StackPanel>
+    <TextBlock Text="CT-27 / Gyro运动后零偏恢复专项" FontSize="22" FontWeight="Bold" Foreground="#183F62"/>
+    <TextBlock Text="真实2TD正反向运动 · 运动前零速基线 · 停稳后连续分窗采集 · 三轴校正Gyro零偏变化与恢复时间" Margin="0,5,0,0" Foreground="#5D7892" TextWrapping="Wrap"/>
+    <TextBlock x:Name="IdentityText" Margin="0,7,0,0" Foreground="#28659A" TextWrapping="Wrap"/>
+    <TextBlock x:Name="CalibrationText" Margin="0,4,0,0" Foreground="#526D86" TextWrapping="Wrap"/>
+    <TextBlock x:Name="BridgeText" Margin="0,5,0,0" Foreground="#8A5A24" TextWrapping="Wrap"/>
+   </StackPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="405"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel>
+     <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="① 运动工况" FontSize="16" FontWeight="Bold" Foreground="#1E5C91"/>
+       <TextBlock Text="测试轴（另一个轴由程序保持在0°）" Margin="0,8,0,2"/>
+       <WrapPanel>
+        <CheckBox x:Name="AxisZ" Content="内轴 / Gyro Z" IsChecked="True" Checked="SettingsChanged" Unchecked="SettingsChanged" Margin="0,0,18,0"/>
+        <CheckBox x:Name="AxisX" Content="外轴 / Gyro X" IsChecked="True" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       </WrapPanel>
+       <TextBlock Text="运动速率（°/s；默认3.5和30）" Margin="0,5,0,2"/>
+       <TextBox x:Name="RatesBox" Text="3.5,30" TextChanged="SettingsChanged"/>
+       <UniformGrid Columns="2">
+        <StackPanel Margin="0,0,6,0"><TextBlock Text="每工况重复次数"/><TextBox x:Name="RepeatsBox" Text="1" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,0"><TextBlock Text="准备定位速度（°/s）"/><TextBox x:Name="SetupSpeedBox" Text="2" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,0"><TextBlock Text="运动起点（°）"/><TextBox x:Name="TravelMinBox" Text="30" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,0"><TextBlock Text="运动终点（°）"/><TextBox x:Name="TravelMaxBox" Text="150" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,0"><TextBlock Text="批准行程下界（°）"/><TextBox x:Name="ApprovedMinBox" Text="0" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,0"><TextBlock Text="批准行程上界（°）"/><TextBox x:Name="ApprovedMaxBox" Text="180" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,0"><TextBlock Text="运动前静置（s）"/><TextBox x:Name="SettleBox" Text="3" TextChanged="SettingsChanged"/></StackPanel>
+       </UniformGrid>
+       <TextBlock Text="正向：起点→终点；反向：终点→起点。Gyro Y保留为交叉轴观测，不单独宣称Y轴准确度。" Foreground="#647D94" TextWrapping="Wrap" Margin="0,5,0,0"/>
+      </StackPanel>
+     </Border>
+     <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="② 零偏恢复采样" FontSize="16" FontWeight="Bold" Foreground="#1E5C91"/>
+       <UniformGrid Columns="2" Margin="0,7,0,0">
+        <StackPanel Margin="0,0,6,0"><TextBlock Text="运动前基线（s）"/><TextBox x:Name="BaselineBox" Text="180" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,0"><TextBlock Text="运动后观察（s）"/><TextBox x:Name="RecoveryBox" Text="180" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,0"><TextBlock Text="单个恢复窗口（s）"/><TextBox x:Name="BinBox" Text="5" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,0"><TextBlock Text="连续稳定窗口数"/><TextBox x:Name="ConsecutiveBox" Text="3" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="0,0,6,0"><TextBlock Text="恢复观察带（°/s）"/><TextBox x:Name="BandBox" Text="0.05" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Margin="6,0,0,0"><TextBlock Text="每窗最少有效帧"/><TextBox x:Name="MinSamplesBox" Text="20" TextChanged="SettingsChanged"/></StackPanel>
+       </UniformGrid>
+       <TextBlock Text="观察带仅用于描述相对运动前基线的恢复，不是产品验收限值。连续稳定窗口之后若再次反弹，不报告已恢复。" Foreground="#8A5A24" TextWrapping="Wrap" Margin="0,5,0,0"/>
+      </StackPanel>
+     </Border>
+     <Border Style="{StaticResource Card}">
+      <StackPanel>
+       <TextBlock Text="③ 现场安全确认" FontSize="16" FontWeight="Bold" Foreground="#1E5C91"/>
+       <CheckBox x:Name="MotionApproval" Content="已确认扫描行程、工装固定及线缆余量" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <CheckBox x:Name="EmergencyApproval" Content="已确认实体急停有效且现场有人监护" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <CheckBox x:Name="MappingApproval" Content="已核实内轴↔Gyro Z、外轴↔Gyro X映射" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <TextBlock Text="启动前必须确认profile中已核验的FIFO槽位、时序说明和每轴限速。无真实动态桥或profile未启用时，程序禁止发出运动命令。" Foreground="#8A5A24" TextWrapping="Wrap" Margin="0,6,0,0"/>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+   </ScrollViewer>
+   <Grid Grid.Column="2">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,10">
+     <StackPanel>
+      <TextBlock Text="执行状态" FontSize="16" FontWeight="Bold" Foreground="#1E5C91"/>
+      <TextBlock x:Name="StatusText" Text="等待主程序IMU、常温标定与CT-10动态桥就绪" Margin="0,7,0,0" TextWrapping="Wrap"/>
+      <ProgressBar x:Name="ProgressBar" Height="9" Margin="0,8,0,0" Minimum="0" Maximum="100"/>
+      <TextBlock x:Name="OutputText" Margin="0,7,0,0" TextWrapping="Wrap" Foreground="#526D86"/>
+     </StackPanel>
+    </Border>
+    <TabControl Grid.Row="1">
+     <TabItem Header="运动计划"><DataGrid x:Name="PlanGrid"/></TabItem>
+     <TabItem Header="零偏恢复结果"><DataGrid x:Name="CyclesGrid"/></TabItem>
+     <TabItem Header="方法说明">
+      <ScrollViewer><TextBlock Margin="14" TextWrapping="Wrap" Text="每个工况均先将测试轴定位到起点，确认另一轴保持0°并静置，然后采集180～300秒运动前零速基线。随后复用CT-10真实动态采集桥，按设定速率执行一次真实编码器可观测的单向扫描。确认目标轴停稳后，连续采集60～180秒零速恢复窗口。\n\n每帧原始物理量按当前UID匹配的常温Gyro JSON输入量程换算，再将偏置和矩阵应用一次。报告记录运动前基线均值/标准差、运动中编码器实测速率、运动后各窗口三轴均值/标准差、相对基线的Δbias、最大观测台阶及持续恢复时间上界。\n\nCT-27评价的是Gyro静止输出恢复，不是ACC倾角代理角，也不是设备融合倾角。恢复观察带是可调分析门限，不等同产品规格；没有明确产品标准和可溯源参考时不自动PASS。动态Gyro时间戳为主机接收时标，不是传感器硬件采样时刻。"/></ScrollViewer>
+     </TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,10,0,0">
+     <TextBlock x:Name="PlanText" TextWrapping="Wrap" Foreground="#526D86"/>
+    </Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" LastChildFill="False" Margin="0,12,0,0">
+   <Button DockPanel.Dock="Right" x:Name="CloseButton" Content="关闭" Click="CloseClick"/>
+   <Button DockPanel.Dock="Right" x:Name="OpenReportButton" Content="打开图文报告" Click="OpenReportClick" IsEnabled="False"/>
+   <Button DockPanel.Dock="Right" x:Name="StopButton" Content="取消并双轴软停车" Click="StopClick" IsEnabled="False" Background="#FCE8DD"/>
+   <Button DockPanel.Dock="Right" x:Name="PreviewButton" Content="预览工况计划" Click="PreviewClick"/>
+   <Button DockPanel.Dock="Right" x:Name="StartButton" Content="▶ 开始CT-27真实测试" Click="StartClick" Background="#CBE4FF" IsEnabled="False"/>
+  </DockPanel>
+ </Grid>
+</Window>

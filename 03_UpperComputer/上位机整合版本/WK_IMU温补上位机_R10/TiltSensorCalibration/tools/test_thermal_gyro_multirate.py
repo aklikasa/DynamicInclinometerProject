@@ -162,7 +162,7 @@ class MultiRateTests(unittest.TestCase):
         ns=dict(math=math,ctypes=ctypes,time=time,turntableComm=comm,turntableData=table,
                 INNER_ROTATION_AXIS=0,OUTER_ROTATION_AXIS=2,wk_comm=wk,wk_signed_velocity=wk_signed_velocity)
         func=isolated_method('_rate_command',ns)
-        dummy=types.SimpleNamespace(task={'phase':'settle'},turntable_form=types.SimpleNamespace(_speed_limit_tripped=False),
+        dummy=types.SimpleNamespace(task={'phase':'settle'},turntable_form=types.SimpleNamespace(_feedback_fault_tripped=False),
                 gyro_accel=types.SimpleNamespace(value=lambda:30),_wk_rate_guard=None,_stopped=lambda:True,
                 _log=lambda msg:None)
         func(dummy,'inner',+60)

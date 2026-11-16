@@ -10,7 +10,7 @@ from xml.etree import ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'turntable'))
-from motion_speed_guard import target_speed_allowed, sway_peak_speed, feedback_overspeed
+from motion_speed_guard import target_speed_allowed, sway_peak_speed, feedback_invalid
 assert target_speed_allowed(10)
 assert target_speed_allowed(-10)
 assert target_speed_allowed(10.0001)
@@ -22,10 +22,10 @@ assert not target_speed_allowed(float('nan'))
 assert not target_speed_allowed(float('inf'))
 assert abs(sway_peak_speed(1.0, 1.0)-math.tau)<1e-7
 assert sway_peak_speed(2.0,1.0)>10
-assert not feedback_overspeed(0, -10.01)
-assert not feedback_overspeed(120, -95)
-assert not feedback_overspeed(10, -9.99)
-assert feedback_overspeed(float('nan'), 0)
+assert not feedback_invalid(0, -10.01)
+assert not feedback_invalid(120, -95)
+assert not feedback_invalid(60.01, 0)
+assert feedback_invalid(float('nan'), 0)
 
 root=ET.parse(ROOT/'ui/mainWindow.ui').getroot()
 tabs={x.attrib['name']:x for x in root.findall('.//widget') if x.attrib.get('name') in ('tab_27','tab_30')}

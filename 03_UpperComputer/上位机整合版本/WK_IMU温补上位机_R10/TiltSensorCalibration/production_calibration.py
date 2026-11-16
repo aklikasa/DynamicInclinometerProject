@@ -7,14 +7,33 @@ import json
 import math
 import os
 import copy
+import re
 import numpy as np
 
 PROFILE_FILENAME = 'production_quality_profile.json'
 
-# 常温 IMU 页面固定使用 1–60°/s 多点方案；全温补页面仍独立读取原工艺配置。
+# 常温 IMU 页面默认提供 1–60°/s 多点方案，并允许按界面自定义拟合/验证速率；全温补页面独立配置。
 GYRO_FULL60_FIT_DPS = (1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0, 45.0, 60.0)
 GYRO_FULL60_VERIFY_DPS = (3.0, 7.5, 12.0, 25.0, 35.0, 50.0, 55.0)
 GYRO_HIGH_SPEED_AUTO_CEILING_DPS = 60.0
+
+
+def parse_gyro_rate_text(text, label='速率', *, minimum=0.1, maximum=60.0, max_points=20):
+    """解析常温 GYRO 可编辑速率列表；逗号/分号/空格分隔，幅值范围 0.1–60°/s。"""
+    tokens = [x for x in re.split(r"[,，;；\s]+", str(text or '').strip()) if x]
+    if not tokens:
+        raise ValueError(f'{label}不能为空，请输入逗号分隔的速率幅值。')
+    if len(tokens) > int(max_points):
+        raise ValueError(f'{label}最多允许{int(max_points)}个速率点，避免自动任务过长。')
+    try:
+        values = [float(x) for x in tokens]
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f'{label}包含无法识别的数字，请使用逗号分隔的数值。')
+    if any(not math.isfinite(x) or x < float(minimum) or x > float(maximum) for x in values):
+        raise ValueError(f'{label}每个速率必须在{minimum:g}–{maximum:g}°/s范围内。')
+    if len({round(x, 9) for x in values}) != len(values):
+        raise ValueError(f'{label}存在重复速率。')
+    return values
 
 
 def profile_with_gyro_rates(profile, fit_rates, verify_rates, *,
@@ -45,7 +64,7 @@ def profile_with_gyro_rates(profile, fit_rates, verify_rates, *,
     if high_speed:
         candidate['rates']['high_speed_trial_acknowledged'] = True
         candidate['rates']['maximum_command_rate_dps'] = GYRO_HIGH_SPEED_AUTO_CEILING_DPS
-        candidate['profile_id'] = str(profile.get('profile_id', 'PILOT')) + '_GYRO_FULL60_TRIAL'
+        candidate['profile_id'] = str(profile.get('profile_id', 'PILOT')) + '_GYRO_HIGH_SPEED_CUSTOM_TRIAL'
         candidate['approved_for_production'] = False
     validate_profile(candidate)
     return candidate

@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / 'turntable'))
 from calibration_artifact_paths import (
     ambient_root, thermal_root, ambient_filename, thermal_filename
 )
-from motion_speed_guard import feedback_overspeed, set_auto_gyro_high_speed_limit
+from motion_speed_guard import feedback_invalid
 
 
 def test_profile_and_98_steps():
@@ -48,6 +48,28 @@ def test_profile_and_98_steps():
     assert len(fit_steps) == 55 and len(verify_steps) == 43
     assert len({s['step_id'] for s in fit_steps + verify_steps}) == 98
     assert max(abs(s['target_rate_dps']) for s in fit_steps + verify_steps if s['mode'] == 'rate') == 60.0
+
+    # 用户可自定义拟合/验证点；三轴正反转工况数随输入变化。
+    custom_fit = pc.parse_gyro_rate_text('2, 7.5, 20, 60', '拟合速率')
+    custom_verify = pc.parse_gyro_rate_text('1, 3, 10, 30, 55', '独立验证速率')
+    custom_profile = pc.profile_with_gyro_rates(
+        disk, custom_fit, custom_verify, high_speed_acknowledged=True, acceleration_dps2=10.0
+    )
+    assert custom_profile['rates']['fit_dps'] == custom_fit
+    assert custom_profile['rates']['verify_dps'] == custom_verify
+    assert len(pc.gyro_fit_steps(custom_profile)) == 25
+    assert len(pc.gyro_verify_steps(custom_profile)) == 31
+    low_profile = pc.profile_with_gyro_rates(
+        disk, [1, 2, 5], [1.5, 3.5], high_speed_acknowledged=False, acceleration_dps2=2.0
+    )
+    assert low_profile['rates']['maximum_command_rate_dps'] == 10.0
+    for bad_text in ('', '0, 2', '61', '1, 1', 'abc', '0.01'):
+        try:
+            pc.parse_gyro_rate_text(bad_text, '测试速率')
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f'非法速率输入未被拒绝：{bad_text!r}')
 
     for bad_accel in (0.5, 31.0):
         try:
@@ -190,10 +212,11 @@ def test_ui_and_turntable_guard_integration():
     tree = ast.parse(src)
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'FormImuCalibration')
     methods = {n.name: ast.get_source_segment(src, n) for n in cls.body if isinstance(n, ast.FunctionDef)}
-    assert 'self.edit_gyro_fit_rates.setReadOnly(True)' in src
-    assert 'self.edit_gyro_verify_rates.setReadOnly(True)' in src
-    assert 'GYRO_FULL60_FIT_DPS' in methods['_load_ui_gyro_profile']
-    assert 'GYRO_FULL60_VERIFY_DPS' in methods['_load_ui_gyro_profile']
+    assert 'self.edit_gyro_fit_rates.setReadOnly(False)' in src
+    assert 'self.edit_gyro_verify_rates.setReadOnly(False)' in src
+    assert 'self.edit_gyro_fit_rates.text()' in methods['_load_ui_gyro_profile']
+    assert 'self.edit_gyro_verify_rates.text()' in methods['_load_ui_gyro_profile']
+    assert 'parse_gyro_rate_text' in methods['_load_ui_gyro_profile']
     assert 'self.check_gyro_high_speed.isChecked()' in methods['_load_ui_gyro_profile']
     for name in ('_start_gyro_auto', '_start_gyro_compare', '_start_alignment_auto', '_generate_gyro_plan'):
         assert 'self._load_ui_gyro_profile(' in methods[name], name
@@ -203,38 +226,27 @@ def test_ui_and_turntable_guard_integration():
     assert 'copy.deepcopy(profile_override)' in methods['_start_auto_task']
     assert 'expected_steps' in methods['_start_auto_task']
     assert 'self.check_gyro_high_speed.setChecked(False)' in methods['_finalize_auto_task']
-    assert 'set_auto_gyro_high_speed_limit(None)' in methods['_finalize_auto_task']
-    assert 'set_auto_gyro_high_speed_limit(None)' in methods['_request_auto_abort']
-    assert 'set_auto_gyro_high_speed_limit(None)' in methods['_start_auto_task']
+    assert 'set_auto_gyro_high_speed_limit' not in src
     tick_src = methods['_auto_task_tick']
-    assert 'monitor_limit = min(task_cap, max(abs(speed) * 1.10, abs(speed) + 0.5))' in tick_src
-    assert 'set_auto_gyro_high_speed_limit(' in tick_src
-    assert 'set_auto_gyro_high_speed_limit(None)' in tick_src
+    assert 'monitor_limit' not in tick_src
+    assert '实际速度反馈设置新增的软件超速阈值' in tick_src
     assert 'experimental_dynamic_std_warn_only' in methods['_save_calibration_result']
     assert 'ambient_root' in methods['_save_calibration_result']
 
-    # Manual operation has no global +/-10°/s feedback cap.
-    assert feedback_overspeed(10.01, 0.0) is False
-    assert feedback_overspeed(120.0, -95.0) is False
-    set_auto_gyro_high_speed_limit(60.0)
-    assert feedback_overspeed(59.9, 0.0) is False
-    assert feedback_overspeed(60.01, 0.0) is True
-    set_auto_gyro_high_speed_limit(None)
-    assert feedback_overspeed(10.01, 0.0) is False
-    for invalid_limit in (10.0, 60.01, float('nan')):
-        try:
-            set_auto_gyro_high_speed_limit(invalid_limit)
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('临时自动高速授权不得低于/超过允许边界或使用NaN')
+    # 实际速度反馈不再按目标速率/60°/s阈值触发软件超速；只拦截 NaN/Inf 无效反馈。
+    assert feedback_invalid(10.01, 0.0) is False
+    assert feedback_invalid(120.0, -95.0) is False
+    assert feedback_invalid(60.01, 0.0) is False
+    assert feedback_invalid(float('nan'), 0.0) is True
+    assert feedback_invalid(0.0, float('inf')) is True
 
-    # 转台控制页不再设置全局±10°/s命令/反馈上限；保留任务临时阈值和反馈有效性检查。
+    # 转台控制页不再设置实际速度幅值的软件反馈上限；保留反馈有效性及厂家硬件故障状态检查。
     tt_source = ROOT / 'form' / 'form_turntable_ctrl.py'
     tt_src = tt_source.read_text(encoding='utf-8')
-    assert 'if not feedback_overspeed(inn, out):' in tt_src
-    assert 'MAX_ABS_SPEED_DPS' not in tt_src
+    assert 'if not feedback_invalid(inn, out):' in tt_src
+    assert 'feedback_overspeed' not in tt_src
     assert 'target_speed_allowed(speed)' in tt_src  # 仅校验有限非零输入，不含固定速率上限
+    assert 'twoTD600_getAxisOverSpeed(axis)' in (ROOT / 'form' / 'form_imu_calibration.py').read_text(encoding='utf-8')
     imu_src = source.read_text(encoding='utf-8')
     assert 'if not math.isfinite(speed) or speed <= 0:' in imu_src  # 自动位置运动不再受10°/s限幅
     assert 'if abs(speed) > GYRO_HIGH_SPEED_ACK_THRESHOLD_DPS:' not in imu_src  # 手动速率入口无10°/s限幅
@@ -253,4 +265,4 @@ if __name__ == '__main__':
     test_warn_only_is_isolated_and_other_checks_remain()
     test_ui_and_turntable_guard_integration()
     test_dts_ambient_thermal_file_naming_remains_intact()
-    print('PASS: R10 + GYRO60 98工况、试验质控隔离、取消全局±10°/s限速并保留自动GYRO任务反馈阈值、DTS文件命名（纯离线）')
+    print('PASS: R10 + GYRO60 默认98工况/自定义速率、移除软件反馈超速阈值、保留硬件故障检查、DTS文件命名（纯离线）')
