@@ -1,0 +1,90 @@
+﻿<Window x:Class="Dts.Wpf.TestWindows.CT19.CT19Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-19 · Gyro独立运行短期重复性" Width="1180" Height="820"
+ MinWidth="1020" MinHeight="700" WindowStartupLocation="CenterOwner" Background="#F3F7FC" Closing="OnClosing">
+ <Grid Margin="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Background="White" CornerRadius="8" Padding="14" Margin="0,0,0,12">
+   <StackPanel>
+    <TextBlock Text="CT-19 / Gyro独立运行短期重复性" FontSize="22" FontWeight="Bold" Foreground="#183B5B"/>
+    <TextBlock x:Name="IdentityText" Margin="0,6,0,0" Foreground="#28659A" TextWrapping="Wrap"/>
+    <TextBlock x:Name="CalibrationText" Margin="0,4,0,0" Foreground="#627A91" TextWrapping="Wrap"/>
+    <TextBlock x:Name="BridgeText" Margin="0,5,0,0" Foreground="#8A5A24" TextWrapping="Wrap"/>
+   </StackPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="390"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+    <StackPanel>
+     <Border Background="White" CornerRadius="8" Padding="13" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="① 动态测试工况" FontSize="17" FontWeight="Bold"/>
+       <TextBlock Text="有真实编码器参考的测试轴" Margin="0,9,0,3"/>
+       <WrapPanel>
+        <CheckBox x:Name="AxisZ" Content="内轴 / Gyro Z" IsChecked="True" Margin="0,0,18,0" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+        <CheckBox x:Name="AxisX" Content="外轴 / Gyro X" IsChecked="True" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       </WrapPanel>
+       <TextBlock Text="Gyro Y保留为交叉轴输出，不单独计算Y轴速率准确度。" Foreground="#8A5A24" TextWrapping="Wrap" Margin="0,5,0,0"/>
+       <TextBlock Text="速率档（°/s，逗号分隔）" Margin="0,10,0,3"/>
+       <TextBox x:Name="RatesBox" Text="4.5,6,7.5,10,15,20,30,45,60" Padding="7" TextChanged="SettingsChanged"/>
+       <Grid Margin="0,9,0,0">
+        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Margin="0,0,5,7"><TextBlock Text="每工况重复次数"/><TextBox x:Name="RepeatsBox" Text="3" Padding="6" TextChanged="SettingsChanged"/></StackPanel>
+        <StackPanel Grid.Column="1" Margin="5,0,0,7"><TextBlock Text="定位速度(°/s)"/><TextBox x:Name="SetupSpeedBox" Text="2" Padding="6" TextChanged="SettingsChanged"/></StackPanel>
+       </Grid>
+       <TextBlock Text="扫描起始角（°）" Margin="0,6,0,3"/><TextBox x:Name="TravelMinBox" Text="30" Padding="6" TextChanged="SettingsChanged"/>
+       <TextBlock Text="扫描终止角（°）" Margin="0,7,0,3"/><TextBox x:Name="TravelMaxBox" Text="150" Padding="6" TextChanged="SettingsChanged"/>
+       <TextBlock Text="批准行程下界（°）" Margin="0,7,0,3"/><TextBox x:Name="ApprovedMinBox" Text="0" Padding="6" TextChanged="SettingsChanged"/>
+       <TextBlock Text="批准行程上界（°）" Margin="0,7,0,3"/><TextBox x:Name="ApprovedMaxBox" Text="180" Padding="6" TextChanged="SettingsChanged"/>
+       <TextBlock Text="定位后静置时间（s）" Margin="0,7,0,3"/><TextBox x:Name="SettleBox" Text="3" Padding="6" TextChanged="SettingsChanged"/>
+      </StackPanel>
+     </Border>
+     <Border Background="White" CornerRadius="8" Padding="13" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="② 动态数据质量参数" FontSize="17" FontWeight="Bold"/>
+       <TextBlock Text="匀速区速率允许偏差（比例）" Margin="0,8,0,3"/><TextBox x:Name="SpeedToleranceBox" Text="0.15" Padding="6" TextChanged="SettingsChanged"/>
+       <TextBlock Text="编码器微分窗口（s）" Margin="0,7,0,3"/><TextBox x:Name="DerivativeWindowBox" Text="0.2" Padding="6" TextChanged="SettingsChanged"/>
+       <TextBlock Text="每段最少有效Gyro帧" Margin="0,7,0,3"/><TextBox x:Name="MinFramesBox" Text="20" Padding="6" TextChanged="SettingsChanged"/>
+       <CheckBox x:Name="InvertInner" Content="内轴 / Gyro Z方向反号" Margin="0,8,0,3" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <CheckBox x:Name="InvertOuter" Content="外轴 / Gyro X方向反号" Margin="0,3,0,3" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <TextBlock Text="不使用命令速率代替实测速率；参考速度由真实编码器位置按时间微分得到。" Foreground="#526D86" TextWrapping="Wrap" Margin="0,8,0,0"/>
+      </StackPanel>
+     </Border>
+     <Border Background="White" CornerRadius="8" Padding="13">
+      <StackPanel>
+       <TextBlock Text="③ 现场安全确认" FontSize="17" FontWeight="Bold"/>
+       <CheckBox x:Name="MotionApproval" Content="已确认扫描行程、工装固定及线缆余量" Margin="0,10,0,5" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <CheckBox x:Name="EmergencyApproval" Content="已确认实体急停有效且现场有人监护" Margin="0,3,0,5" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <CheckBox x:Name="MappingApproval" Content="已核实内轴↔Gyro Z、外轴↔Gyro X及正负号" Margin="0,3,0,5" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+       <TextBlock Text="CT-19复用CT-10动态适配器。10°/s不再作为软件上限；每个轴的实际最高速率由ct10_machine_profile.json中有证据的限速决定。当前仅支持0～360°内的有限扫描，不执行多圈连续运动。" Foreground="#8A5A24" TextWrapping="Wrap" Margin="0,8,0,0"/>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+   </ScrollViewer>
+   <Grid Grid.Column="2">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Background="White" CornerRadius="8" Padding="13" Margin="0,0,0,10">
+     <StackPanel>
+      <TextBlock Text="执行状态" FontSize="17" FontWeight="Bold"/>
+      <TextBlock x:Name="StatusText" Text="等待主程序硬件与常温标定就绪" Margin="0,7,0,0" TextWrapping="Wrap"/>
+      <ProgressBar x:Name="ProgressBar" Height="9" Margin="0,8,0,0" IsIndeterminate="False"/>
+      <TextBlock x:Name="OutputText" Margin="0,7,0,0" TextWrapping="Wrap" Foreground="#526D86"/>
+     </StackPanel>
+    </Border>
+    <TabControl Grid.Row="1">
+     <TabItem Header="逐段运行结果"><DataGrid x:Name="RunsGrid" AutoGenerateColumns="True" IsReadOnly="True" CanUserAddRows="False"/></TabItem>
+     <TabItem Header="重复性汇总"><DataGrid x:Name="GroupsGrid" AutoGenerateColumns="True" IsReadOnly="True" CanUserAddRows="False"/></TabItem>
+     <TabItem Header="方法说明"><ScrollViewer><TextBlock Margin="12" TextWrapping="Wrap" Text="CT-19评价同一Gyro轴、速率和方向下多次独立动态扫描的均值离散。输出跨运行STD和残差跨运行STD是重复性指标；单段残差STD/RMSE反映该段动态误差波动。正反向配对差异用于观察方向依赖。编码器参考由CT-10动态算法从真实反馈微分获得；动态时间戳为同一主机Stopwatch时基下的主机接收/反馈时标，不是传感器硬件采样时刻。Gyro Y作为交叉轴保留在逐帧CSV中，不单独声称Y轴角速度准确度。无产品标准和可溯源参考不输出PASS。"/></ScrollViewer></TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="12" Margin="0,10,0,0"><TextBlock x:Name="PlanText" TextWrapping="Wrap" Foreground="#526D86"/></Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" LastChildFill="False" Margin="0,12,0,0">
+   <Button x:Name="CloseButton" Content="关闭" Padding="18,8" Margin="6,0" Click="CloseClick" DockPanel.Dock="Right"/>
+   <Button x:Name="StopButton" Content="取消并停车" Padding="18,8" Margin="6,0" Click="StopClick" IsEnabled="False" DockPanel.Dock="Right"/>
+   <Button x:Name="PreviewButton" Content="预览测试计划" Padding="18,8" Margin="6,0" Click="PreviewClick" DockPanel.Dock="Right"/>
+   <Button x:Name="StartButton" Content="开始CT-19真实测试" Padding="20,8" Margin="6,0" Click="StartClick" DockPanel.Dock="Right" Background="#1769AA" Foreground="White"/>
+  </DockPanel>
+ </Grid>
+</Window>

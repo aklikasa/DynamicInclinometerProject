@@ -1,0 +1,13 @@
+最终版离线回归摘要 (2026-11-05)
+命令：python -m compileall -q .
+命令：python -m unittest discover -s tools -p test_*.py -q
+运行结果：114项测试，112项通过，2项未通过。
+两项失败源自输入的上一版ZIP，已对原版单独复现：
+  - test_2fdt_zero_status.py: 历史版回零状态界面文本断言不匹配
+  - test_stable_base_regression.py: 历史转台控制文件SHA256断言不匹配
+为保留设备安全边界，本次未改动 form/form_turntable_ctrl.py、
+turntable/turntable_2FDT600WK_comm.py 或 temperature_chamber/temperature_chamber_comm.py。
+
+新增的28套联合候选模型、PV校正、拟合/验证数据隔离、
+无PV降级、历史原始CSV恢复、MCU计算输入转换及Excel报告测试已通过。
+这些都是合成数据/静态接口测试，不是Windows上位机启动或真实硬件联调验收。

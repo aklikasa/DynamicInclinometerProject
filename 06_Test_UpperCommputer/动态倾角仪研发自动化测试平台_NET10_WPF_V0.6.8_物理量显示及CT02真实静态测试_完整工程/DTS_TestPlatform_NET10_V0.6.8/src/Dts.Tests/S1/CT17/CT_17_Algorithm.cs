@@ -1,0 +1,312 @@
+﻿using Dts.Tests.S1.CT10;
+using Dts.Tests.S1.CT12A;
+namespace Dts.Tests.S1.CT17;
+
+public static class Ct17Algorithm
+{
+    private static double Median(IEnumerable<double> source)
+    {
+        var a=source.Where(double.IsFinite).OrderBy(x=>x).ToArray();
+        if(a.Length==0)return double.NaN;
+        return a.Length%2==0?(a[a.Length/2-1]+a[a.Length/2])/2:a[a.Length/2];
+    }
+    private static double P95(IEnumerable<double> source)
+    {
+        var a=source.Where(double.IsFinite).OrderBy(x=>x).ToArray();
+        return a.Length==0?double.NaN:a[(int)Math.Floor((a.Length-1)*0.95)];
+    }
+    private static double Mad(IEnumerable<double> source,double median)
+        =>Median(source.Select(x=>Math.Abs(x-median)));
+    private static double? F(double x)=>double.IsFinite(x)?x:null;
+
+    public static void Validate(Ct17Settings s,bool confirmations=true)
+    {
+        if(!double.IsFinite(s.StaticCaptureSeconds)||s.StaticCaptureSeconds<10||s.StaticCaptureSeconds>300)
+            throw new InvalidDataException("静态时间基采集时长应为10～300秒");
+        if(!double.IsFinite(s.ExpectedHostBatchHz)||s.ExpectedHostBatchHz<1||s.ExpectedHostBatchHz>200)
+            throw new InvalidDataException("目标主机批次输出频率应为1～200Hz");
+        if(!double.IsFinite(s.HostRateTolerancePercent)||s.HostRateTolerancePercent<1||s.HostRateTolerancePercent>100)
+            throw new InvalidDataException("主机输出频率容差应为1%～100%");
+        if(!double.IsFinite(s.PreMotionDwellSeconds)||s.PreMotionDwellSeconds<0.5||s.PreMotionDwellSeconds>5)
+            throw new InvalidDataException("运动前基线静置时间应为0.5～5秒");
+        if(!double.IsFinite(s.SettleSeconds)||s.SettleSeconds<0||s.SettleSeconds>30)
+            throw new InvalidDataException("定位后静置时间应为0～30秒");
+        if(!s.TestInner&&!s.TestOuter)throw new InvalidDataException("至少选择一个转台轴");
+        if(s.Repetitions is <1 or >10)throw new InvalidDataException("正反向往复重复次数应为1～10");
+        if(!double.IsFinite(s.CenterDeg)||s.CenterDeg<0||s.CenterDeg>360||
+           !double.IsFinite(s.AmplitudeDeg)||s.AmplitudeDeg<0.1||s.AmplitudeDeg>5)
+            throw new InvalidDataException("中心角应为0～360°，单侧幅值应为0.1～5°");
+        if(!double.IsFinite(s.CommandSpeedDps)||s.CommandSpeedDps<=0||s.CommandSpeedDps>20||
+           !double.IsFinite(s.SetupSpeedDps)||s.SetupSpeedDps<=0||s.SetupSpeedDps>20)
+            throw new InvalidDataException("测试速率/定位速率必须在(0,20]°/s；实际还受设备核验限速约束");
+        if(!double.IsFinite(s.ApprovedMinDeg)||!double.IsFinite(s.ApprovedMaxDeg)||
+           s.ApprovedMinDeg<0||s.ApprovedMaxDeg>360||s.ApprovedMaxDeg<=s.ApprovedMinDeg||
+           s.CenterDeg-s.AmplitudeDeg<s.ApprovedMinDeg||s.CenterDeg+s.AmplitudeDeg>s.ApprovedMaxDeg)
+            throw new InvalidDataException("小幅往复范围超出现场批准行程");
+        if(!double.IsFinite(s.EncoderDerivativeWindowSeconds)||s.EncoderDerivativeWindowSeconds<0.04||s.EncoderDerivativeWindowSeconds>0.5)
+            throw new InvalidDataException("编码器速度微分窗口应为0.04～0.5秒");
+        if(!double.IsFinite(s.MaxLagSearchMs)||s.MaxLagSearchMs<20||s.MaxLagSearchMs>1000)
+            throw new InvalidDataException("互相关时延搜索范围应为20～1000ms");
+        if(s.InnerGyroSign is not (-1 or 1)||s.OuterGyroSign is not (-1 or 1))
+            throw new InvalidDataException("Gyro轴向投影符号只能为+1或-1");
+        if(confirmations&&(!s.MotionAndCablingApproved||!s.EmergencyStopConfirmed||!s.SensorMappingVerified))
+            throw new InvalidOperationException("运动测试前必须确认机械/线缆行程、实体急停和Gyro轴向映射");
+    }
+
+    public static Ct17StaticTiming AnalyzeStatic(IReadOnlyList<Ct12aBatch> batches,Ct17Settings s)
+    {
+        if(batches.Count<5)throw new InvalidDataException("静态时基样本少于5个完整FIFO批次");
+        var warnings=new List<string>();
+        bool blocks=batches.All(b=>b.Frames==16);
+        if(!blocks)warnings.Add("存在非16帧FIFO批次");
+        var odrs=batches.Select(b=>b.OdrHz).Distinct().ToArray();
+        if(odrs.Length==0||odrs[0]<=0)throw new InvalidDataException("MCU未提供有效ODR，不能判断16帧FIFO的预期时间跨度");
+        if(odrs.Length!=1)warnings.Add("ODR在采集中改变；以下tick间隔只按首批ODR作工程估计");
+        double[] host=batches.Select(b=>b.HostUtcSeconds).ToArray();
+        var hostDt=host.Zip(host.Skip(1),(a,b)=>b-a).ToArray();
+        if(hostDt.Any(x=>x<=0))throw new InvalidDataException("主机批次时间戳重复或逆序");
+        double hostPeriod=Median(hostDt);
+        double hostRate=1/hostPeriod;
+        double hostJitter=P95(hostDt.Select(x=>Math.Abs(x-hostPeriod)*1000));
+        uint[] ticks=batches.Select(b=>b.McuTickMs).ToArray();
+        var tickDt=new double[batches.Count-1];
+        var unwrapped=new double[batches.Count];unwrapped[0]=0;
+        for(int i=1;i<batches.Count;i++)
+        {
+            uint delta=unchecked(ticks[i]-ticks[i-1]);
+            if(delta==0)throw new InvalidDataException("MCU批次tick重复，无法建立时间轴");
+            tickDt[i-1]=delta;unwrapped[i]=unwrapped[i-1]+delta;
+        }
+        double tickPeriod=Median(tickDt);
+        double expected=16000.0/odrs[0];
+        double tickError=double.IsFinite(expected)?Math.Abs(tickPeriod-expected)/expected*100:double.NaN;
+        int candidateMissing=0,unclassified=0;
+        if(double.IsFinite(expected)&&expected>0)
+        foreach(double dt in tickDt)
+        {
+            double ratio=dt/expected;
+            if(!double.IsFinite(ratio)||ratio>10000){unclassified++;continue;}
+            int mult=(int)Math.Round(ratio);
+            if(ratio>=1.5&&mult>=2&&Math.Abs(ratio-mult)<=0.25)candidateMissing+=mult-1;
+            else if(ratio>=1.5)unclassified++;
+        }
+        double candidateRatio=candidateMissing==0?0:
+            candidateMissing*16.0/(batches.Count*16.0+candidateMissing*16.0);
+        // Linear host-vs-MCU clock mapping. Intercept is intentionally not called
+        // absolute latency: the two clocks have no shared epoch and serial delay is unknown.
+        double[] x=unwrapped.Select(v=>v/1000.0).ToArray();
+        double[] y=host.Select(v=>v-host[0]).ToArray();
+        double mx= x.Average(),my=y.Average();
+        double den=x.Sum(v=>(v-mx)*(v-mx));
+        double slope=den>0?x.Select((v,i)=>(v-mx)*(y[i]-my)).Sum()/den:double.NaN;
+        double intercept=my-slope*mx;
+        double[] residual=y.Select((v,i)=>v-(intercept+slope*x[i])).ToArray();
+        double residualP95=P95(residual.Select(v=>Math.Abs(v)*1000));
+        double drift=double.IsFinite(slope)?(slope-1)*1e6:double.NaN;
+        double duration=host[^1]-host[0];
+        double hostRateError=Math.Abs(hostRate-s.ExpectedHostBatchHz)/s.ExpectedHostBatchHz*100;
+        if(hostRateError>s.HostRateTolerancePercent)
+            warnings.Add($"主机批次输出频率{hostRate:F2}Hz，与目标{s.ExpectedHostBatchHz:F2}Hz偏差{hostRateError:F1}%");
+        if(double.IsFinite(tickError)&&tickError>20)
+            warnings.Add($"MCU tick中位批次间隔与16/ODR预期偏差{tickError:F1}%");
+        if(candidateMissing>0)warnings.Add($"根据MCU tick推断存在{candidateMissing}个疑似漏批（不是全局帧序号直接证明）");
+        if(unclassified>0)warnings.Add($"{unclassified}处长间隔无法解释为ODR整数倍，需核对MCU tick语义/通信丢包");
+        if(residualP95>Math.Max(5,hostPeriod*1000*0.5))
+            warnings.Add("主机UTC与MCU tick线性映射残差偏大，接收时延/轮询抖动可能显著");
+        warnings.Add("固件仅提供批次MCU tick和帧内sample_index(0–15)，没有跨批次逐帧全局序号；疑似丢帧率只能按16帧/ODR与tick间隔估算，不能作为精确丢帧计数。");
+        warnings.Add("host_utc是整批Modbus读取完成附近的主机接收时刻，16行共享同一时标；不能将其复制成16个独立帧时戳。");
+        warnings.Add("MCU tick与主机UTC无共同纪元；线性映射截距不是绝对传输延迟，残差反映接收链路与轮询时序的综合抖动。");
+        return new Ct17StaticTiming(batches.Count,(long)batches.Count*16,odrs[0],
+            duration,hostRate,hostPeriod*1000,hostJitter,tickPeriod,expected,tickError,
+            hostRate*16,drift,residualP95,candidateMissing,unclassified,
+            candidateRatio,s.ExpectedHostBatchHz,hostRateError,blocks,warnings);
+    }
+
+    private sealed record TimedValue(double T,double V);
+    private static double Pos(Ct10EncoderFrame f,Ct10Axis axis)=>axis==Ct10Axis.Inner?f.InnerDeg:f.OuterDeg;
+    private static double Interp(IReadOnlyList<TimedValue> a,double t)
+    {
+        if(a.Count<2||t<a[0].T||t>a[^1].T)return double.NaN;
+        int lo=0,hi=a.Count-1;
+        while(lo+1<hi){int m=(lo+hi)/2;if(a[m].T<=t)lo=m;else hi=m;}
+        double d=a[hi].T-a[lo].T;
+        return d<=0?double.NaN:a[lo].V+(a[hi].V-a[lo].V)*(t-a[lo].T)/d;
+    }
+    private static double Corr(IReadOnlyList<double> x,IReadOnlyList<double> y)
+    {
+        if(x.Count<8||x.Count!=y.Count)return double.NaN;
+        double mx=x.Average(),my=y.Average();
+        double sx=x.Sum(v=>(v-mx)*(v-mx)),sy=y.Sum(v=>(v-my)*(v-my));
+        if(sx<=1e-14||sy<=1e-14)return double.NaN;
+        return x.Select((v,i)=>(v-mx)*(y[i]-my)).Sum()/Math.Sqrt(sx*sy);
+    }
+    private static double? CorrelationLag(List<TimedValue> gyro,List<TimedValue> reference,double maxLagMs,
+        out double? coefficient,out double resolutionMs)
+    {
+        coefficient=null;resolutionMs=double.NaN;
+        if(gyro.Count<10||reference.Count<8)return null;
+        double[] gd=gyro.Zip(gyro.Skip(1),(a,b)=>b.T-a.T).Where(x=>x>0).ToArray();
+        double[] rd=reference.Zip(reference.Skip(1),(a,b)=>b.T-a.T).Where(x=>x>0).ToArray();
+        if(gd.Length==0||rd.Length==0)return null;
+        double gm=Median(gd),rm=Median(rd);
+        resolutionMs=Math.Max(gm,rm)*1000;
+        double step=Math.Max(0.005,Math.Min(gm,rm)/2);
+        double best=-2,bestLag=0;
+        for(double lag=-maxLagMs/1000;lag<=maxLagMs/1000+1e-9;lag+=step)
+        {
+            var xs=new List<double>();var ys=new List<double>();
+            foreach(var r in reference)
+            {
+                double g=Interp(gyro,r.T+lag);
+                if(double.IsFinite(g)){xs.Add(r.V);ys.Add(g);}
+            }
+            double c=Corr(xs,ys);
+            if(double.IsFinite(c)&&c>best){best=c;bestLag=lag;}
+        }
+        if(best<0.25)return null;
+        coefficient=best;
+        return bestLag*1000;
+    }
+    private static double FindEncoderOnset(TimedValue[] e,double baseline,double threshold)
+    {
+        for(int i=0;i+1<e.Length;i++)
+        {
+            if(Math.Abs(e[i].V-baseline)>=threshold&&Math.Abs(e[i+1].V-baseline)>=threshold)
+                return e[i].T;
+        }
+        return double.NaN;
+    }
+    private static double FindGyroOnset(TimedValue[] g,double baseline,double threshold,int direction)
+    {
+        for(int i=0;i+1<g.Length;i++)
+            if((g[i].V-baseline)*direction>=threshold&&(g[i+1].V-baseline)*direction>=threshold)
+                return g[i].T;
+        return double.NaN;
+    }
+    private static double NearestAge(IReadOnlyList<TimedValue> a,double t)
+        =>a.Min(x=>Math.Abs(x.T-t))*1000;
+
+    public static Ct17SweepResult AnalyzeSweep(int index,Ct10Axis axis,Ct10Direction direction,int repetition,
+        double commandSpeed,double startDeg,double endDeg,int gyroSign,Ct10Capture capture,
+        long commandStartTicks,long commandReturnTicks,double derivativeWindowSeconds,double maxLagMs,
+        Func<double,double,double,double[]> applyGyro,string csvPath)
+    {
+        long freq=capture.TimestampFrequency;
+        if(freq<=0||capture.GyroFrames.Count<10||capture.EncoderFrames.Count<8)
+            throw new InvalidDataException("动态遥测数据不足或时间戳频率无效");
+        if(!capture.MotionCompletedNormally)throw new InvalidDataException("转台动态运动未正常完成");
+        if(commandStartTicks<=0||commandReturnTicks<commandStartTicks)
+            throw new InvalidDataException("未获得有效的运动命令调用起止时标");
+        if(capture.GyroFrames.Zip(capture.GyroFrames.Skip(1),(a,b)=>b.TimestampTicks<=a.TimestampTicks).Any(x=>x)||
+           capture.EncoderFrames.Zip(capture.EncoderFrames.Skip(1),(a,b)=>b.TimestampTicks<=a.TimestampTicks).Any(x=>x))
+            throw new InvalidDataException("Gyro/编码器时间戳重复或倒退");
+        if(capture.EncoderFrames.Any(x=>!x.InnerNormal||!x.OuterNormal||!x.InnerEnabled||!x.OuterEnabled))
+            throw new InvalidDataException("转台运动期间状态异常或失能");
+        int gyroAxis=axis==Ct10Axis.Inner?2:0;
+        int rawFs=capture.GyroCalibrationInputFullScaleDps;
+        double mdps=rawFs switch{125=>4.375,250=>8.75,500=>17.5,1000=>35,2000=>70,4000=>140,_=>throw new InvalidDataException("不支持的Gyro原始输入量程")};
+        double scale=mdps/1000;
+        var gyro=new List<TimedValue>();
+        var gyroTemp=new List<double>();
+        foreach(var f in capture.GyroFrames)
+        {
+            if(!double.IsFinite(f.InputX_Dps)||!double.IsFinite(f.InputY_Dps)||!double.IsFinite(f.InputZ_Dps)||!double.IsFinite(f.TemperatureC))
+                throw new InvalidDataException("Gyro动态帧包含非有限数据");
+            if(f.RawCountX is not null||f.RawCountY is not null||f.RawCountZ is not null)
+            {
+                if(f.RawCountX is null||f.RawCountY is null||f.RawCountZ is null||
+                   Math.Abs(f.InputX_Dps-f.RawCountX.Value*scale)>1e-6||
+                   Math.Abs(f.InputY_Dps-f.RawCountY.Value*scale)>1e-6||
+                   Math.Abs(f.InputZ_Dps-f.RawCountZ.Value*scale)>1e-6)
+                    throw new InvalidDataException("Gyro物理输入与原始计数/JSON输入量程换算不一致");
+            }
+            var v=applyGyro(f.InputX_Dps,f.InputY_Dps,f.InputZ_Dps);
+            if(v.Length!=3||v.Any(x=>!double.IsFinite(x)))throw new InvalidDataException("Gyro矩阵输出无效");
+            gyro.Add(new TimedValue((f.TimestampTicks-commandStartTicks)/(double)freq,v[gyroAxis]*gyroSign));
+            gyroTemp.Add(f.TemperatureC);
+        }
+        var encoder=capture.EncoderFrames.Select(f=>new TimedValue(
+            (f.TimestampTicks-commandStartTicks)/(double)freq,Pos(f,axis))).ToArray();
+        var encoderAfterForMotion=encoder.Where(x=>x.T>=0).ToArray();
+        if(encoderAfterForMotion.Length<4||
+           Math.Abs(encoderAfterForMotion[^1].V-endDeg)>0.5)
+            throw new InvalidDataException("编码器实际轨迹未覆盖请求终点，不能计算时延");
+        for(int k=1;k<encoderAfterForMotion.Length;k++)
+            if((encoderAfterForMotion[k].V-encoderAfterForMotion[k-1].V)*(int)direction < -0.25)
+                throw new InvalidDataException("编码器实测轨迹存在明显反向运动，拒绝计算时间对齐");
+        double[] preGyro=gyro.Where(x=>x.T<0).Select(x=>x.V).ToArray();
+        double[] preEncoder=encoder.Where(x=>x.T<0).Select(x=>x.V).ToArray();
+        if(preGyro.Length<5||preEncoder.Length<5)
+            throw new InvalidDataException($"运动前基线样本不足：Gyro {preGyro.Length}，编码器 {preEncoder.Length}；请增加预运动静置时间");
+        double gyroBase=Median(preGyro),gyroSigma=1.4826*Mad(preGyro,gyroBase);
+        double gyroThreshold=Math.Max(5*gyroSigma,0.05*commandSpeed);
+        double encBase=Median(preEncoder);
+        double encNoise=1.4826*Mad(preEncoder,encBase);
+        double encThreshold=Math.Max(0.05,5*encNoise);
+        var gyroAfter=gyro.Where(x=>x.T>=0).ToArray();
+        var encoderAfter=encoder.Where(x=>x.T>=0).ToArray();
+        double encOn=FindEncoderOnset(encoderAfter,encBase,encThreshold);
+        double gyroOn=FindGyroOnset(gyroAfter,gyroBase,gyroThreshold,(int)direction);
+        var reference=new List<TimedValue>();
+        for(int i=0;i<encoder.Length;i++)
+        {
+            double leftT=encoder[i].T-derivativeWindowSeconds/2;
+            double rightT=encoder[i].T+derivativeWindowSeconds/2;
+            int left=Array.FindLastIndex(encoder,x=>x.T<=leftT);
+            int right=Array.FindIndex(encoder,x=>x.T>=rightT);
+            if(left>=0&&right>left)
+            {
+                double dt=encoder[right].T-encoder[left].T;
+                if(dt>0)reference.Add(new TimedValue((encoder[left].T+encoder[right].T)/2,
+                    (encoder[right].V-encoder[left].V)/dt));
+            }
+        }
+        var gyroCentered=gyro.Select(x=>new TimedValue(x.T,x.V-gyroBase)).ToList();
+        double? lag=CorrelationLag(gyroCentered,reference,maxLagMs,out double? corr,out double resolution);
+        double? refMedian=null,gyroMedian=null,residualMedian=null,rmse=null;
+        var residuals=new List<double>();var refs=new List<double>();var gyros=new List<double>();
+        foreach(var g in gyroCentered.Where(x=>x.T>=0))
+        {
+            double r=Interp(reference,g.T);
+            if(!double.IsFinite(r))continue;
+            double y=Interp(gyro,g.T);
+            if(!double.IsFinite(y))continue;
+            refs.Add(r);gyros.Add(y);residuals.Add(y-r);
+        }
+        if(residuals.Count>0)
+        {refMedian=Median(refs);gyroMedian=Median(gyros);residualMedian=Median(residuals);rmse=Math.Sqrt(residuals.Average(x=>x*x));}
+        double? commandCall= (commandReturnTicks-commandStartTicks)/(double)freq*1000;
+        double? commandToEncoder=double.IsFinite(encOn)?encOn*1000:null;
+        double? commandToGyro=double.IsFinite(gyroOn)?gyroOn*1000:null;
+        double? encoderToGyro=double.IsFinite(encOn)&&double.IsFinite(gyroOn)?(gyroOn-encOn)*1000:null;
+        double[] gIntervals=gyro.Zip(gyro.Skip(1),(a,b)=>b.T-a.T).Where(x=>x>0).ToArray();
+        double[] eIntervals=encoder.Zip(encoder.Skip(1),(a,b)=>b.T-a.T).Where(x=>x>0).ToArray();
+        double gMed=Median(gIntervals)*1000,eMed=Median(eIntervals)*1000;
+        double timingResolution=Math.Max(double.IsFinite(resolution)?resolution:0,Math.Max(gMed,eMed));
+        var rows=new List<Ct17SweepSample>();
+        foreach(var g in gyroCentered)
+        {
+            double p=Interp(encoder,g.T),r=Interp(reference,g.T),measured=Interp(gyro,g.T);
+            bool has=double.IsFinite(p)&&double.IsFinite(r)&&double.IsFinite(measured);
+            rows.Add(new Ct17SweepSample(capture.GyroFrames[rows.Count].TimestampTicks,
+                g.T*1000,g.T,has?p:null,has?r:null,measured,has?measured-r:null,
+                gyroTemp[rows.Count],NearestAge(encoder,g.T),has,
+                has?"参考速度可用":"超出编码器参考时间范围"));
+        }
+        var quality=new List<string>();
+        if(!double.IsFinite(encOn))quality.Add("未识别到可靠的编码器运动起点");
+        if(!double.IsFinite(gyroOn))quality.Add("未识别到可靠的Gyro响应起点（检查轴向符号/幅值/采样率）");
+        if(lag is null)quality.Add("互相关峰值不足，未发布相关时延");
+        if(corr is not null&&corr<0.5)quality.Add("互相关系数偏低，时延估计可信度有限");
+        if(preGyro.Length<20||preEncoder.Length<10)quality.Add("运动前基线样本数量偏少");
+        if(residuals.Count<8)quality.Add("有效时间对齐点不足");
+        if(capture.DataSource.Contains("HOST_RECEIPT",StringComparison.OrdinalIgnoreCase))
+            quality.Add("Gyro时间戳为主机接收时刻，不是传感器真实采样时刻；结果为端到端表观时延");
+        return new Ct17SweepResult(index,axis.ToString(),direction.ToString(),repetition,commandSpeed,startDeg,endDeg,
+            gyro.Count,encoder.Length,preGyro.Length,preEncoder.Length,commandCall,commandToEncoder,
+            commandToGyro,encoderToGyro,lag,corr,refMedian,gyroMedian,residualMedian,rmse,
+            gMed,eMed,timingResolution,freq,commandStartTicks,commandReturnTicks,
+            capture.DataSource,capture.HardwareNotes,csvPath,
+            quality.Count==0?"本段获得可分析的真实动态时序数据":string.Join("；",quality),rows);
+    }
+}

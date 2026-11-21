@@ -1,0 +1,5 @@
+1、把Windows安全中心的实时保护关闭，否则会出现写入.exe无权限的错误！
+
+2、在源代码目录下运行终端，输入以下命令：
+
+pyinstaller -i SoftwareIcon.ico -F main.py -n TiltSensorCalibration --noconsole -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\form" -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\turntable" -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\ellipsoid" -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\lm" -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\temperature_chamber" -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\tilt_sensor_calibration" -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\tilt_sensor" -p "D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\源码\倾角仪校准软件\TiltSensorCalibration\debug"  --distpath D:\Work\倾角仪\SVN\TiltSensor\RD\Software\PC\生产辅助软件\安装包\倾角仪校准软件

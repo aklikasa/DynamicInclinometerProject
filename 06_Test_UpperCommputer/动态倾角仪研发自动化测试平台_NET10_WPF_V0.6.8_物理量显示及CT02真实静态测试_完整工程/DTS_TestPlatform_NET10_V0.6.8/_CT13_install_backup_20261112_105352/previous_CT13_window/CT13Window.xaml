@@ -1,0 +1,78 @@
+﻿<Window x:Class="Dts.Wpf.TestWindows.CT13.CT13Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-13 V1.1 · 多次上电重复性" Width="1120" Height="790" MinWidth="950" MinHeight="650"
+ WindowStartupLocation="CenterOwner" Background="#F3F7FC">
+ <Grid Margin="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="14" Margin="0,0,0,12">
+   <StackPanel>
+    <TextBlock Text="CT-13 V1.1 / 多次上电重复性" FontSize="23" FontWeight="Bold" Foreground="#173B60"/>
+    <TextBlock x:Name="DeviceText" Margin="0,6,0,0" Foreground="#23649B"/>
+    <TextBlock Text="人工断电/重新上电；软件只负责重新连接后的身份核验、等待、真实采集和归档，不控制电源。" Margin="0,5,0,0" TextWrapping="Wrap" Foreground="#8A5A24"/>
+   </StackPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="340"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+    <StackPanel>
+     <Border Background="White" CornerRadius="8" Padding="13" Margin="0,0,0,10">
+      <StackPanel>
+       <TextBlock Text="① 测试参数" FontSize="17" FontWeight="Bold"/>
+       <TextBlock Text="计划上电次数" Margin="0,9,0,2"/><TextBox x:Name="CyclesBox" Text="10"/>
+       <TextBlock Text="每次上电稳定等待（秒）" Margin="0,7,0,2"/><TextBox x:Name="WarmupBox" Text="120"/>
+       <TextBlock Text="每次静态采集时长（秒）" Margin="0,7,0,2"/><TextBox x:Name="CaptureBox" Text="60"/>
+       <TextBlock Text="断电保持时间（秒，人工计时）" Margin="0,7,0,2"/><TextBox x:Name="OffBox" Text="30"/>
+       <TextBlock Text="操作备注" Margin="0,7,0,2"/><TextBox x:Name="NoteBox" Height="55" AcceptsReturn="True" TextWrapping="Wrap"/>
+       <Button Content="应用参数 / 检查" Click="ValidateClick" Margin="0,12,0,0" Padding="8"/>
+      </StackPanel>
+     </Border>
+     <Border Background="White" CornerRadius="8" Padding="13">
+      <StackPanel>
+       <TextBlock Text="② 人工供电操作" FontSize="17" FontWeight="Bold"/>
+       <TextBlock Text="每轮流程：点击开始断电 → 手动拔掉USB/电源并计时 → 点击确认断电完成 → 手动重新上电 → 在主程序重新连接IMU → 回到本窗口确认身份并采集。" TextWrapping="Wrap" Margin="0,8,0,10"/>
+       <CheckBox x:Name="PoseCheck" Content="已确认PCB固定姿态、安装方向和线缆布置全程不变" Margin="0,3,0,8"/>
+       <CheckBox x:Name="PowerCheck" Content="已确认本轮由人工完成真实断电及重新上电" Margin="0,3,0,8"/>
+       <Button x:Name="OffButton" Content="开始本轮断电" Click="OffClick" Padding="8" Margin="0,5,0,0"/>
+       <Button x:Name="OffDoneButton" Content="确认断电完成 / 已重新上电" Click="OffDoneClick" Padding="8" Margin="0,5,0,0" IsEnabled="False"/>
+       <Button x:Name="CaptureButton" Content="核验UID并开始本轮采集" Click="CaptureClick" Padding="8" Margin="0,5,0,0" IsEnabled="False"/>
+       <TextBlock x:Name="CountdownText" Text="等待开始" Foreground="#23649B" Margin="0,9,0,0" TextWrapping="Wrap"/>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+   </ScrollViewer>
+   <Grid Grid.Column="2">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="13" Margin="0,0,0,10">
+     <StackPanel>
+      <TextBlock Text="测试进度" FontSize="17" FontWeight="Bold"/>
+      <TextBlock x:Name="ProgressText" Text="0 / 10 次上电周期完成" Margin="0,6,0,0"/>
+      <ProgressBar x:Name="ProgressBar" Height="9" Minimum="0" Maximum="10" Value="0" Margin="0,8,0,0"/>
+      <TextBlock x:Name="StatusText" Text="请先在主窗口连接IMU，并选择正确的常温/全温标定模式。" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="#526D86"/>
+     </StackPanel>
+    </Border>
+    <DataGrid x:Name="CycleGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" Background="White">
+     <DataGrid.Columns>
+      <DataGridTextColumn Header="轮次" Binding="{Binding Index}" Width="55"/>
+      <DataGridTextColumn Header="UID" Binding="{Binding UidShort}" Width="110"/>
+      <DataGridTextColumn Header="上电时间(UTC)" Binding="{Binding PowerOnUtc}" Width="*"/>
+      <DataGridTextColumn Header="样本数" Binding="{Binding Samples}" Width="75"/>
+      <DataGridTextColumn Header="温度℃" Binding="{Binding Temperature}" Width="75"/>
+      <DataGridTextColumn Header="采集文件" Binding="{Binding CsvFile}" Width="2*"/>
+     </DataGrid.Columns>
+    </DataGrid>
+    <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+     <StackPanel>
+      <TextBlock Text="统计说明" FontWeight="Bold"/>
+      <TextBlock x:Name="SummaryText" Text="完成至少2次上电后，汇总已完成轮次及温度范围。六轴跨周期数值需按已验证的诊断数据格式计算，不从未知字段猜测。" TextWrapping="Wrap" Margin="0,5,0,0"/>
+      <TextBlock x:Name="OutputText" TextWrapping="Wrap" Foreground="#58738D" Margin="0,5,0,0"/>
+     </StackPanel>
+    </Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" Margin="0,12,0,0">
+   <Button DockPanel.Dock="Right" Content="导出CT13汇总" Click="ExportClick" Padding="12,7" Margin="6,0,0,0"/>
+   <Button DockPanel.Dock="Right" Content="关闭" Click="CloseClick" Padding="12,7"/>
+  </DockPanel>
+ </Grid>
+</Window>

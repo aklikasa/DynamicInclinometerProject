@@ -1,4 +1,4 @@
-<Window x:Class="Dts.Wpf.TestWindows.CT12A.CT12AWindow"
+﻿<Window x:Class="Dts.Wpf.TestWindows.CT12A.CT12AWindow"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  Title="CT-12A · Allan 方差／随机稳定性表征" Width="1230" Height="830"
@@ -51,7 +51,7 @@
        <CheckBox x:Name="StationaryConfirm" Content="已固定IMU与线缆，确认全程静止、无振动和机械移动" Margin="0,11,0,6"/>
        <CheckBox x:Name="ThermalConfirm" Content="已准备稳定温度环境，接受记录中如实报告温度变化" Margin="0,0,0,6"/>
        <CheckBox x:Name="TimebaseConfirm" Content="理解：MCU仅有16帧批次级时标，非逐帧硬件同步计量" Margin="0,0,0,6"/>
-       <TextBlock Text="本测试不操作转台。连续性和时间质量未达标时仅保存真实数据与警告报告，绝不生成虚假的合格结论。" Margin="0,8,0,0" Foreground="#9F6839" TextWrapping="Wrap" FontSize="12"/>
+       <TextBlock Text="SENSOR_OK未确认时仅生成来源未核实的诊断曲线，不发布噪声系数；SIM_MODE置位、丢帧和时间质量异常仍拒绝。" Margin="0,8,0,0" Foreground="#9F6839" TextWrapping="Wrap" FontSize="12"/>
       </StackPanel>
      </Border>
     </StackPanel>
@@ -107,6 +107,7 @@
   </Grid>
   <DockPanel Grid.Row="2" LastChildFill="False" Margin="0,12,0,0">
    <Button DockPanel.Dock="Right" Content="关闭" Style="{StaticResource Action}" Click="CloseClick"/>
+   <Button DockPanel.Dock="Right" x:Name="OfflineButton" Content="离线重算历史CSV（免重采）" Style="{StaticResource Action}" Click="OfflineClick"/>
    <Button DockPanel.Dock="Right" x:Name="ReportButton" Content="打开图文报告" Style="{StaticResource Action}" Click="ReportClick" IsEnabled="False"/>
    <Button DockPanel.Dock="Right" x:Name="StopButton" Content="取消采集（不运动转台）" Style="{StaticResource Warning}" Click="StopClick" IsEnabled="False"/>
    <Button DockPanel.Dock="Right" x:Name="StartButton" Content="▶ 一键自动Allan采集与分析" Style="{StaticResource Primary}" Click="StartClick"/>

@@ -6,6 +6,7 @@ using Dts.Core;
 using Dts.Devices;
 using Dts.TestEngine;
 using Dts.Tests.S1.CT10;
+using Dts.Tests.S1.CT17;
 
 namespace Dts.Wpf.Hardware.CT10;
 
@@ -16,7 +17,7 @@ namespace Dts.Wpf.Hardware.CT10;
 /// use ONE operator-verified latest FIFO slot per successful poll stamped at HOST RECEIVE.
 /// The profile must document that interpretation. No fictitious 16 precise timestamps.
 /// </summary>
-public sealed class Ct10LiveDynamicAdapter : ICt10DynamicHardware
+public sealed class Ct10LiveDynamicAdapter : ICt10DynamicHardware, ICt17TimingTelemetry
 {
     private readonly LiveTestHardware _host;
     private readonly Func<RealImu?> _imu;
@@ -25,6 +26,19 @@ public sealed class Ct10LiveDynamicAdapter : ICt10DynamicHardware
     private readonly string _profilePath;
     private int _inSweep;
 
+    // CT17_TIMING_EXTENSION_V1_1: optional instrumentation; default dwell is zero.
+    private long _ct17PreMotionDwellTicks;
+    private long _ct17CommandCallStartTicks;
+    private long _ct17CommandCallReturnTicks;
+
+    public TimeSpan Ct17PreMotionDwell
+    {
+        get => TimeSpan.FromTicks(Interlocked.Read(ref _ct17PreMotionDwellTicks));
+        set => Interlocked.Exchange(ref _ct17PreMotionDwellTicks, value.Ticks);
+    }
+    public long Ct17CommandCallStartTicks => Interlocked.Read(ref _ct17CommandCallStartTicks);
+    public long Ct17CommandCallReturnTicks => Interlocked.Read(ref _ct17CommandCallReturnTicks);
+    public long Ct17TimestampFrequency => Stopwatch.Frequency;
     public Ct10LiveDynamicAdapter(LiveTestHardware host, Func<RealImu?> imu,
         Func<IRealTurntable?> table, Func<CalibrationRun> calibration, string profilePath)
     {
@@ -274,9 +288,20 @@ public sealed class Ct10LiveDynamicAdapter : ICt10DynamicHardware
                 }
                 await arm;
                 token.ThrowIfCancellationRequested();
+                // CT17_TIMING_EXTENSION_V1_1: record only the host-side command-call envelope.
+                Interlocked.Exchange(ref _ct17CommandCallStartTicks, 0);
+                Interlocked.Exchange(ref _ct17CommandCallReturnTicks, 0);
+                var ct17Dwell = Ct17PreMotionDwell;
+                if (ct17Dwell < TimeSpan.Zero || ct17Dwell > TimeSpan.FromSeconds(5))
+                    throw new InvalidOperationException("CT-17运动前基线静置时间超出0～5秒");
+                if (ct17Dwell > TimeSpan.Zero)
+                    await Task.Delay(ct17Dwell, token);
+                token.ThrowIfCancellationRequested();
+                Interlocked.Exchange(ref _ct17CommandCallStartTicks, Stopwatch.GetTimestamp());
                 // Both real telemetry streams have been armed BEFORE the motion command.
                 motionStarted=true;
                 await _host.SetTwoTdAbsoluteAsync((int)request.Axis,request.EndDeg,request.CommandDps,token);
+                Interlocked.Exchange(ref _ct17CommandCallReturnTicks, Stopwatch.GetTimestamp());
                 progress?.Report($"CT-10 真实动态采集：{request.Axis} {request.CommandDps:F2}°/s");
                 var completed=await Task.WhenAny(arrived.Task,encoderTask,imuTask,
                     Task.Delay(TimeSpan.FromSeconds(request.SafetyTimeoutSeconds),token));

@@ -1,0 +1,8 @@
+低速重点与用户可编辑速率版本：2026-11-07
+
+python -m unittest discover -s tools -p "test_*.py"
+168 tests; 166 passed; 2 known pre-existing assertion errors:
+- test_2fdt_zero_status: old UI text expectation
+- test_stable_base_regression: old hash baseline for form_turntable_ctrl.py
+
+See tests for full regressions. No hardware tested.

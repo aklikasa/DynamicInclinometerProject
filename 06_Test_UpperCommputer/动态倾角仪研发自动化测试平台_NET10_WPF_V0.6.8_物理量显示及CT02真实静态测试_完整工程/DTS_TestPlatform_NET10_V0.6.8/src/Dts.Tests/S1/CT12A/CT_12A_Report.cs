@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
@@ -58,6 +58,7 @@ public static class Ct12aReport
             qr.Add($"mcu_jitter_p95,{F(q.McuCadenceJitterP95Percent,"G17")},percent");
             qr.Add($"fifo_span_error_p95,{F(q.FifoSpanErrorP95Percent,"G17")},percent");
             qr.Add($"coefficient_released,{analysis.CoefficientsReleased},engineering only");
+            qr.Add($"sensor_unverified_batches,{q.SensorUnverifiedBatches},SENSOR_OK bit 0 not set");
             foreach(string w in q.Warnings)qr.Add("warning,"+Q(w)+",quality audit");
         }
         else qr.Add("analysis_failed,"+Q(d.FailureReason)+",see JSON");
@@ -125,7 +126,7 @@ public static class Ct12aReport
             var q=a.TimeQuality;
             b.Append($"<div class='card'><h2>时间质量与真实FIFO连续性</h2>"+
                 $"<p><b>分类：</b>{H(q.Classification)}　采集 {q.Frames} 帧 / {q.Batches} 批；"+
-                $"断点或重叠 {q.GapsOrOverlaps} 处。</p><p>主机批次中位周期 {F(q.MedianBatchPeriodSeconds,"F5")}s，MCU批次中位周期 {F(q.MedianMcuPeriodSeconds,"F5")}s；"+
+                $"断点或重叠 {q.GapsOrOverlaps} 处；SENSOR_OK未确认 {q.SensorUnverifiedBatches} 批。</p><p>主机批次中位周期 {F(q.MedianBatchPeriodSeconds,"F5")}s，MCU批次中位周期 {F(q.MedianMcuPeriodSeconds,"F5")}s；"+
                 $"主机P95抖动 {F(q.HostCadenceJitterP95Percent,"F2")}%、MCU P95抖动 {F(q.McuCadenceJitterP95Percent,"F2")}%。</p>"+
                 $"<p>温度 {F(a.TemperatureMinC,"F2")}～{F(a.TemperatureMaxC,"F2")}℃；"+
                 $"<b>参数发布：</b>{(a.CoefficientsReleased?"仅工程估计（未硬件同步认证）":"否；禁止解读未通过的系数")}</p>");

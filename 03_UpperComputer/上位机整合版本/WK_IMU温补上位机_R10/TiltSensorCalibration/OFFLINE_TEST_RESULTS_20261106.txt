@@ -1,0 +1,13 @@
+2026-11-06  温补拟合/独立验证双温度输入版  离线验证记录
+
+1. Python语法编译：通过（form_thermal_compensation、thermal_variable_temperature、thermal_run_resume、thermal_excel_report、新增专项测试）。
+2. 88项温补相关 unittest：88项全部通过。
+3. 新增6项专项测试：6项全部通过。覆盖温度合并排序、重叠/越界拒绝、验证温度只执行独立工况、逐工况可变计划安全断点续做（包含JSON回读）、28套候选/温度验证数据隔离、Excel工况计划与界面逻辑接线。
+4. 全工程 unittest discover：126项，共124项通过、2项旧版断言未通过。
+   - tools/test_2fdt_zero_status.py: 旧版回零UI文本匹配断言失败。
+   - tools/test_stable_base_regression.py: 旧版form/form_turntable_ctrl.py哈希断言失败。
+   已解压用户本次上传的修改前ZIP并单独复测，确认上述两项在旧版中亦失败。
+5. 未改动原WK转台控制、PLC温箱控制、生产常温标定、原温补稳定门槛和28套拟合算法。
+6. 未在本环境打开PySide6界面：此执行环境未安装PySide6；未连接现场PLC/WK/IMU，不代表实机验收。
+
+注意：所有输出温补参数仅为研发候选；实验前必须检查现场急停、高速连续旋转线缆安全和温箱状态。

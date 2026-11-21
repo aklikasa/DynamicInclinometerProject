@@ -1,0 +1,77 @@
+﻿<Window x:Class="Dts.Wpf.TestWindows.CT17.CT17Window"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="CT-17 V1.1 · 数据时间对齐与延迟诊断" Width="1240" Height="850" MinWidth="1050" MinHeight="700"
+ WindowStartupLocation="CenterOwner" Background="#F3F7FC" Closing="OnClosing">
+ <Grid Margin="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Background="White" CornerRadius="9" Padding="14" Margin="0,0,0,12"><StackPanel>
+   <TextBlock Text="CT-17 V1.1 / 数据时间对齐与延迟诊断" FontSize="22" FontWeight="Bold" Foreground="#173B60"/>
+   <TextBlock x:Name="IdentityText" Margin="0,6,0,0"/>
+   <TextBlock x:Name="CalibrationText" Margin="0,5,0,0" TextWrapping="Wrap" Foreground="#526D86"/>
+   <TextBlock x:Name="BridgeText" Margin="0,6,0,0" TextWrapping="Wrap" Foreground="#8A5A24"/>
+  </StackPanel></Border>
+  <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="380"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <ScrollViewer Grid.Column="0"><StackPanel>
+    <Border Background="White" CornerRadius="9" Padding="13" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Text="① 静态时间基检查" FontSize="17" FontWeight="Bold"/>
+     <TextBlock Text="静态FIFO采集时长（秒）" Margin="0,9,0,3"/><TextBox x:Name="StaticSeconds" Text="30" TextChanged="SettingsChanged"/>
+     <TextBlock Text="期望主机批次输出频率（Hz）" Margin="0,8,0,3"/><TextBox x:Name="ExpectedHz" Text="50" TextChanged="SettingsChanged"/>
+     <TextBlock Text="输出频率允许偏差（%）" Margin="0,8,0,3"/><TextBox x:Name="RateTolerance" Text="20" TextChanged="SettingsChanged"/>
+     <TextBlock Text="将核验：每批16帧、ODR、MCU tick间隔、主机批次频率、时间抖动及疑似漏批。" TextWrapping="Wrap" Foreground="#526D86" Margin="0,8,0,0"/>
+    </StackPanel></Border>
+    <Border Background="White" CornerRadius="9" Padding="13" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Text="② 小幅正反向往复参数" FontSize="17" FontWeight="Bold"/>
+     <WrapPanel Margin="0,8,0,0">
+      <CheckBox x:Name="TestInner" Content="内轴（对应Gyro Z）" IsChecked="True" Margin="0,0,16,0" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+      <CheckBox x:Name="TestOuter" Content="外轴（对应Gyro X）" Margin="0,0,0,0" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+     </WrapPanel>
+     <TextBlock Text="往复中心角（°）" Margin="0,8,0,3"/><TextBox x:Name="CenterDeg" Text="90" TextChanged="SettingsChanged"/>
+     <TextBlock Text="单侧幅值（°）" Margin="0,8,0,3"/><TextBox x:Name="AmplitudeDeg" Text="1" TextChanged="SettingsChanged"/>
+     <TextBlock Text="往复运动速度（°/s）" Margin="0,8,0,3"/><TextBox x:Name="CommandSpeed" Text="1" TextChanged="SettingsChanged"/>
+     <TextBlock Text="定位速度（°/s）" Margin="0,8,0,3"/><TextBox x:Name="SetupSpeed" Text="2" TextChanged="SettingsChanged"/>
+     <TextBlock Text="正反向重复次数" Margin="0,8,0,3"/><TextBox x:Name="Repeats" Text="3" TextChanged="SettingsChanged"/>
+     <TextBlock Text="现场批准行程下界（°）" Margin="0,8,0,3"/><TextBox x:Name="ApprovedMin" Text="0" TextChanged="SettingsChanged"/>
+     <TextBlock Text="现场批准行程上界（°）" Margin="0,8,0,3"/><TextBox x:Name="ApprovedMax" Text="180" TextChanged="SettingsChanged"/>
+    </StackPanel></Border>
+    <Border Background="White" CornerRadius="9" Padding="13" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Text="③ 时延分析参数" FontSize="17" FontWeight="Bold"/>
+     <TextBlock Text="运动前基线静置（秒）" Margin="0,8,0,3"/><TextBox x:Name="PreMotionDwell" Text="1.5" TextChanged="SettingsChanged"/>
+     <TextBlock Text="定位后静置（秒）" Margin="0,8,0,3"/><TextBox x:Name="SettleSeconds" Text="2" TextChanged="SettingsChanged"/>
+     <TextBlock Text="编码器微分窗口（秒）" Margin="0,8,0,3"/><TextBox x:Name="DerivativeWindow" Text="0.2" TextChanged="SettingsChanged"/>
+     <TextBlock Text="互相关最大搜索时延（ms）" Margin="0,8,0,3"/><TextBox x:Name="MaxLagMs" Text="500" TextChanged="SettingsChanged"/>
+     <CheckBox x:Name="InvertInner" Content="内轴Gyro Z反号" Margin="0,8,0,3"/>
+     <CheckBox x:Name="InvertOuter" Content="外轴Gyro X反号" Margin="0,3,0,3"/>
+    </StackPanel></Border>
+    <Border Background="White" CornerRadius="9" Padding="13"><StackPanel>
+     <TextBlock Text="④ 现场安全确认（运动前必选）" FontSize="17" FontWeight="Bold"/>
+     <CheckBox x:Name="MotionApproval" Content="已确认小幅行程、工装固定、线缆余量及运动方向" Margin="0,10,0,5"/>
+     <CheckBox x:Name="EmergencyApproval" Content="已确认实体急停有效，测试全程有人现场监护" Margin="0,3,0,5"/>
+     <CheckBox x:Name="MappingApproval" Content="已核实内轴↔Gyro Z、外轴↔Gyro X及正负号" Margin="0,3,0,5"/>
+     <TextBlock Text="CT-17会真实驱动转台做小幅往复。参数范围仍受ct10_machine_profile.json中的核验限速和硬件状态约束；未就绪时禁止运动。" TextWrapping="Wrap" Foreground="#8A5A24" Margin="0,8,0,0"/>
+     <TextBlock x:Name="PlanText" TextWrapping="Wrap" Foreground="#526D86" Margin="0,10,0,0"/>
+    </StackPanel></Border>
+   </StackPanel></ScrollViewer>
+   <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Background="White" CornerRadius="9" Padding="13" Margin="0,0,0,10"><StackPanel>
+     <TextBlock Text="测试状态" FontSize="17" FontWeight="Bold"/>
+     <TextBlock x:Name="StatusText" Text="等待真实IMU、2TD及常温标定就绪" Margin="0,7,0,0" TextWrapping="Wrap"/>
+     <ProgressBar x:Name="ProgressBar" Height="9" Margin="0,9,0,0" IsIndeterminate="False"/>
+     <TextBlock x:Name="OutputText" Margin="0,7,0,0" TextWrapping="Wrap" Foreground="#526D86"/>
+    </StackPanel></Border>
+    <TabControl Grid.Row="1">
+     <TabItem Header="动态时延结果"><DataGrid x:Name="SweepGrid" AutoGenerateColumns="True" IsReadOnly="True"/></TabItem>
+     <TabItem Header="静态时间基"><ScrollViewer><TextBlock x:Name="StaticSummaryText" Margin="12" TextWrapping="Wrap"/></ScrollViewer></TabItem>
+     <TabItem Header="结论与限制"><ScrollViewer><TextBlock x:Name="SummaryText" Margin="12" TextWrapping="Wrap"/></ScrollViewer></TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Background="White" CornerRadius="9" Padding="12" Margin="0,10,0,0"><TextBlock x:Name="RootText" TextWrapping="Wrap" Foreground="#526D86"/></Border>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" Margin="0,12,0,0">
+   <Button x:Name="StartButton" DockPanel.Dock="Right" Content="开始CT-17测试" Click="StartClick" Padding="13,7" Margin="6,0,0,0"/>
+   <Button x:Name="StopButton" DockPanel.Dock="Right" Content="停止并软停车" Click="StopClick" Padding="13,7" IsEnabled="False" Margin="6,0,0,0"/>
+   <Button x:Name="ReportButton" DockPanel.Dock="Right" Content="打开HTML报告" Click="ReportClick" Padding="13,7" IsEnabled="False" Margin="6,0,0,0"/>
+   <Button x:Name="PreviewButton" DockPanel.Dock="Right" Content="预览参数" Click="PreviewClick" Padding="13,7" Margin="6,0,0,0"/>
+   <Button Content="关闭" Click="CloseClick" Padding="13,7"/>
+  </DockPanel>
+ </Grid>
+</Window>

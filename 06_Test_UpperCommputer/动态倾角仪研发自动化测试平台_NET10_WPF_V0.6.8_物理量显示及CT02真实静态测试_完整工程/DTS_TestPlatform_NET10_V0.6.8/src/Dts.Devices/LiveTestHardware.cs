@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Dts.Core;
 using Dts.TestEngine;
@@ -6,7 +6,7 @@ using Dts.TestEngine;
 namespace Dts.Devices;
 
 /// <summary>Only physical device APIs; all turntable calls share the main UI semaphore.</summary>
-public sealed class LiveTestHardware : IStaticAngleHardware
+public sealed class LiveTestHardware : IStaticAngleHardware, IAllanPreflightHardware
 {
     private readonly Func<RealImu?> _imu;
     private readonly Func<IRealTurntable?> _td;
@@ -35,6 +35,49 @@ public sealed class LiveTestHardware : IStaticAngleHardware
         return new CaptureArtifacts(captured.Folder,Path.Combine(captured.Folder,"imu_raw.csv"),
             Path.Combine(captured.Folder,"manifest.json"),analysis,
             captured.Samples,captured.Batches,id.UidHex,id.DtsId);
+    }
+    public async Task<AllanPreflightResult> ProbeAllanAsync(CalibrationRun run,CancellationToken ct)
+    {
+        var imu=_imu()??throw new InvalidOperationException("CT-12A预检：IMU未连接");
+        var id=imu.Identity??throw new InvalidOperationException("CT-12A预检：完整UID不存在");
+        if(!imu.Connected)throw new IOException("CT-12A预检：串口已断开");
+        run.Validate(id);
+        if(run.Mode!=CalibrationMode.Ambient)throw new InvalidDataException("CT-12A预检：请使用常温校准");
+        var hashes=run.Sources;
+        foreach(var source in hashes)
+        {
+            if(!File.Exists(source.FilePath)||
+                !Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(source.FilePath)))
+                .Equals(source.Sha256,StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("CT-12A预检：标定文件已修改或移动："+source.FilePath);
+        }
+        int unique=0,unverified=0,odr=0;
+        uint? lastTick=null;
+        var watch=System.Diagnostics.Stopwatch.StartNew();
+        while(unique<3 && watch.Elapsed<TimeSpan.FromSeconds(12))
+        {
+            ct.ThrowIfCancellationRequested();
+            // ReadBatchAsync always rejects SIM_MODE independently of SENSOR_OK.
+            var batch=await imu.ReadBatchAsync(ct,requireSensorOk:false);
+            if(batch.FifoUnread==0 || batch.Samples.Count==0 || batch.McuTickMs==lastTick)
+            {
+                await Task.Delay(80,ct);continue;
+            }
+            if(batch.Samples.Count!=16 || batch.OdrHz<1 || batch.OdrHz>10000)
+                throw new InvalidDataException("CT-12A预检：FIFO批次不是完整16帧或ODR无效");
+            if(odr!=0 && odr!=batch.OdrHz)
+                throw new InvalidDataException("CT-12A预检：MCU的ODR在三个批次间发生变化");
+            var row=SelectedImuFrame.FromSample(batch,batch.Samples[^1],batch.Samples.Count-1,run);
+            if(!row.HasComputedCalibration || row.CalibratedAcc is not {Length:3} ||
+               row.CalibratedGyro is not {Length:3})
+                throw new InvalidDataException("CT-12A预检：UID匹配的ACC/Gyro常温校正失败："+row.Status);
+            if(!row.CalibratedAcc.All(double.IsFinite)||!row.CalibratedGyro.All(double.IsFinite))
+                throw new InvalidDataException("CT-12A预检：六轴校正值不是有限数值");
+            unique++;odr=batch.OdrHz;lastTick=batch.McuTickMs;
+            if((batch.FifoFlags&0x0001)==0)unverified++;
+        }
+        if(unique<3)throw new InvalidDataException("CT-12A预检：12秒内未获得至少3个不同MCU时戳的真实FIFO批次");
+        return new AllanPreflightResult(unique,unverified,odr);
     }
     private IRealTurntable RequireTd()
     {

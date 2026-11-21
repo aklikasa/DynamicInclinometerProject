@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -124,7 +124,7 @@ public partial class CT12AWindow : Window, Dts.Wpf.TestWindows.ICalibrationRunAw
                 "CT-12A 真实静态长时采集",MessageBoxButton.YesNo,MessageBoxImage.Warning)
                 !=MessageBoxResult.Yes)return;
             _reportHtml=null;ReportButton.IsEnabled=false;StartButton.IsEnabled=false;
-            PreviewButton.IsEnabled=false;StopButton.IsEnabled=true;
+            PreviewButton.IsEnabled=false;OfflineButton.IsEnabled=false;StopButton.IsEnabled=true;
             AxisGrid.ItemsSource=null;CurveGrid.ItemsSource=null;
             RunProgressBar.IsIndeterminate=true;
             SummaryText.Text="正在写入真实FIFO原始/校正CSV，完成后检查时标并计算Allan";
@@ -150,7 +150,7 @@ public partial class CT12AWindow : Window, Dts.Wpf.TestWindows.ICalibrationRunAw
         {
             RunProgressBar.IsIndeterminate=false;
             _cts?.Dispose();_cts=null;StopButton.IsEnabled=false;StartButton.IsEnabled=true;
-            PreviewButton.IsEnabled=true;
+            PreviewButton.IsEnabled=true;OfflineButton.IsEnabled=true;
         }
     }
     private void ShowReport(string file)
@@ -164,7 +164,10 @@ public partial class CT12AWindow : Window, Dts.Wpf.TestWindows.ICalibrationRunAw
             $"时标等级：{data.Analysis.TimeQuality.Classification}，"+
             $"完整批次{data.Analysis.TimeQuality.Batches}，"+
             $"疑似缺帧/重叠{data.Analysis.TimeQuality.GapsOrOverlaps}处。"+
-            (data.Analysis.CoefficientsReleased?"仅工程估计，未硬件同步认证。":"数据质量未达标，禁止发布噪声系数。 ");
+            (data.Analysis.CoefficientsReleased?"仅工程估计，未硬件同步认证。":
+             data.Analysis.TimeQuality.SensorUnverifiedBatches>0 && data.Analysis.Curves.Count>0?
+                "SENSOR_OK未确认：曲线仅限研发诊断，噪声系数未发布。":
+                "质量/τ覆盖未达发布条件，不发布噪声系数。 ");
         ReportText.Text="报告："+_reportHtml+"　原始数据："+data.AcquisitionFolder;
         if(data.Analysis is not { } a)return;
         static string F(double? v,string fmt="F6")=>v?.ToString(fmt,CultureInfo.InvariantCulture)??"N/A";
@@ -188,6 +191,51 @@ public partial class CT12AWindow : Window, Dts.Wpf.TestWindows.ICalibrationRunAw
         }).ToArray();
         Tabs.SelectedIndex=0;
     }
+    private async void OfflineClick(object sender,RoutedEventArgs e)
+    {
+        if(_cts is not null || _runner.IsRunning)
+        {
+            MessageBox.Show(this,"正在运行其他测试，请先完成再离线重算。","CT-12A",MessageBoxButton.OK,MessageBoxImage.Information);
+            return;
+        }
+        var pick=new Microsoft.Win32.OpenFileDialog
+        {
+            Title="请选择原CT-12A采集文件夹中的manifest.json",
+            Filter="采集清单 (manifest.json)|manifest.json|JSON 文件 (*.json)|*.json",
+            FileName="manifest.json",CheckFileExists=true
+        };
+        if(pick.ShowDialog(this)!=true)return;
+        if(MessageBox.Show(this,"此操作只读历史原始/校正CSV与校准JSON快照，按当前窗口τ/质量阈值重算，"+
+            "并在报告根目录另存新的Allan报告，不会覆盖原始数据或原报告。继续？",
+            "CT-12A 历史数据离线重算",MessageBoxButton.YesNo,MessageBoxImage.Information)!=MessageBoxResult.Yes)
+            return;
+        try
+        {
+            var p=Settings();Ct12aAlgorithm.Validate(p,false);
+            _cts=new CancellationTokenSource();
+            OfflineButton.IsEnabled=false;StartButton.IsEnabled=false;PreviewButton.IsEnabled=false;
+            StopButton.IsEnabled=true;RunProgressBar.IsIndeterminate=true;
+            SummaryText.Text="正在对历史CSV流式验证、计算Allan并重建报告。原数据保持只读。";
+            var progress=new Progress<string>(msg=>StatusText.Text=msg);
+            string report=await Ct12aOffline.ReanalyzeAsync(pick.FileName,p,_cts.Token,progress);
+            ShowReport(report);
+            StatusText.Text="离线重算完成："+Path.GetDirectoryName(report);
+        }
+        catch(OperationCanceledException){StatusText.Text="历史离线计算已取消，原数据未改动";}
+        catch(Exception ex)
+        {
+            StatusText.Text="历史离线重算失败："+ex.Message;
+            MessageBox.Show(this,ex.Message,"CT-12A 离线重算失败",MessageBoxButton.OK,MessageBoxImage.Warning);
+        }
+        finally
+        {
+            RunProgressBar.IsIndeterminate=false;
+            _cts?.Dispose();_cts=null;
+            OfflineButton.IsEnabled=true;StartButton.IsEnabled=true;PreviewButton.IsEnabled=true;
+            StopButton.IsEnabled=false;
+        }
+    }
+
     private void StopClick(object sender,RoutedEventArgs e)
     {
         StatusText.Text="正在取消真实IMU采集；不发送任何转台命令。已完成CSV将在采集目录保留";

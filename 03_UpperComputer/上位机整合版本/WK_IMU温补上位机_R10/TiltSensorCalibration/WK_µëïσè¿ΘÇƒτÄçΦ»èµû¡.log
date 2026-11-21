@@ -1,0 +1,10 @@
+[2026-11-04T09:02:27] ENTER axis=2 port=9 direction=0 accel=10 speed_abs=10 state=1 alarm=0
+[2026-11-04T09:02:27] RETURN axis=2 direction=0 result=0
+[2026-11-04T09:03:15] ENTER axis=2 port=9 direction=1 accel=10 speed_abs=10 state=1 alarm=0
+[2026-11-04T09:03:15] RETURN axis=2 direction=1 result=0
+[2026-11-04T09:03:35] ENTER axis=0 port=8 direction=0 accel=10 speed_abs=10 state=1 alarm=0
+[2026-11-04T09:03:35] RETURN axis=0 direction=0 result=0
+[2026-11-04T09:03:48] ENTER axis=0 port=8 direction=1 accel=10 speed_abs=10 state=1 alarm=0
+[2026-11-04T09:03:48] RETURN axis=0 direction=1 result=0
+[2026-11-04T09:09:57] ENTER axis=0 port=8 direction=1 accel=10 speed_abs=10 state=1 alarm=0
+[2026-11-04T09:09:57] RETURN axis=0 direction=1 result=0
