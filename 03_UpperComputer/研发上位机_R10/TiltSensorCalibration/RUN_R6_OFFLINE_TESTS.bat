@@ -1,5 +1,0 @@
-@echo off
-chcp 65001>nul
-cd /d "%~dp0"
-python -m unittest discover -s tests_r6 -v
-if errorlevel 1 pause
